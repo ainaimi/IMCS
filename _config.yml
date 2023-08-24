@@ -1,0 +1,54 @@
+# Site settings
+title: ML4CI
+subtitle: Machine Learning for Causal Inference
+description: |
+    <p>This course covers the basics behind using machine learning methods for estimating causal effects.</p>
+
+    <p>By the end of this course you should have a solid understanding of:</p>
+    <ul>
+        <li>the challenges of estimating causal effects with data</li>
+        <li>when/why one should use machine learning to estimate causal effects</li>
+        <li>the challenges of using machine learning methods for estimating causal effects</li>
+        <li>how to estimate causal effects with machine learning methods in R</li>
+    <ul>
+    <br>
+    
+    <p>The literature on ML and causal inference is expansive and complex. 
+    There are some essential concepts that are not easy to understand for 
+    those with little to no formal technical background. The purpose of this 
+    course is to help you fill this gap, and give you some ability to use advanced 
+    analytic techniques in data.</p>
+
+baseurl: "/ML4CI" # the github directory
+url: "https://ainaimi.github.io/" # the base hostname & protocol for your site
+
+# host the syllabus on google docs
+# File: Publish to Web
+syllabus_url: #
+githubdir: "ainaimi/ML4CI"
+
+# Author/user information
+email: ashley.naimi@emory.edu
+twitter_username: ashley_naimi
+github_username:  ainaimi
+authorurl: "https://bit.ly/3GFu2o1"
+# address: |
+#     Emory University
+#     Department of Biostatistics and Bioinformatics
+#     1518 Clifton Rd. NE
+#     Atlanta, GA 30322
+
+# Use collection to manage records
+collections: 
+    recordings:
+        output: true
+        permalink: /:collection/:name
+
+# Build settings
+markdown: kramdown
+
+# Other options
+permalink: blog/:year/:month/:title
+excerpt_separator: "<!--more-->"
+
+include: ['_images', '_css']
