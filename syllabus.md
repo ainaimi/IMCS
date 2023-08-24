@@ -46,7 +46,7 @@ Simulation methods are extremely flexible, and can be used to understand and eva
 
 For example, confidence intervals are commonly used to capture the variation in a parameter estimate of interest, but are notoriously difficult to interpret. Simulation can be used to clarify why this is the case, and how to avoid falling in traps of misinterpretation.
 
-<img src="./images/ci_coverage.pdf"
+<img src="./_images/ci_coverage.pdf"
      alt="Markdown Monster icon"
      style="float: left; margin-right: 10px;" />
 
