@@ -11,7 +11,7 @@ description: |
         <li>the challenges and limitations of using Monte Carlo simulations</li>
         <li>how to design, deploy, and analyze Monte Carlo simulations in R</li>
     <ul>
-       
+    <br>
     <p>
     Their are several resources on how to design and analyze Monte Carlo simulation studies in the 
     quantitative sciences. This course consolidates and adds to these resources by instructing through a 
