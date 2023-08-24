@@ -46,11 +46,9 @@ Simulation methods are extremely flexible, and can be used to understand and eva
 
 For example, confidence intervals are commonly used to capture the variation in a parameter estimate of interest, but are notoriously difficult to interpret. Simulation can be used to clarify why this is the case, and how to avoid falling in traps of misinterpretation.
 
-<p>
 <img src="./_images/ci_coverage.png"
      alt="Simulation example of 95% confidence interval coverage, which can be used to understand how to better interpret them, and avoid falling in common traps such as treating confidence intervals as Bayesian credible intervals."
      style="float: left; margin-right: 10px;" />
-</p>
 
 In computing the standard error of a point estimate from a regression model, one may often choose between a robust variance (sandwich) estimator, model-based approaches, or the bootstrap. Simulation can be used to evaluate how well each standard error estimator captures the true sampling variation of the parameter in a specific context, thus guiding the choice. 
 
