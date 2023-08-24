@@ -1,6 +1,6 @@
 # Site settings
-title: ML4CI
-subtitle: Machine Learning for Causal Inference
+title: MCS
+subtitle: Monte Carlo Simulation
 description: |
     <p>This course covers the basics behind using machine learning methods for estimating causal effects.</p>
 
@@ -19,13 +19,13 @@ description: |
     course is to help you fill this gap, and give you some ability to use advanced 
     analytic techniques in data.</p>
 
-baseurl: "/ML4CI" # the github directory
+baseurl: "/MCS" # the github directory
 url: "https://ainaimi.github.io/" # the base hostname & protocol for your site
 
 # host the syllabus on google docs
 # File: Publish to Web
 syllabus_url: #
-githubdir: "ainaimi/ML4CI"
+githubdir: "ainaimi/MCS"
 
 # Author/user information
 email: ashley.naimi@emory.edu
