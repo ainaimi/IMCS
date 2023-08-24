@@ -2,22 +2,23 @@
 title: IMCS
 subtitle: Introduction to Monte Carlo Simulation
 description: |
-    <p>This course covers the basics behind using machine learning methods for estimating causal effects.</p>
+    <p>This course covers will serve as an introduction to Monte Carlo simulations in the quantitative sciences.</p>
 
     <p>By the end of this course you should have a solid understanding of:</p>
     <ul>
-        <li>the challenges of estimating causal effects with data</li>
-        <li>when/why one should use machine learning to estimate causal effects</li>
-        <li>the challenges of using machine learning methods for estimating causal effects</li>
-        <li>how to estimate causal effects with machine learning methods in R</li>
+        <li>the role, scope, and purpose of Monte Carlo simulation</li>
+        <li>when/why one should use Monte Carlo simulations</li>
+        <li>the challenges and limitations of using Monte Carlo simulations to address quantitative questions</li>
+        <li>how to design, deploy, and analyze Monte Carlo simulations in R</li>
     <ul>
     <br>
     
-    <p>The literature on ML and causal inference is expansive and complex. 
-    There are some essential concepts that are not easy to understand for 
-    those with little to no formal technical background. The purpose of this 
-    course is to help you fill this gap, and give you some ability to use advanced 
-    analytic techniques in data.</p>
+    <p>Their are several resources on how to design and analyze Monte Carlo simulation studies in the 
+    quantitative sciences. This course consolidates and adds to these resources by instructing through a 
+    specific example question. Simulation methods are extremely flexible, and can be used to understand 
+    and evaluate methodology in a number of different ways. This is an applied course. By the end of the course, 
+    students will be able to implement their own Monte Carlo simulation to estimate bias, mean squared error, 
+    confidence interval coverage, and other statistics for an estimator of their choice.</p>
 
 baseurl: "/IMCS" # the github directory
 url: "https://ainaimi.github.io/" # the base hostname & protocol for your site
