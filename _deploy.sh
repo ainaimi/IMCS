@@ -3,10 +3,10 @@
 # clone the repository
 # if [ $1 == 'local' ]
 # then
-mkdir ML4CI
+mkdir MCS
 git clone -b gh-pages \
-  https://github.com/ainaimi/ML4CI \
-  ML4CI
+  https://github.com/ainaimi/MCS \
+  MCS
 # else
 # 	# configure your name and email if you have not done so
 # 	git config --global user.email "ashley.naimi@emory.edu"
@@ -15,13 +15,13 @@ git clone -b gh-pages \
 
 # 	git clone -b gh-pages \
 #   https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git \
-#   ML4CI
+#   MCS
 # fi
 
 # remove contents from existing gh-pages branch
-cd ML4CI
+cd MCS
 git rm -rf *
-echo "All files in /ML4CI after git rm"
+echo "All files in /MCS after git rm"
 ls -l 
 # replace with contents from master branch /website
 cp -r ../website/* ./
@@ -29,7 +29,7 @@ cp -r ../website/* ./
 cp -r ../lectures ./
 cp -r ../homework ./
 
-echo "All files in /ML4CI after copies"
+echo "All files in /MCS after copies"
 ls -l 
 ls -l lectures
 ls -l homework
