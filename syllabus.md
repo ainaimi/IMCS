@@ -44,16 +44,11 @@ This course will focus on how to use experimental principles to appropriately th
 
 Simulation methods are extremely flexible, and can be used to understand and evaluate methodology in a number of different ways.
 
-For example, confidence intervals are commonly used to capture the variation in a parameter estimate of interest, but are notoriously difficult to interpret. Simulation can be used to clarify why this is the case, and how to avoid falling in traps of misinterpretation.
-
-<img src="/Users/ain/Library/CloudStorage/Dropbox/Teaching/IMCS/_images/ci_coverage.png"
-     alt="this is a test."
-     style="float: left; margin-right: 10px;" />
+For example, confidence intervals are commonly used to capture the variation in a parameter estimate of interest, but are notoriously difficult to interpret. Simulation can be used to clarify why this is the case, and how to avoid falling in traps of misinterpretation. 
 
 In computing the standard error of a point estimate from a regression model, one may often choose between a robust variance (sandwich) estimator, model-based approaches, or the bootstrap. Simulation can be used to evaluate how well each standard error estimator captures the true sampling variation of the parameter in a specific context, thus guiding the choice. 
 
 Measurement error of an exposure of interest is commonly encountered in the empirical sciences, yet researchers will often assume certain simple measurement error models that lead to little to no bias. However, the impact of similar sources of error on covariates included in a regression model (e.g., confounders) is often not considered. Simulation can be used to better understand how common sources of error in a given research project can affect the bias of the treatment effect estimator of interest.
-
 
 When seeking to construct a simulation study to answer a specific question, several problems need to be considered and controlled for. This course will provide insight into what these problems are, and how to resolve them. Such problems include: choosing an appropriate Monte Carlo sample size to efficiently quantify parameters of interest without unnecessarily slowing down computation;  choosing a relevant data generating mechanism using causal inference principles (via, e.g., DAGs) for the underlying research question and using R code to generate variables from this mechanism; and how to efficiently analyze simulated data and interpret results. The course will conclude with a discussion of when more complex simulation designs are warranted, such as “plasmode” simulations or synthetic simulation (via variational autoencoders or generative adversarial networks).
 
@@ -61,22 +56,19 @@ Course concepts will be illustrated through an extended comparison of two averag
 
 This is an applied course. By the end of the course, students will be able to implement their own Monte Carlo simulation to estimate bias, mean squared error, confidence interval coverage, and other statistics for an estimator of their choice. 
 
-
 ## PRE-REQUISITES
 
 This course will build on basic and intermediate analytic methods and causal inference concepts covered in [EPI 545](https://sph.emory.edu/academics/courses/epi-courses/index.html), [EPI 560](https://sph.emory.edu/academics/courses/epi-courses/index.html) and [EPI 760](https://sph.emory.edu/academics/courses/epi-courses/index.html). 
 
-Necessary skills and concept include: reading data into R, basic data cleaning in R (e.g., subsetting data, finding missing values, merging data), operating on data.frames (e.g., changing column names, row names, summarizing rows/columns of data using simple statistics), basic graphics (e.g., plot or ggplot2), marginal standardization (g computation, parametric g formula), inverse probability weighting, basic causal estimands (average treatment effect, effect of treatment on the treated), and identifiability.
+Necessary skills and concept include: reading data into R, basic data cleaning in R (e.g., subsetting data, finding missing values, merging data), operating on data frames (e.g., changing column names, row names, summarizing rows/columns of data using simple statistics), basic graphics (e.g., plot or ggplot2), marginal standardization (g computation, parametric g formula), inverse probability weighting, basic causal estimands (average treatment effect, effect of treatment on the treated), and identifiability. Writing functions in R, using loops, and using the apply family of functions will be reviewed in the course.
 
 ## COURSE LEARNING OBJECTIVES
 
-* Understand the basic causal roadmap of picking a suitable estimand and estimator for a given research question.
-* Understand the curse of dimensionality and bias-variance tradeoffs.
-* Understand why a double-robust estimator mitigates problems introduced by the curse of dimensionality.
-* Understand the difference between TMLE and AIPW.
-* Understand how stacking (SuperLearner) combines several machine learning algorithms into a single meta-algorithm.
-* Deploy stacking in R using the `SuperLearner` and `sl3` packaages.
-* Deploy TMLE and AIPW in R using the `tmle`, `tmle3` and `AIPW` packages.
+* Understand how different distributions and regression models lead to simulated data
+* Understand key distributions in R, and how to use R functions to simulate and analyze data
+* Understand how to define an estimand of choice, and identify it's true value
+* Evaluate key measures such as bias, mean squared error, efficiency, and confidence interval coverage
+* Know how simulations are limited and why
  
 ## ATTENDANCE POLICY
 
@@ -117,10 +109,10 @@ Final grade point cutoffs (rounded to the nearest whole number) will be:
 This course will consist of a combination of in class lectures, in class exercises, and at home assignments. Students will be expected to have R and RStudio installed and working on their computers. In addition, the following packages should be installed and in working order:
 
 ```
-"tidyverse", "here", "sandwich", "lmtest", "boot", "ranger", "ggplot2", "broom", "SuperLearner", "tmle", "AIPW", "ranger", "xgboost", "e1071", "nnet", "glmnet", "remotes"
+"tidyverse", "here", "sandwich", "lmtest", "boot", "ranger", "ggplot2", "broom", "microbenchmark", "mvtnorm", "doParallel"
 ```
  
-You will also have to install the `tlverse` library, which is available only on GitHub. The best way to do this is to use the `install_github()` function in the `remotes` package. However, you will have to address the potential GitHub API limits, which can lead to installation errors. To deal with this problem, you will need your own GitHub account. 
+Depending on the type of simulation study you are conducting, you may have to install a development package from, e.g., GitHub. The best way to do this is to use the `install_github()` function in the `remotes` package. However, you will have to address the potential GitHub API limits, which can lead to installation errors. To deal with this problem, you will need your own GitHub account. 
 
 The easiest way to address this issue is to use a Github personal access token (PAT). There are a number of ways to do this, and it's important to [read the basic information on PATs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). Within R and RStudio, one straightforward way to manage PATs is to install and use the `usethis` package, which has a suite of functions available for creating and integrating PATs. Once you've installed `usethis`, you can:
 
@@ -134,7 +126,7 @@ Be aware: **your Github PAT is a password, and should be treated as such.**
 
 ### Health considerations
 
-At the very first sign of not feeling well, stay at home and reach out for a health consultation. Please consult the campus FAQ for how to get the health consultation. As you know, Emory does contact tracing if someone has been diagnosed with COVID-19. A close contact is defined as someone you spend more than 15 minutes with, at a distance less than 6 feet, not wearing facial coverings. This typically means your roommates, for example. 
+At the very first sign of not feeling well, please stay at home. You will not be penalized for not showing up to class because you are feeling ill. 
 
 ## RSPH POLICIES
 
@@ -157,10 +149,14 @@ You are expected to uphold and cooperate in maintaining academic integrity as a 
 
 ## COURSE CALENDAR AND OUTLINE
 
-| Section 1  | Estimands in Time-Fixed and Longidutinal Settings; Identification Bias versus Estimation Bias, Regression for Effect Estimation: Outcome Modeling and Propensity Scores, Loss Functions, Bias-Variance Tradeoff, Curse of Dimensionality. |
+| Section 1  | Why simulate?; Example questions that can be asked and answered via simulation studies; A specific example question: how does IP-weighting compare to marginal standardization?; An Overview of Simulation Designs; Regression Models and Distributions for Simulation Studies |
 
-| Section 2 | Machine Learning: Slow Convergence and Complexity Issues; Introduction to Double-Robustsness: Intuition and a Worked Example; Introduction to Cross-Fitting (Sample Splitting); Augmented Inverse Probability Weighting; Targeted Minimum Loss-Based Estimation; Double Debiased Machine Learning; Longitudinal TMLE. |
+| Section 2 | Key Distributions in the R stats and other packages; Constructing user defined functions in R; For Loops and the Apply Family of Functions; Seeds in R |
 
-| Section 3 | Heterogeneous Treatment Effects: T-Learner, S-Learner, X-Learner, R-Learner, DR-Learner, Causal Forests; Fitting the Outcome Model and Propensity Score; The Super Learner: Intuition and a Worked Example; Choosing Level-0 Algorithms; Tuning Level-0 Algorithms in the Super Learner; Screening Algorithms; Design Matrices in the Super Learner; |
+| Section 3 | The Aims of a simulation study; Defining your data generating mechanism using DAGs; What is your Estimand? No, really, what is your estimand?; The true value and the Oracle; Evaluating Estimators |
 
-| Section 4  |  The Cross-Validated Super Learner; `SuperLearner` versus `CV.SuperLearner` versus `sl3`; Estimating the ATE, ETT, ETU with TMLE and AIPW, Worked Examples; Estimating CATEs with the DR-Learner (versus Causal Forests), Worked Examples |
+| Section 4  |  Computation: when do small differences become big?; Profiling functions; Parallel Processing |
+
+| Section 5  |  Performance measures: bias, mean squared error, efficiency, confidence interval coverage and length, type I and II errors; Analyzing and Interpreting Simulation Results  |
+
+| Section 6  |  Putting it all together: how does IP-weighting compare to marginal standardization? |
