@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Syllabus Updated %%current_date_yyyymm%%
+title: "Introduction to Monte Carlo Simulation Using R"
 permalink: /syllabus/
 header-includes:
   - \usepackage{hyperref}
@@ -9,34 +9,25 @@ output:
   pdf_document
 ---
 
-[Download a pdf copy of syllabus](../syllabus.pdf)
-
-## Basic information
-
 __DEPARTMENT:__ Epidemiology
 
 __COURSE NUMBER:__ TBD                                          
 
-__COURSE TITLE__: Introduction to Monte Carlo Simulation
+__COURSE TITLE__: Introduction to Monte Carlo Simulation Using R
 
-__CREDIT HOURS__: 3
+__CREDIT HOURS__: 2
 
-__SEMESTER__: Fall %%current_date_yyyy%%
+__SEMESTER__: Fall 2024
 
 __CLASS HOURS AND LOCATION__: TBD
 
 __INSTRUCTOR NAME:__ Ashley I. Naimi
 
 __INSTRUCTOR CONTACT INFORMATION__
+
 * __EMAIL__: ashley.naimi@emory.edu 
 * __SCHOOL ADDRESS OR MAILBOX LOCATION__: CNR 4013
 * __OFFICE HOURS__: By Appointment
-
-__TEACHING ASSISTANT INFORMATION__: 
-* __NAME__: TBD
-* __EMAIL__: TBD
-* __OFFICE HOURS__: TBD (location: TBD)
- 
 
 ## COURSE DESCRIPTION
 
@@ -58,17 +49,31 @@ This is an applied course. By the end of the course, students will be able to im
 
 ## PRE-REQUISITES
 
-This course will build on basic and intermediate analytic methods and causal inference concepts covered in [EPI 545](https://sph.emory.edu/academics/courses/epi-courses/index.html), [EPI 560](https://sph.emory.edu/academics/courses/epi-courses/index.html) and [EPI 760](https://sph.emory.edu/academics/courses/epi-courses/index.html). 
+This course will build on basic and intermediate analytic methods covered in [EPI 538](https://sph.emory.edu/academics/courses/epi-courses/index.html), [EPI 545](https://sph.emory.edu/academics/courses/epi-courses/index.html), and [EPI 550](https://sph.emory.edu/academics/courses/epi-courses/index.html).
 
-Necessary skills and concept include: reading data into R, basic data cleaning in R (e.g., subsetting data, finding missing values, merging data), operating on data frames (e.g., changing column names, row names, summarizing rows/columns of data using simple statistics), basic graphics (e.g., plot or ggplot2), marginal standardization (g computation, parametric g formula), inverse probability weighting, basic causal estimands (average treatment effect, effect of treatment on the treated), and identifiability. Writing functions in R, using loops, and using the apply family of functions will be reviewed in the course.
+Prerequesite skills and concepts include: basic epidemiological measures, confounding, misclassification, selection bias, estimation of epidemiological parameters, issues related to causality, interpretation of basic inferential statistics such as p values and confidence intervals, as well as concepts, methods, and application of key regression concepts related to linear, log-linear and logistic regression.
+
+## DIVERSITY, EQUITY, AND INCLUSION CONSIDERATIONS
+
+This course will focus on the theory and application of quantitative and statistical methods to epidemiologic data. Epidemiology is a complex field of study that combines biomedical, physiological, mathematical, social, political, and economic dimensions into a single domain. As a result of this complexity, it is important to understand how epidemiologic knowledge is shaped by and is used to shape social and cultural perspectives on health, well-being, and the optimal organization of human societies.
+
+It is impossible to understand these perspectives without acknowledging the role that early 20th century views on race, ethnicity, sex, gender, and other related socio-political constructs played in shaping quantitative methods that we still use today. For example, the "founding fathers" of statistics (Francis Galton, Karl Pearson, and Ronald Fisher) were also founders of 20th century Eugenics, and they used the new math they derived to characterize many of the egregious and scientifically unjustifiable eugenic acts (forced sterilization, marriage prohibitions, or the supposed moral superiority of "Nordics" or "Aryans") with the patina of "objectivity."
+
+The literature on this topic is expansive, complex, and rapidly growing, and we will not be able to cover many of the problems with how statistical and quantitative methods were and are used inappropriately for iniquitous ends. However, the recommended reading list for the course contains references to key books and papers on this topic which are (some highly) recommended. Additionally, a deep understanding of the connection between data, statistics, and substantive theory can go a long way in both dismantling unsubstantiated claims (both eugenic, and more generally), as well as design studies that can generate a more nuanced understanding of the complexity of health. My hope is that EPI 560 will serve this end. 
 
 ## COURSE LEARNING OBJECTIVES
 
-* Understand how different distributions and regression models lead to simulated data
-* Understand key distributions in R, and how to use R functions to simulate and analyze data
-* Understand how to define an estimand of choice, and identify it's true value
-* Evaluate key measures such as bias, mean squared error, efficiency, and confidence interval coverage
-* Know how simulations are limited and why
+By the end of this course, you should be able to design, analyze, and interpret results from simple to intermediate level simulation studies using the R programming language. Specifically, you should aim to:
+
+* Understand the distinctions between parametric, plasmode, and synthetic simulations
+* Be capable of simulating random variables from a set distribution functions in R
+* Be capable of simulating data from linear, log-linear, and logistic regression models
+* Use the "balancing intercept" in the context of a logistic regression model for simulation
+* Construct simulation functions in R and use for loops and the `apply` family of functions
+* Use DAGs to generate code for simulating from simple and complex designs
+* Use Monte Carlo Integration to compute true parameter values in simple and complex designs
+* Understand Monte Carlo Error, and how to compute performance measures that take it into account
+* Generate appropriate summaries (tables and plots) of simulation results in R 
  
 ## ATTENDANCE POLICY
 
@@ -78,41 +83,46 @@ In person attendance in this course is expected.
 
 ### Assignments
 
-There will be one final project to be completed at home. There will also be three short exercises over the course of the term. 
+Each section will be associated with a short section assignment to be completed at home. All assignments are "open-book". Use of internet search engines is encouraged. Use of ChatGPT or other large language model based chat-bots is not prohibited. However, dishonest or misleading use of these (or any) techniques will be considered as Academic dishonesty, which will incur associated penalties (see below).
 
 ### Grade scale
 
-Students can choose to be graded as using letter scores (see table) or as Satisfactory(S)/Unsatisfactory(U).
+Students will be graded as Satisfactory (S)/Unsatisfactory (U).
 
-The basis for the final grade will be determined as follows:
-
-|---|---|
-| Exercises | 20% |
-| Analysis Project | 80% |
-
-
-Final grade point cutoffs (rounded to the nearest whole number) will be:
-
-|---|---|
-| A | 95-100 |
-| A- | 90-94 |
-| B+ | 85-89 |
-| B | 80-84 |
-| B- | 75-79 |
-| C | 70-74 |
-| F | <70 |
+- The basis for the final grade will be determined via section assignments. 
+- There will be a total of five section assignments (section 1 will not have an assignment). 
+- Each assignment will consist of two questions. 
+- Section assignments can be worked on in groups, but must be submitted individually. 
+- Section assignments will consist of a mix of short answer questions and/or R programming exercises.
+- Section assignments will be graded as Satisfactory (S)/Unsatisfactory (U).
+- To obtain a Satisfactory grade for the course, the student must obtain an S grade on each section assignment.
 
 
- 
-## COURSE STRUCTURE
+## COURSE LOGISTICS
 
-This course will consist of a combination of in class lectures, in class exercises, and at home assignments. Students will be expected to have R and RStudio installed and working on their computers. In addition, the following packages should be installed and in working order:
+### CANVAS
+
+- All materials for the course will be hosted on CANVAS. This includes the syllabus, lecture notes, data sets, R programs, section assignments, and readings. 
+
+- We will use CANVAS Course Chat, CANVAS Announcements, and email as the primary means of communication in this course. 
+
+- You will be asked to use CANVAS to submit assignments by the assigned due date.
+
+### In Class Computing
+
+You really should bring your laptop to class. There will be several class opportunities to run code.
+
+### R and Posit
+
+Students will be expected to have [R](https://cran.r-project.org/) and [Posit](https://posit.co/) [(formerly RStudio)](https://posit.co/blog/rstudio-is-becoming-posit/) installed and working on their computers. In addition, the following packages should be installed and in working order:
 
 ```
-"tidyverse", "here", "sandwich", "lmtest", "boot", "ranger", "ggplot2", "broom", "microbenchmark", "mvtnorm", "doParallel"
+"tidyverse", "here", "sandwich", "lmtest", "boot", "ggplot2", "broom", "rio"
 ```
- 
-Depending on the type of simulation study you are conducting, you may have to install a development package from, e.g., GitHub. The best way to do this is to use the `install_github()` function in the `remotes` package. However, you will have to address the potential GitHub API limits, which can lead to installation errors. To deal with this problem, you will need your own GitHub account. 
+
+Other packages will have to be installed during the course of the semester. Students should be familiar with how to install packages in R from CRAN.
+
+Depending on the analytic scenario, you may have to install a development package from, e.g., GitHub. The best way to do this is to use the `install_github()` function in the `remotes` package (the `remotes` package can be installed from CRAN). However, you will have to address the potential GitHub API limits, which can lead to installation errors. To deal with this problem, you will need your own GitHub account. 
 
 The easiest way to address this issue is to use a Github personal access token (PAT). There are a number of ways to do this, and it's important to [read the basic information on PATs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). Within R and RStudio, one straightforward way to manage PATs is to install and use the `usethis` package, which has a suite of functions available for creating and integrating PATs. Once you've installed `usethis`, you can:
 
@@ -128,35 +138,92 @@ Be aware: **your Github PAT is a password, and should be treated as such.**
 
 At the very first sign of not feeling well, please stay at home. You will not be penalized for not showing up to class because you are feeling ill. 
 
-## RSPH POLICIES
+## OTHER POLICIES
 
 __Accessibility and Accommodations__ 
 
-Accessibility Services works with students who have disabilities to provide reasonable accommodations. In order to receive consideration for reasonable accommodations, you must contact the Office of Accessibility Services (OAS). It is the responsibility of the student to register with OAS. Please note that accommodations are not retroactive and that disability accommodations are not provided until an accommodation letter has been processed.
-
-Students who registered with OAS and have a letter outlining their academic accommodations are strongly encouraged to coordinate a meeting time with me to discuss a protocol to implement the accommodations as needed throughout the semester. This meeting should occur as early in the semester as possible.
-
-Contact Accessibility Services for more information at (404) 727-9877 or accessibility@emory.edu. Additional information is available at the OAS website at http://equityandinclusion.emory.edu/access/students/index.html
-
-## Honor Code
-You are bound by Emory University’s Student Honor and Conduct Code. RSPH requires that all material submitted by a student fulfilling his or her academic course of study must be the original work of the student.  Violations of academic honor include any action by a student indicating dishonesty or a lack of integrity in academic ethics. Academic dishonesty refers to cheating, plagiarizing, assisting other students without authorization, lying, tampering, or stealing in performing any academic work, and will not be tolerated under any circumstances.
-
-The [RSPH Honor Code](http://www.sph.emory.edu/cms/current_students/enrollment_services/honor_code.html) states: "*Plagiarism is the act of presenting as one's own work the expression, words, or ideas of another person whether published or unpublished (including the work of another student). A writer’s work should be regarded as his/her own property.*" 
+As the instructor of this course, I endeavor to provide an inclusive learning environment. I want every student to succeed. The Department of Accessibility Services (DAS) works with students who have disabilities to provide reasonable accommodations. It is your responsibility to request accommodations. In order to receive consideration for reasonable accommodations, you must register with the DAS at https://accessibility.emory.edu/students/. Accommodations cannot be retroactively applied so you need to contact DAS as early as possible and contact us as early as possible in the semester to discuss the plan for implementation of your accommodations. For additional information about accessibility and accommodations, please contact the DAS at (404) 727-9877 or accessibility@emory.edu.
 
 ## Laney Academic Integrity Statement 
 
 You are expected to uphold and cooperate in maintaining academic integrity as a member of the Laney Graduate School. By taking this course, you affirm your commitment to the Laney Graduate School Honor Code, which you can find in the Laney Graduate School Handbook. You should ensure that you are familiar with the rights and responsibilities of members of our academic community and with policies that apply to students as members of our academic community. Any individual, when they suspect that an offense of academic misconduct has occurred, shall report this suspected breach to the appropriate Director of Graduate Studies, Program Director, or Dean of the Laney Graduate School. If an allegation is reported to a Director of Graduate Studies or a Program Director, they are in turn required to report the allegation to the Dean of Laney Graduate School. 
 
-## COURSE CALENDAR AND OUTLINE
+## COURSE MATERIALS
 
-| Section 1  | Why simulate?; Example questions that can be asked and answered via simulation studies; A specific example question: how does IP-weighting compare to marginal standardization?; An Overview of Simulation Designs; Regression Models and Distributions for Simulation Studies |
+### Required Reading
 
-| Section 2 | Key Distributions in the R stats and other packages; Constructing user defined functions in R; For Loops and the Apply Family of Functions; Seeds in R |
+The course notes will be posted on CANVAS and are the only required readings for this course.
 
-| Section 3 | The Aims of a simulation study; Defining your data generating mechanism using DAGs; What is your Estimand? No, really, what is your estimand?; The true value and the Oracle; Evaluating Estimators |
+### Recommened Optional Reading
 
-| Section 4  |  Computation: when do small differences become big?; Profiling functions; Parallel Processing |
+1) Rudolph et al (2021) Simulation as a Tool for Teaching and Learning Epidemiologic Methods. *Am J Epidemiol*. 190(5):900-907.
 
-| Section 5  |  Performance measures: bias, mean squared error, efficiency, confidence interval coverage and length, type I and II errors; Analyzing and Interpreting Simulation Results  |
+2) Morris et al (2019) Using simulation studies to evaluate statistical methods. *Stat in Med*. 38(11):2074-2102.
 
-| Section 6  |  Putting it all together: how does IP-weighting compare to marginal standardization? |
+3) Maldonado and Greenland (1997) The importance of critically interpreting simulation studies. *Epidemiology* 8(4):453-6
+
+4) Rudolph et al (2021) Simulation in Practice: The Balancing Intercept. *Am J Epidemiol*. 190(8):1696-1698.
+
+5) Fox et al (2022) Illustrating How to Simulate Data From Directed Acyclic Graphs to Understand Epidemiologic Concepts. *Am J Epidemiol*. 191(7):1300-1306.
+
+
+<!-- Burton A et al (2006) The design of simulation studies in medical statistics. Stat Med. 2006;25(24):4279-4292. doi:10.1002/sim.2673
+Mooney, C. “Conveying truth with the artificial: using simulated data to teach statistics in social sciences.” SocInfo Journal 1.Part 7 (1995): 1-5.
+Hodgson, Ted, and Maurice Burke. “On simulation and the teaching of statistics.” Teaching Statistics 22.3 (2000): 91-96.
+
+Notes
+Notes from a Stats course at NC State. Among other things, useful equations for calculating simulation error, and other estimands: https://www4.stat.ncsu.edu/~davidian/st810a/simulation_handout.pdf
+
+Notes from a short lecture at Emory on introduction to simulation: https://ainaimi.github.io/resources/Simulation_slides.html#1
+
+Casella, George, and Christian P. Robert. “Monte Carlo Statistical Methods.” (1999). Springer. New York, NY. -->
+
+## COURSE OUTLINE: LECTURES
+
+<div style="page-break-after: always;"></div>
+
+**N.B.: Weekly Schedule is Approximate**
+
+| &sect; 1    | Topics | 
+|:-------------|--------|
+| Week 1:      | Why simulate?; An Overview of Simulation Designs; Example Simulation Questions: |
+|              |    - Example 1: simple regression in an RCT |
+|              |    - Example 2: IP-weighting versus marginal standardization |
+|              |    - Example 3: causal mediation analysis |
+
+
+| &sect; 2    |  Topics | 
+|:-------------|--------|
+| Week 2:      | Key Distributions in the R stats and other packages; The Inverse Transformation Method; |
+| Week 3:      | Regression Models and Distributions for Simulation Studies; The Balancing Intercept |
+| Week 4:      | Constructing User Defined Functions in R; For Loops and the Apply Family of Functions | 
+| Week 5:      | Seeds in General and in R |
+
+
+| &sect; 3    | Topics | 
+|:-------------|--------|
+| Week 6:      | The Aims of a simulation study; Defining your data generating mechanism using DAGs |
+| Week 7:      | Defining your data generating mechanism using DAGs; Plasmode Simulation |
+| Week 8:      | What is your Estimand? Computing the True Estimand Value Using Monte Carlo Integration and the Oracle |
+
+
+| &sect; 4    |  Topics |
+|:-------------|--------|
+| Week 9:      | Monte Carlo Error and Approximate Performance Measures: Bias, Mean Squared Error, Integrated Measures
+| Week 10:     | Approximate Performance Measures: Efficiency, Confidence Interval Coverage and Length, Type I and II errors, Power, Statistical Considerations |
+
+| &sect; 5    | Topics | 
+|:-------------|--------|
+| Week 11:      | Analyzing and Interpreting Simulation Results, Nested Loop Plots, Zip Plot, Lollipop Plot, Histograms, Density Plots, Scatter Plots  |
+
+| &sect; 6    | Topics | 
+|:-------------|--------|
+| Week 12:     | Revisiting Example Simulation Questions: |
+|              |    - Example 1: simple regression in an RCT |
+|              |    - Example 2: IP-weighting versus marginal standardization |
+|              |    - Example 3: causal mediation analysis |
+
+| &sect; 7 (**optional**)    | Topics | 
+|:-------------|--------|
+| Week TBD:     | Computation: Parallel Processing in General and in R  |
+| Week TBD:     | Working on a Computing Cluster |
