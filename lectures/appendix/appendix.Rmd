@@ -1,0 +1,99 @@
+---
+title: "Appendix Notes"
+author: "Ashley I Naimi"
+date: "`r paste0('Spring ', 2024)`" #format(Sys.Date(), '%Y')
+urlcolor: blue
+bibliography: ref.bib
+link-citations: yes
+output: 
+    bookdown::pdf_book:
+      base_format: tint::tintPdf
+      toc: true
+      number_sections: true
+      includes:
+        in_header: ../../misc/preamble.tex
+      latex_engine: xelatex
+    html_document:
+      theme: readable
+      toc: true
+      toc_float: true
+      number_sections: true
+      css: ../../misc/style.css
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(formatR)
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+
+packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
+               "gridExtra","skimr","here","RColorBrewer","survival")
+
+for (package in packages) {
+  if (!require(package, character.only=T, quietly=T)) {
+    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
+  }
+}
+
+for (package in packages) {
+  library(package, character.only=T)
+}
+
+remotes::install_github("rstudio/fontawesome")
+
+library(fontawesome)
+
+thm <- theme_classic() +
+  theme(
+    legend.position = "top",
+    legend.background = element_rect(fill = "transparent", colour = NA),
+    legend.key = element_rect(fill = "transparent", colour = NA)
+  )
+theme_set(thm)
+
+knitr::knit_hooks$set(purl = knitr::hook_purl)
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+\newpage
+\onehalfspacing
+
+# Simulation Reading List
+
+Here is a reading list on designing and conducting Monte Carlo simulation studies for quantitative sciences. These articles are divided into two sections: methods articles, which describe, in whole or in part, how to conduct Monte Carlo simulations. I've also included two actual simulation studies that are published on the performance of different methods. 
+
+## Simulation Methods
+
+
+This article by Boulesteix and colleagues outlines some considerations around doing simulation studies in the health sciences. The authors also conduct an actual simulation study and provide R code that can be used to reproduce their results: https://bmjopen.bmj.com/content/10/12/e039921
+
+This article by Morris and colleagues is quickly becoming the standard reference on designing and implementing simulation studies in quantitative sciences:  https://onlinelibrary.wiley.com/doi/10.1002/sim.8086
+
+This article by Koehler et al discuss specific strategies around minimizing Monte Carlo estimator, estimating Monte Carlo error, and using Monte Carlo error to select appropriate sample sizes: https://www.tandfonline.com/doi/abs/10.1198/tast.2009.0030
+
+
+This book by Efron and Hastie, though not explicitly about Monte Carlo simulation, presents several concepts and code that are directly related to key statistical principles that should govern decisions around conducting Monte Simulations: Efron B, Hastie T. Computer Age Statistical Inference. Cambridge, UK: Cambridge University Press; 2016.
+
+## Simulation Examples
+
+Here are three examples of simulation studies conducted towards specific ends. The first focuses on problems that can arise with inappropriate uses of p-values, particularly in smaller samples. The second evaluates and compares different methods for constructing inverse probability weights for continuous exposures. The third presents a simulation study of the performance of inverse probability weighted Cox proportional hazards regression model. Of particular note, this latter simulation deploys an interesting and unique method to etimate the convergence rate of an estimator in different settings. 
+
+
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9555245/
+
+https://pubmed.ncbi.nlm.nih.gov/24487212/
+
+https://pubmed.ncbi.nlm.nih.gov/22492660/
+
+<!-- # More Advanced Simulation Topics -->
+
+<!-- ## Simulating Complex Longitudinal Data -->
+
+<!-- ## Plasmode Simulation -->
+
+<!-- ## Synthetic Simulation -->
+
+<!-- \newpage -->
+
+<!-- # References -->
