@@ -1,0 +1,19 @@
+\contentsline {section}{\numberline {1}Why Simulate?}{2}{section.1}%
+\contentsline {section}{\numberline {2}An Overview of Simulation Designs}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Compartmental Models}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Generative Modeling}{3}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Monte Carlo Estimation}{4}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Monte Carlo Simulation}{5}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}The Monte Carlo Method}{5}{subsection.2.5}%
+\contentsline {section}{\numberline {3}Example Simulation Questions}{6}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Can we estimate the value of \(\pi \)?}{6}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Estimating the Central Tendency of a Random Variable}{8}{subsection.3.2}%
+\contentsline {section}{\numberline {4}Some Example Simulation Research Questions}{11}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Inverse Probability Weighting versus G Comptuation in Time-Dependent Settings}{11}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}The Impact of Random Measurement Error in Observational Data Analysis}{12}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Hetergeneous Treatment Effects in the Presence of Null Overall Effects}{13}{subsection.4.3}%
+\contentsline {section}{\numberline {5}Some Motivating Questions}{13}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Example 1: Simple Regression in an RCT setting}{13}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Example 2: IPW vs Marginal Standardization}{14}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Example 3: Causal Mediation Analysis}{14}{subsection.5.3}%
+\contentsfinish 
