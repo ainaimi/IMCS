@@ -1,0 +1,6 @@
+\contentsline {section}{\numberline {1}Regression Models and Distributions for Simulation: Simple Continuous}{2}{section.1}%
+\contentsline {section}{\numberline {2}Regression Models and Distributions for Simulation: Binary and Continuous}{4}{section.2}%
+\contentsline {section}{\numberline {3}Log-Linear and Poisson}{8}{section.3}%
+\contentsline {section}{\numberline {4}Marginal Standardization}{11}{section.4}%
+\contentsline {section}{\numberline {5}Inverse Probability Weighting}{13}{section.5}%
+\contentsfinish 

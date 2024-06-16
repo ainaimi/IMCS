@@ -1,0 +1,478 @@
+---
+title: "Distributions in a Regression Context"
+author: "Ashley I Naimi"
+date: "Summer `r format(Sys.Date(), '%Y')`"
+urlcolor: blue
+bibliography: ref.bib
+link-citations: yes
+output: 
+    bookdown::pdf_book:
+      base_format: tint::tintPdf
+      toc: true
+      number_sections: true
+      includes:
+        in_header: ../../misc/preamble.tex
+      latex_engine: xelatex
+    html_document:
+      theme: readable
+      toc: true
+      toc_float: true
+      number_sections: true
+      css: ../../misc/style.css
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(formatR)
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+
+packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
+               "gridExtra","skimr","here","RColorBrewer","survival")
+
+for (package in packages) {
+  if (!require(package, character.only=T, quietly=T)) {
+    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
+  }
+}
+
+for (package in packages) {
+  library(package, character.only=T)
+}
+
+remotes::install_github("rstudio/fontawesome")
+
+library(fontawesome)
+
+thm <- theme_classic() +
+  theme(
+    legend.position = "top",
+    legend.background = element_rect(fill = "transparent", colour = NA),
+    legend.key = element_rect(fill = "transparent", colour = NA)
+  )
+theme_set(thm)
+
+knitr::knit_hooks$set(purl = knitr::hook_purl)
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+\newpage
+\onehalfspacing
+
+Often, we use regression models to analyze data, and so they are typically implemented in some way in a simulation setting. Here, we'll explore how to integrate some of the distribution functions in the last chapter into a regression modeling framework. We'll start with some very simple regression modeling frameworks and work our way up in complexity.
+
+# Regression Models and Distributions for Simulation: Simple Continuous
+
+The simplest regression framework we can simulate involves two normally distributed random variables: 
+
+```{r tidy = F, warning = F, message = F}
+
+set.seed(123)
+
+n = 5000
+
+x <- rnorm(n, mean = 0, sd = 1)
+
+y <- 5 + 2*x + rnorm(n, mean = 0, sd = 1)
+
+a <- data.frame(x, y)
+
+head(a)
+
+```
+
+We can explore these data using standard methods:
+
+```{r  tidy = F, warning = F, message = F}
+
+GGally::ggpairs(a)
+
+summary(a$y)
+
+summary(a$x)
+
+```
+
+Because of how we defined the outcome in the simulation, we can analyze these data using a few methods. For example, via `lm()` or `glm()`:
+
+```{r tidy = F, warning = F, message = F}
+
+mod1 <- lm(y ~ x, data = a)
+
+# mod1 <- glm(y ~ x, data = a, family = gaussian(link = "identity"))
+
+summary(mod1)$coefficients
+
+```
+
+We can see that the coefficients from this model align almost exactly with the values we used to simulate the outcome variable `y`. 
+
+# Regression Models and Distributions for Simulation: Binary and Continuous
+
+How should we simulate a binary random variable from a regression model? We can use a logistic regression model to do this. We won't explain all of this now, but will have an opportunity to look at each of these elements to get a sense of how this code works and why:
+
+```{r  tidy = F, warning = F, message = F}
+
+# define the inverse logistic function
+expit <- function(x){
+  1/(1 + exp(-x))
+} 
+
+set.seed(123)
+
+n = 5000
+
+z <- rnorm(n, mean = 0, sd = 1)
+
+x <- rbinom(n, size = 1, p = expit(-1 + log(2)*z))
+
+y <- 100 + 10*x + 3*z + rnorm(n, mean = 0, sd = 10)
+
+# use these variables to construct a dataset:
+
+a <- data.frame(z, x, y)
+
+```
+
+The above code gives us a dataset of 5000 observations with: one continuous covariate $z$, one binary exposure $x$, and one continuous outcome $y$:
+
+```{r tidy = F, warning = F, message = F}
+
+head(a)
+
+```
+
+We can do some basic analyses of these data:
+
+```{r tidy = F, warning = F, message = F}
+
+ggplot(a) + geom_histogram(aes(x = y))
+
+ggplot(a) + geom_histogram(aes(x = z))
+
+table(a$x)
+
+mean(a$x)
+
+```
+
+Again, we can use a simple regression model to analyze these data, such as:
+
+```{r tidy = F, warning = F, message = F}
+
+# mod1 <- lm(y ~ x, data = a)
+
+mod1 <- glm(y ~ x + z, data = a, family = gaussian(link = "identity"))
+
+summary(mod1)$coefficients
+
+```
+
+Let's unpack this model. We can formulate it as a generalized linear model with a Gaussian distribution and identity link function: 
+
+$$Y_i = \beta_0 + \beta_1 X_i + \beta_2 Z_i + \epsilon_i$$
+where $\epsilon_i \sim \mathcal{N}(0, \sigma^2)$
+
+Notice that this equation corresponds to the following model code:
+
+```{r, warning = F, message = F, eval = F}
+
+mod1 <- glm(y ~ x + z, data = a, family = gaussian(link = "identity"))
+
+summary(mod1)
+
+```
+
+Notice also how this aligned with the code we used to simulate the outcome:
+
+```{r, warning = F, message = F, eval = F}
+
+y <- 100 + 10*x + 3*z + rnorm(n, mean = 0, sd = 10)
+
+```
+
+What about the code that we used to simulate the exposure? This is the propensity score model, and we used logistic regression, defined as:
+
+$$\logit P(X = 1 \mid Z = 1) = \alpha_0 + \alpha_1 Z$$
+which is equivalent to:
+
+$$ P(X = 1 \mid Z = 1) = \expit \{ \alpha_0 + \alpha_1 Z \}$$
+In our code, the values of $\alpha_0, \alpha_1$ were set to -1 and $\log(2)$, respectively. Importantly, the "logit" and "expit" functions are defined as:
+
+$$\logit P(\bullet) = \frac{P(\bullet)}{1 - P(\bullet)}$$
+
+$$\expit (\bullet) = \frac{1}{[1 + \exp(-\bullet)]}$$
+These functions are inversely related, meaning:
+
+$$P(\bullet) = \expit \left ( \logit P(\bullet) \right ) $$
+
+We can fit this model using the GLM routines in R. For example, if we wanted to fit a propensity score model to the `a` data, we might use the following code:
+
+```{r  tidy = F, warning = F, message = F}
+a$propensity_score <- glm(x ~ z, data = a, family = binomial("logit"))$fitted.values
+```
+
+While this is harder to see, it is aligned with the code we used to simulate the exposure. Specifically:
+
+```{r tidy = F, warning = F, message = F}
+x <- rbinom(n, size = 1, p = expit(-1 + log(2)*z))
+```
+
+Note that this code simulates a random variable $X$ from the Bernoulli distribution (`rbinom` with `size = 1`), where `p` is defined as the inverse of the logit of the regression model. We can write this as:
+
+$$\log \left [ \frac{P(X = 1 \mid Z)}{1 - P(X = 1 \mid Z)} \right ] = -1 + \log(2)\times Z $$
+
+Or, we can also write this as:
+
+$$P(X = 1 \mid Z) = \frac{1}{\left [ 1 + \exp(-[-1 + \log(2)\times Z]) \right ] }$$
+
+This $P(X = 1 \mid Z)$ is the propensity score. It's what we used in the `p = ` argument of the `rbinom` function, and it's what we estimated when we fit a `glm` regressing our exposure against $Z$, appended with the `$fitted.values` operator.
+
+:::{.rmdnote data-latex="{dive}"}
+
+__Deeper Dive__: The $\expit(\bullet)$ Function
+
+|               Consider the probabilities we get from the expit function above when we have specific values of $Z$, which is a continuous (Gaussian) random variable with mean = 0 and standard deviation = 1. When $Z = 0$, we have:
+
+$$\frac{1}{1+\exp(-[-1])} \approx \frac{1}{1+ 2.718282} \approx 0.27$$
+
+In contrast, when $Z = -1$, we have
+
+$$\frac{1}{1+\exp(-[-1 + \log(2) \times -1])} \approx \frac{1}{1+ 0.1839397} \approx 0.15$$
+
+But if $Z = 1$, we have:
+
+$$\frac{1}{1+\exp(-[-1 + \log(2) \times 1])} \approx \frac{1}{1+ 0.7357589} \approx 0.42$$
+Each of these gets resolved in the `rbinom` function above, giving us a probability bounded between [0,1] that also depends on $Z$.
+:::
+
+# Log-Linear and Poisson
+
+We can also simulate from a log-linear model where the outcome is distributed following a Poisson distribution. In this case, we could define a log-linear Poisson regression model as:
+
+$$\log E(Y \mid X ) = \beta_0 + \beta_1 X $$
+
+where $Y \mid X \sim Pois(\lambda)$, and where $\lambda = \exp(\beta_0 + \beta_1 X)$. In R, this could look like:
+
+```{r tidy = F, warning = F, message = F}
+
+set.seed(123)
+
+n = 5000
+
+z <- rnorm(n, mean = 0, sd = 1)
+
+x <- rbinom(n, size = 1, p = expit(-1 + log(2)*z))
+
+y <- rpois(n, lambda = exp(2 + log(2)*x + log(1.5)*z))
+
+# use these variables to construct a dataset:
+
+b <- data.frame(z, x, y)
+
+head(b)
+
+```
+
+We can explore distributions in this dataset, as we would typically:
+
+```{r tidy = F, warning = F, message = F}
+
+GGally::ggpairs(b)
+
+```
+
+We could more closely inspect the distribution of the outcome, which follows a Poisson distribution:
+
+```{r tidy = F, warning = F, message = F}
+
+ggplot(b) + 
+  geom_histogram(aes(x = y)) + 
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
+
+```
+
+We can then fit a regression model to these simulated data, as follows:
+
+```{r tidy = F, warning = F, message = F}
+
+mod1 <- glm(y ~ x + z, data = b, family = poisson(link = "log"))
+
+summary(mod1)$coefficients
+
+```
+
+Again, this model demonstrates that we can recover the true values, which we used to simulate these data. 
+
+# Marginal Standardization
+
+Marginal standardization is equivalent to g computation (aka the parametric g formula) when the exposure is measured at a single time point [@Naimi2016b]. This process can be implemented by fitting a single regression model, regressing the outcome against the exposure and all confounding variables. But instead of reading the coefficients the model, one can obtain parameter estimates of interest by using this model to generate predicted risks for each individual under “exposed” and “unexposed” scenarios in the dataset. To obtain standard errors, the entire procedure must be bootstrapped.
+
+Here is some code to implement this marginal standardization in the above dataset:
+
+```{r tidy = F, warning = F, message = F}
+
+library(boot)
+
+#' Regress the outcome against the exposure and covariate
+ms_model <- glm(y ~ x + z, data = a, family = gaussian(link = "identity"))
+
+##' Generate predictions for everyone in the sample to obtain 
+##' unexposed (mu0 predictions) and exposed (mu1 predictions) risks.
+mu1 <- predict(ms_model, newdata = transform(a, x=1), type="response")
+mu0 <- predict(ms_model, newdata = transform(a, x=0), type="response")
+
+#' Mean difference in predicted outcomes
+marg_stand_MD <- mean(mu1) - mean(mu0)
+
+#' Using the bootstrap to obtain confidence intervals for the marginally adjusted 
+#' mean difference.
+bootfunc <- function(data,index){
+  boot_dat <- data[index,]
+  ms_model <- glm(y ~ x + z, data=boot_dat, family = gaussian(link = "identity"))
+  mu1 <- predict(ms_model, newdata = transform(boot_dat,x=1), type="response")
+  mu0 <- predict(ms_model, newdata = transform(boot_dat,x=0), type="response")
+  
+  marg_stand_MD_ <- mean(mu1) - mean(mu0)
+  
+  return(marg_stand_MD_)
+}
+
+#' Run the boot function. Set a seed to obtain reproducibility
+set.seed(123)
+boot_res <- boot(a, bootfunc, R=2000)
+
+boot_MD <- boot.ci(boot_res, type = "norm")
+
+marg_stand_MD
+
+boot_MD
+
+```
+
+# Inverse Probability Weighting
+
+We can also estimate the exposure-outcome association using inverse probability weighting. Inverse probability weighting is the commonly employed propensity score adjustment technique. The simple heuristic often used to describe the way IP-weighting works is that, when applied to data, they yield a "pseudo population" where there is no longer an association between the covariate (i.e., confounder) on the exposure.
+
+The weights for each individual needed to create this pseudo-population are defined as the inverse of the probability of receiving their observed exposure. However, simply taking the inverse of the probability of the observed exposure, while valid, is not the usual strategy for implementing inverse probability weights. In practice, one will often use stabilized weights, stabilized normalized weights, potentially with some degree of "truncation" or, more accurately, trimming of the weights.^[In contrast to our emphasis of the usage of the word "truncation" which refers to the removal of observations from the dataset, researchers will often refer to "truncating" the weights, which sets the largest value to be equal to the 99th or 95th percentile values. This is more accurately referred to as "trimming" the weights, since no truncation is occurring.] 
+
+The simplest type of weight used in practice is the stabilized inverse probability weight. These are often defined as:
+
+\[
+sw = 
+\begin{dcases}
+\frac{P(X = 1)}{P(X = 1 \mid Z)} & \text{if $X = 1$} \\
+\frac{P(X = 0)}{P(X = 0 \mid Z)} & \text{if $X = 0$}
+\end{dcases}
+\]
+
+Let's use the simulated data again to construct the stabilized weights and apply them to estimate the mean difference. We start by fitting a propensity score model to construct our weights:
+
+```{r tidy = F, warning = F, message = F}
+
+# create the propensity score in the dataset
+a$propensity_score <- glm(x ~ z, data = a, family = binomial("logit"))$fitted.values
+
+# stabilized inverse probability weights
+a$sw <- (mean(a$x)/a$propensity_score)*a$x + 
+  ((1-mean(a$x))/(1-a$propensity_score))*(1-a$x)
+
+summary(a$sw)
+
+head(a)
+
+```
+
+As we can see from the output above, the stabilized weights are, in fact, well behaved, with a mean of one and a max value that is small relative to the overall sample size.
+
+```{r tidy = F, warning = F, message = F}
+
+mod_MD_weighted <- glm(y ~ x, data = a, weights=sw, family = gaussian("identity"))
+
+summary(mod_MD_weighted)$coefficients
+
+```
+
+To get appropriate standard errors for this model, there are a few options we can use. Importantly, the model-based standard errors are no longer valid when weighting is used. One must instead use the robust (sandwich) variance estimators, or the bootstrap. 
+
+For example, the robust variance approach could be deployed using the `lmtest` and `sandwich` packages:
+
+```{r tidy = F, warning = F, message = F}
+
+library(lmtest)
+library(sandwich)
+
+coeftest(mod_MD_weighted, 
+         vcov. = vcovHC(mod_MD_weighted, type = "HC3"))[2,]
+
+coefci(mod_MD_weighted, 
+       level = 0.95, 
+       vcov. = vcovHC(mod_MD_weighted, type = "HC3"))[2,]
+
+```
+
+One can then construct CIs in the standard way using the estimated standard error in the output above, or using the `coefci` function in the `lmtest` package. Alternatively, we can use the boostrap to get standard errors for IP weighted models. The key to the bootstrap here (as in all cases) is to capture all models within the bootstrap function. In the IP weighting case, this includes the propensity score model and the weighted regression model:
+
+```{r tidy = F, warning = F, message = F}
+#' Using the bootstrap to obtain confidence intervals for the IP weighted 
+#' mean difference.
+bootfunc <- function(data,index){
+  
+  boot_dat <- data[index,]
+
+  boot_dat$propensity_score <- glm(x ~ z, data = boot_dat, family = binomial("logit"))$fitted.values
+
+  # stabilized inverse probability weights
+  boot_dat$sw <- (mean(boot_dat$x)/boot_dat$propensity_score)*boot_dat$x + 
+    ((1-mean(boot_dat$x))/(1-boot_dat$propensity_score))*(1-boot_dat$x)  
+  
+  mod_MD_weighted_ <- glm(y ~ x, data = boot_dat, weights=sw, family = gaussian("identity"))
+
+  res <- summary(mod_MD_weighted_)$coefficients[2,1]
+  
+  return(res)
+  
+}
+
+#' Run the boot function. Set a seed to obtain reproducibility
+set.seed(123)
+boot_res <- boot(a, bootfunc, R = 2000)
+
+boot_IP_weight <- boot.ci(boot_res, type = "norm")
+
+summary(mod_MD_weighted)$coefficients[2,1]
+
+boot_IP_weight
+```
+
+Here's a table comparing the results we've obtained so far:
+
+```{r tidy = F, warning = F, message = F, include = F}
+
+## marginal standardization
+
+marg_stand_res <- c(marg_stand_MD, boot_MD$normal[2:3])
+
+ip_weighted_res <- c(summary(mod_MD_weighted)$coefficients[2,1], 
+                     coefci(mod_MD_weighted, 
+                            vcov. = vcovHC(mod_MD_weighted, type = "HC3"))[2,])
+
+ip_weighted_boot <- c(summary(mod_MD_weighted)$coefficients[2,1], 
+                      boot_IP_weight$normal[2:3])
+```
+
+```{r tidy = F, message = F, warning = F, echo = F}
+kable(
+  rbind(marg_stand_res,
+      ip_weighted_res,
+      ip_weighted_boot),
+      col.names = c("Estimate", "LCL", "UCL")
+)
+```
+
+
+
+\newpage
+
+# References
