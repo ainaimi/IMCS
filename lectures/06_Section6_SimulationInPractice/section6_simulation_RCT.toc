@@ -1,0 +1,11 @@
+\contentsline {section}{\numberline {1}Adjusted versus Unadjusted ITT Estimates}{2}{section.1}%
+\contentsline {section}{\numberline {2}Aims}{2}{section.2}%
+\contentsline {section}{\numberline {3}Data Generating Mechanisms}{2}{section.3}%
+\contentsline {section}{\numberline {4}Estimands}{2}{section.4}%
+\contentsline {section}{\numberline {5}Methods}{3}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Unadjusted and Adjusted Linear Regression}{3}{subsection.5.1}%
+\contentsline {section}{\numberline {6}Performance Measures}{3}{section.6}%
+\contentsline {section}{\numberline {7}True Estimand Value}{3}{section.7}%
+\contentsline {section}{\numberline {8}Simulation Code}{4}{section.8}%
+\contentsline {section}{\numberline {9}Performance Evaluation}{7}{section.9}%
+\contentsfinish 

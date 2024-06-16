@@ -1,0 +1,357 @@
+---
+title: "Simulation Study: Example 3"
+author: "Ashley I Naimi"
+date: "`r paste0('Spring ', 2024)`" #format(Sys.Date(), '%Y')
+urlcolor: blue
+bibliography: ref.bib
+link-citations: yes
+output: 
+    bookdown::pdf_book:
+      base_format: tint::tintPdf
+      toc: true
+      number_sections: true
+      includes:
+        in_header: ../../misc/preamble.tex
+      latex_engine: xelatex
+    html_document:
+      theme: readable
+      toc: true
+      toc_float: true
+      number_sections: true
+      css: ../../misc/style.css
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(formatR)
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+
+packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
+               "gridExtra","skimr","here","RColorBrewer","survival")
+
+for (package in packages) {
+  if (!require(package, character.only=T, quietly=T)) {
+    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
+  }
+}
+
+for (package in packages) {
+  library(package, character.only=T)
+}
+
+remotes::install_github("rstudio/fontawesome")
+
+library(fontawesome)
+
+thm <- theme_classic() +
+  theme(
+    legend.position = "top",
+    legend.background = element_rect(fill = "transparent", colour = NA),
+    legend.key = element_rect(fill = "transparent", colour = NA)
+  )
+theme_set(thm)
+
+knitr::knit_hooks$set(purl = knitr::hook_purl)
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+\newpage
+\onehalfspacing
+
+# Estimating the Controlled Direct Effect
+
+Our final example of using simulation will involve causal mediation analysis. We are going to use the data generating mechanism we used that was based on the following DAG:
+
+```{r, out.width = "10cm",fig.cap="Causal diagram representing exposure induced mediator outcome confounding.",echo=F}
+knitr::include_graphics(here("_images","mediation_dag.pdf"))
+```
+
+Data generated from this mechanism can be used to quantify the controlled direct effect, defined as:
+
+$$E(Y^{x = 1, z} - Y^{x = 0, z})$$
+
+# Aims
+
+In terms of aims, let's evaluate what happens when we improperly adjust for the confounder of the mediator outcome association that is downstream to the exposure. There are a few ways in which we can improperly adjust for this confounder, and we'll explore two:
+
+- Evaluate the bias of a CDM estimator when we include the exposure induced mediator outcome confounder ($L$) in a simple regression model
+- Evaluate the bias of a CDM estimator when we fail to adjust for the exposure induced mediator outcome confounder
+
+As we saw previously, the DAG above suggests the following causal ordering:
+
+|  Variable  | Arrow Number |
+|----|---|
+| $U$  |  0 |
+| $C$  |  0 |
+| $X$  |  1 |
+| $L$  |  2 |
+| $Z$  |  2 |
+| $Y$  |  5 |
+
+# Monte Carlo Integration for the True Value
+
+In order to evaluate the bias, we're going to need to compute the true value. We can do this here using Monte Carlo integration. Let's write a program that adapts our data generating mechanism so that we can compute the true CDM in the setting we'd like to explore:
+
+```{r tidy = F, warning = F, message = F}
+
+expit <- function(x){1/(1 + exp(-x))}
+
+set.seed(123)
+
+true_CDM <- function(sample_size, exposure, mediator){
+  
+  n <- sample_size
+
+  U <- rnorm(n)
+  
+  C <- rnorm(n)
+  
+  X <- exposure # rbinom(n, size = 1, p = expit(-1 + log(2)*C ))
+  
+  L <- rnorm(n, mean = 0 + 1.5*X + 1.5*U)
+  
+  Z <- mediator # rbinom(n, size = 1, expit(-1.5 + log(2)*X + log(2)*L ))
+  
+  return(mean(10 + 5*X + 5*C + 5*Z + 4*L + 4*U))
+
+}
+
+
+```
+
+
+# Estimands
+
+We will focus our attention on a setting with a continuous outcome. Thus, we can compare the unadjusted and adjusted mean difference between the treated and untreated:
+
+$$E(Y \mid A = 1) - E(Y \mid A = 0)$$
+
+Note that, in a well-conducted randomized trial, this is equivalent to the average treatment effect on the mean difference scale: 
+
+$$E(Y^{a = 1} -Y^{a = 0})$$
+
+# Methods
+
+## Unadjusted and Adjusted Linear Regression
+
+With a continuous outcome and a binary randomized treatment variable, we can fit simple adjusted and unadjusted linear regression models to compute the ITT effect:
+
+$$E(Y \mid A ) = \alpha_0 + \alpha_1A$$
+$$E(Y \mid A, C) = \beta_0 + \beta_1A + \beta_2C$$
+
+In these cases, provided the models are correctly specified, both $\alpha_1$ and $\beta_1$ can be interpreted as the intention to treat effect. 
+
+# Performance Measures
+
+Once we obtain our simulation data, we will use the following performance measures to compare unadjusted and adjusted ITT effects:
+
+- bias of the point estimate
+- bias of the standard error
+
+# True Estimand Value
+
+In this case, because we are interested in unadjusted and adjusted effects in a linear model, we do not need to rely on Monte Carlo integration to compute the true value. In fact, the true value will be whatever coefficient we choose to parameterize the treatment-outcome relationship in the linear model used to simulate the outcome. Because the model is linear, and there is no confounding bias to adjust for, we can expect that the unadjusted and adjusted effects are equivalent.
+
+Note that, in nonlinear models (such as logistic regression), this equivalence will not hold, in which case we'd need to use Monte Carlo integration to compute the true value.
+
+# Simulation Code
+
+Once the true values are obtained, we can then run our simulation. Let's look through the code we'll use to do this:
+
+```{r tidy = F, warning = F, message = F, eval = F}
+library(parallel)
+library(lmtest)
+library(sandwich)
+
+expit<-function(a){1/(1+exp(-a))}
+
+set.seed(123)
+
+simulation_function <- function(index, 
+                                sample_size = 500,
+                                true_value = 2,
+                                c_number = 10,
+                                cov_mat = 0,
+                                diag_cov = 1){
+  
+  # printing to console won't work with parallel processing
+  print(index)
+  
+  # DATA GENERATION
+  n <- sample_size 
+  print(n)
+  
+  # how many confounders to simulate?
+  p <- c_number
+  print(p)
+  
+  ## confounder matrix
+  sigma <- matrix(cov_mat, nrow=p, ncol=p)
+  diag(sigma) <- diag_cov
+  c <- mvtnorm::rmvnorm(n, mean=rep(0,p), sigma=sigma)
+  
+  # DESIGN MATRIX FOR THE PROPENSITY SCORE MODEL
+  piMat <- model.matrix(  
+    as.formula(  
+      paste("~(",  
+            paste("c[,",1:ncol(c),"]", collapse="+"),  
+            ")"  
+      )  
+    )  
+  )[,-1]
+  
+  # simulate the treatment via 50:50 randomization
+  x <- rbinom(n, size = 1, p = .5)
+  
+  # parameters for the covariate outcome relation
+  parmsC_mu <- rep(1.25, c_number)
+  
+  # simulate the outcome
+  y <- rnorm(n, mean = 100 + true_value*x + piMat%*%parmsC_mu, sd = 2)
+  
+  # construct dataset
+  analysis_data <- data.frame(y, x, c)
+  
+  # ANALYSIS
+  
+  mod1 <- lm(y ~ x, data = analysis_data)
+  unadjusted_effect <- summary(mod1)$coefficients[2,1:2]
+  
+  mod2 <- lm(y ~ ., data = analysis_data)
+  adjusted_effect <- summary(mod2)$coefficients[2,1:2]
+  
+  # SIMULATION FUNCTION OUTPUT
+  
+  res <- data.frame(sample_size = sample_size,
+                    c_number = c_number,
+                    cov_mat  = cov_mat,
+                    diag_cov = diag_cov,
+                    true_value = true_value,
+                    unadjusted_effect,
+                    adjusted_effect)
+  
+  return(res)
+}
+
+simulation_results <- mclapply(1:5000,
+                               function(x) simulation_function(index = x, 
+                                                               sample_size = 500,
+                                                               true_value = 2,
+                                                               c_number = 10,
+                                                               cov_mat = 0,
+                                                               diag_cov = 1),
+                               mc.cores = detectCores() - 2)
+
+sim_res <- do.call(rbind, simulation_results)
+
+# # save the data to file!
+
+write_csv(sim_res, here("lectures/06_Section6_SimulationInPractice", "simulation_results_rct.csv"))
+
+```
+
+
+# Performance Evaluation
+
+This simulation takes some time to run, so let's be sure we save our results to a file so that we can re-import them without having to run the simulation again to rebuild the entire dataset. We can import our saved data back into R using standard code, such as the `read` functions in the tidyverse:
+
+```{r tidy = F, warning = F, message = F}
+
+a <- read_csv(here("lectures/06_Section6_SimulationInPractice", "simulation_results_rct.csv"))
+
+head(a)
+
+```
+
+Let's start with some basic analyses. We'll look at the mean of the unadjusted and adjusted mean differences, which should be 2 across all parameter specifications:
+
+```{r tidy = F, warning = F, message = F}
+
+a %>% 
+  group_by(sample_size, c_number, cov_mat) %>% 
+  summarize(meanAdj = mean(adjusted_estimate),
+            meanUnAdj = mean(unadjusted_estimate))
+
+```
+
+These results show what we'd expect to see: that, on average, the point estimates are centered on the true value. What about the standard errors?:
+
+```{r tidy = F, warning = F, message = F}
+
+a %>% 
+  group_by(sample_size, c_number, cov_mat) %>% 
+  summarize(meanAdjSE = mean(adjusted_estimate_se),
+            meanUnAdjSE = mean(unadjusted_estimate_se))
+
+```
+
+This is difficult to interpret specifically, but clearly the standard error estimator for the unadjusted ITT estimator is much larger than the adjusted ITT estimator. Let's visualize these results using a nested loop plot:
+
+```{r tidy = F, warning = F, message = F}
+
+plot_res <- a %>% 
+  group_by(sample_size, c_number, cov_mat) %>% 
+  summarize(meanAdjSE = mean(adjusted_estimate_se),
+            meanUnAdjSE = mean(unadjusted_estimate_se))
+
+pacman::p_load(looplot)
+
+p = nested_loop_plot(resdf = plot_res, 
+                     x = "sample_size", steps = "c_number", grid_rows = "cov_mat",
+                     steps_y_base = -.25, steps_y_height = .25, steps_y_shift = .1,
+                     x_name = "Sample Size", y_name = "Standard Error",
+                     spu_x_shift = 200,
+                     steps_values_annotate = TRUE, steps_annotation_size = 3, 
+                     hline_intercept = 0, 
+                     y_expand_add = c(1, NULL), 
+                     post_processing = list(
+                       add_custom_theme = list(
+                         axis.text.x = element_text(angle = -90,
+                                                    vjust = 0.5,
+                                                    size = 8)
+                       ))
+)
+
+ggsave(here("_images", "nested_loop_plot_rct.pdf"), width = 8, height = 6)
+
+```
+
+Here, we can more clearly see the differences between adjusted and unadjusted ITT estimators when different numbers of covariates are adjusted for under different covariate correlation structures across our three sample sizes:
+
+```{r nested_loop_rct, out.width="10cm", fig.align='center', echo=F}
+knitr::include_graphics(here("_images", "nested_loop_plot_rct.pdf"))
+```
+
+Finally, it's important to note three subtleties here. **First,** the standard errors for the adjusted an unadjusted estimators are performing as expected. They are accurately capturing the variability in the point estimates. 
+
+We can confirm this by comparing the standard deviation of the point estimates from the adjusted and unadjusted approaches to the means of their respective standard error estimates:
+
+```{r tidy = F, warning = F, message = F}
+a %>% 
+  group_by(sample_size, c_number, cov_mat) %>% 
+  summarize(meanAdjSE = mean(adjusted_estimate_se),
+            sdAdj = sd(adjusted_estimate)) %>% 
+  mutate(se_bias = sdAdj - meanAdjSE)
+
+a %>% 
+  group_by(sample_size, c_number, cov_mat) %>% 
+  summarize(meanUnadjSE = mean(unadjusted_estimate_se),
+            sdUnadj = sd(unadjusted_estimate)) %>% 
+  mutate(se_bias = sdUnadj - meanUnadjSE)
+```
+
+Fundamentally, what is happening here is that the adjusted estimator is simply more efficient than the unadjusted estimator. However, both are correct. 
+
+**Second,** our illustration is limited in that our outcome is simulated from a linear model. Because of this, we can place the adjusted and unadjusted point estimates on equal footing as they are both targeting the same estimand. That is, because of the combination of randomization and linearity of the outcome model, the unadjusted and adjusted estimator are mathematically equivalent. 
+
+If our outcome was simulated from a nonlinear model, such as logistic regression, we'd have to take into consideration noncollapsibility here, which would add a considerable degree of complexity to this our simulation study.
+
+**Third** and final, we did not explore the consequences of misspecification of the adjusted model in our simulations. To illustrate this point, suppose there were several interactions between the randomized treatment and the covariates in the data generating mechanism that we **did not know to acccount for** in the analytic model used to adjust our ITT estimator. Alternatively, suppose that a subset of the covariates were related to the outcome in complex (e.g., curvilinear) ways, and we failed to account for this in our analytic model because we did not know these relationships were present. 
+
+In this case, it is possible that using a misspecified model to obtain an adjusted estimator results in bias of the ITT effect, which obviates the whole purpose of deploying a randomized trial. This is one reason why unadjusted ITT effects are most commonly reported in the literature, even though adjusted estimators are more efficient. In effect, efficiency is a second order property, while bias is a first order property.
+
+
+\newpage
+
+# References
