@@ -1,0 +1,224 @@
+---
+title: "Causal Inference 3: DAGs"
+author: Ashley I. Naimi, PhD 
+header-includes:
+   - \DeclareMathOperator{\logit}{logit}
+   - \DeclareMathOperator{\expit}{expit}
+   - \usepackage{setspace}
+   - \usepackage{booktabs}
+output: #pdf_document
+  tufte::tufte_handout: default
+  #tufte::tufte_html: default
+bibliography: ref_main_v4.bib
+---
+
+```{r setup, include=FALSE}
+library(here)
+library(tidyverse)
+thm <- theme_classic() +
+  theme(
+    legend.position = "top",
+    legend.title=element_blank(),
+    legend.background = element_rect(fill = "transparent", colour = NA),
+    legend.key = element_rect(fill = "transparent", colour = NA)
+  )
+theme_set(thm)
+```
+
+\newpage
+\noindent {\Large \bf Outline}
+\vskip .25cm
+\noindent \underline{DAGs}
+\begin{itemize}
+  \item[] Background: The Confounding Triangle
+ \item[] "Drawing" versus Graphical Model
+ \item[] Adjustment
+  \begin{itemize}
+    \item[] Conditioning
+    \item[] Stratification
+    \item[] Matching
+    \item[] Weighting
+  \end{itemize}
+  \item[] Directed Acyclic Graphs
+  \item[] Terminology
+  \item[] Minimally Sufficient Adjustment Set
+\end{itemize}
+
+\newpage
+\onehalfspacing
+
+\noindent {\Large \bf \underline{DAGs and SWIGs}}
+
+\noindent {\large {\bf Background}}
+
+Anyone with even a modicum of experience in epidemiology has seen the confounding triangle. 
+
+```{r, out.width = "200px",fig.cap="The Confounding Triangle.",echo=F}
+knitr::include_graphics("F1.pdf")
+```
+
+This Figure has long been used to reason about whether or why a particular variable should be adjusted for in an analysis. However, this figure is misleading, and can actually result in adjustment for variables that **should not** be included in an analysis. Furthermore, while this figure has been used to reason about confounding, it leaves too many questions unanswered. Among these include: 
+\begin{itemize}
+  \item What does the double headed arrow mean?
+  \item How do proxies (for the exposure, confounders, outcome) affect confounding?
+  \item Is it possible to adjust for too many covariates?
+  \item Is there a consequence to adjusting for nonconfounders?
+  \item Can we adjust for too few variables?
+  \item Can adjustment for one covariate turn another from a confounder to a nonconfounder?
+  \item Can adjustment for one covariate turn another from a nonconfounder to a confounder?
+\end{itemize}
+
+Of course, this figure has not been the only tool used to identify confounders. Often, associations are used to determine whether a particular variable should be adjusted for, particularly in the context of regression modeling. For example, the change in estimate method proceeds by estimating the exposure-outcome association without the confounder, and then estimating a second exposure-outcome association with the confounder. If the difference between the two point estimates exceeds 10\%, the variable is deemed to be a confounder. As we will see, this approach can also be misleading for the following reason: confounding is a statement about causal structure, and associations cannot be used (without background knowledge) to determine causal structure. 
+
+In this section, we will look at a particular type of graphical modeling technique that allows researchers to (i) use background knowledge to clearly articulate the extent of what is known about a particular exposure-outcome relation, and (ii) use these graphical models to select confounders that need to be adjusted for.
+
+______________________________________________________________________________________________
+\begin{quotation}
+\noindent \textsc{Study Question:} Suppose we wish to quantify the effect of smoking on congenital malformations, and agree on the following DAG:
+\end{quotation}
+```{r, out.width = "400px",fig.cap="",echo=F}
+knitr::include_graphics("F8.pdf")
+```
+Without knowing the rules for covariate selection using DAGs, which variables would you adjust for in your analysis?
+
+______________________________________________________________________________________________
+
+\noindent {\large {\bf Graphical Models}}
+
+The first thing to recognize is that Figure 1 is not a graphical model. It is a picture/drawing. There is a world of difference between the two. Formally, a graphical model is a representation of conditional independence structures between random variables. In our case, the random variables (often referred to as "nodes" in a graphical modeling context) are variables such as the exposure, confounders, and outcome. Graphical models are used to depict assumed relations between these variables. For example, consider the following simple diagram:
+
+```{r, out.width = "200px",fig.cap="A simple graphical model.",echo=F}
+knitr::include_graphics("F2.pdf")
+```
+This three node diagram states that, structurally, $X$ causes $Z$ which, in turn, causes $Y$. This has statistical implications:
+
+\begin{itemize}
+\item[1.] $X$ and $Z$ are statistically associated
+\item[2.] $Z$ and $Y$ are statistically associated
+\item[3.] $X$ and $Y$ are statistically associated
+\item[4.] Conditional on $Z$, $X$ and $Y$ are statistically independent
+\end{itemize}
+
+This last statement demonstrates the utility of graphical models. If interest lies in estimating the effect of $X$ on $Y$, this diagram tells us that we should not adjust for $Z$. If we do (and this graphical model is correct), we would expect to see **no association** between $X$ and $Y$.^[Of course, this discussion ignores the issue of sampling variability, which we will encounter in a subsequent section.] 
+
+There has long been confusion about what is precisely meant by "adjustment." For example, one might think that conditioning in a regression model on a given variable will create problems, but stratifying the model on that same variable will result in valid estimates. Causal inference and graphical models have clarified many of these issues. In the causal inference framework, adjustment is meant to connote any form of statistical adjustment, including:
+\begin{itemize}
+  \item[] Conditioning
+  \item[] Stratification
+  \item[] Matching
+  \item[] Restriction
+  \item[] Inverse probability weighting
+\end{itemize}
+
+This distinction is important. For instance, with respect to the effect of gonorrhea on tubal infertility, @Grodstein1993 state that "[c]ontrolling for a history of pelvic inflammatory disease is problematic as pelvic inflammatory disease is in the causal pathway between sexually transmitted disease infection and tubal infertility. Therefore, adjusting for it as a term in the model might obscure the actual relation ... " However, they go on "[t]o further examine the role of pelvic inflammatory disease in the association between sexually transmitted diseases and tubal infertility, we performed separate analyses ... according to the case’s history of pelvic inflammatory disease."
+
+Graphical models are a good heuristic tool that allow us to see why this reasoning is incorrect. The first four forms of regression adjustment can be depicted as follows:
+```{r, out.width = "200px",fig.cap="Adjusting for Z, whether by conditioning in a regression model, stratification, matching, or restriction, is depicted in a graphical model by placing a box around the variable that is adjusted for. In this graphical model, there is no longer any association between $X$ and $Y$.",echo=F}
+knitr::include_graphics("F3.pdf")
+```
+In this graphical model, there is no longer any association between $X$ and $Y$ becuase the path is blocked by adjusting for $Z$. Based on the logic of graphical models, it is clear to see that in this case, adjusting for $Z$ should not be done.^[We did not discuss how to represent weighting here. This will be done when we cover that method in a subsequent section.]
+
+\noindent {\large {\bf Directed Acyclic Graphs}}
+
+Figures 2 and 3 are both graphical models that happen to be directed acyclic graphs. Graphical models [@Lauritzen1996] are a general group of probabilistic models that include chain graphs [@Richardson1998], directed acyclic graphs [@Pearl1995], single world intervention graphs [@Richardson2013], and others. What distinguishes these graphical models from one another are the rules that we use to draw and analyze them.^[These rules are sometimes referred to as the Markov properties of the model.]
+
+A directed acyclic graph is a graphical model with **three key properties**:
+\begin{itemize}
+  \item[1.] All arrows (edges) are directed from one variable (node) to another.
+  \item[2.] There are no cycles/loops in the diagram.
+  \item[3.] All common causes are included in the DAG.
+\end{itemize}
+
+If any of these properties is not met in a particular graphical model, it is not a DAG. 
+
+\noindent {\large {\bf DAG Terminology}}
+
+To explain terminology, consider the following DAG:
+
+```{r, out.width = "100px",fig.cap="A simple directed acyclic graph.",echo=F}
+knitr::include_graphics("F6.pdf")
+```
+A path is any route between two variables. There are two kinds of paths: causal and noncausal. A causal path is one in which the direction of the arrows proceeds from the cause (exposure) to the effect (outcome): $X \rightarrow Y$ or $X \rightarrow V \rightarrow Y$. A noncausal path is any other type of path. A backdoor path is one in which an arrow proceeds into the exposure: $X \leftarrow C_1 \rightarrow Y$.
+
+There are two types of variables in a DAG: colliders and noncolliders. A collider is a variable with two arrows pointed into it (sometimes referred to as an "inverted fork" or a "$v$-structure"). A non-collider is any other type of variable ("chain" and "fork"). Any variable that has an arrow pointing into it is a **descendent**. Any variable that has an arrow pointing out of it is an **ancestor**.
+
+Paths are either open or blocked. Blocked paths occur if:
+
+\begin{itemize}
+  \item[Rule 1:] We adjust for a non-collider that sits on the path.
+  \item[Rule 2:] A collider sits on the path, and we have not adjusted for it or any of its descendents.
+\end{itemize}
+
+If all paths between any two variables are blocked, we say that the variables are $d$-separated. For example, adjusting for $X$ and $C_1$ in Figure 4 $d$-separates $U$ from $Y$.
+
+In the DAG presented in Figure 4, the path $X \rightarrow C_2 \leftarrow Y$ is blocked because $C_2$ is a collider, and we did not adjust for it. The paths $X \rightarrow V \rightarrow Y$ and $X \leftarrow C_1 \rightarrow Y$ are open because both $V$ and $C_1$ are noncolliders, and we did not adjust for them.^[If we adjusted for $C_2$, $V$, or $C_1$, this would be represented by putting a box around these variables.] Furthermore, the first path is causal, the second path is noncausal (it is an open backdoor path).
+
+By convention (in epidemiology), variables denoted $U$ are unmeasured. There is no convention for other types of variables.
+
+We say that two DAGs are Markov equivalent if (and only if) their structures imply the same conditional independencies. For example, consider the following DAGs:
+
+```{r, out.width = "300px",fig.cap="Two Markov equivalent directed acyclic graphs",echo=F}
+knitr::include_graphics("F9.pdf")
+```
+
+These DAGs have the same set of nodes, and the same collider ($C_2$). However, in Figure 5A $V$ is a mediator but in Figure 5B $V$ is a confounder. Unfortunately, there is no statistical/analytic technique that will allow us to distinguish between these two DAGs. Thus, we say they are Markov equivalent. The importance of this bears out when we are uncertain about the underlying causal structure. If interest lies in the total effect of $X$ on $Y$, in the case of Figure 5A, we would not adjust for $V$, while in the case of Figure 5B we would adjust for $V$. 
+
+The way to handle such uncertainty in practice is to conduct two analyses, and see if they provide different results. If so, then both should be presented with a discussion of the uncertainty involved.
+
+\noindent {\large {\bf Covariate Selection}}
+
+Most often, the objective of using DAGs in an applied analysis is to identify the **minimally sufficient adjustment set**. This is the set of variables that will successfully block all open non-causal paths, and isolate the causal path of interest.
+
+To do this, there are 4 steps involved:
+\begin{itemize}
+\item[1.] List all paths from the exposure to the outcome
+\item[2.] Label each path as either causal or noncausal
+\item[3.] Label each path as either open or blocked
+\end{itemize}
+
+Once these steps are done, the final step is to find the smallest set of variables that close all open non-causal paths. 
+
+\noindent {\large {\bf Examples}}
+
+Let's proceed with some examples. We'll first identify the minimally sufficient adjustment set for Figure 4. This DAG has the following paths:
+\begin{table}
+\begin{tabular}{p{4cm}cc}
+\hline
+Path & Status &   \\
+\hline
+$X \rightarrow Y$ & Causal & Open \\
+$X \rightarrow V \rightarrow Y$ & Causal & Open \\
+$X \rightarrow C_2 \leftarrow Y$ & Non-Causal & Closed \\
+$X \leftarrow C_1 \rightarrow Y$ & Non-Causal & Open \\
+$X \leftarrow U \rightarrow C_1 \rightarrow Y$ & Non-Causal & Open \\
+\hline
+\end{tabular}
+\end{table}
+
+Based on the rules governing DAGs, if we adjust for $C_1$, we close both non-causal paths, and leave both causal paths open. Next we'll revisit the opening example:
+
+```{r, out.width = "400px",fig.cap="",echo=F}
+knitr::include_graphics("F8.pdf")
+```
+\newpage 
+This diagram has the following paths:
+
+\begin{table}[h]
+\begin{tabular}{p{8cm}cc}
+\hline
+Path & Status &   \\
+\hline
+$smoking \rightarrow malformation$ & Causal & Open \\
+$smoking \rightarrow diet \rightarrow malformation$ & Causal & Open \\
+$smoking \leftarrow SES \rightarrow diet \rightarrow malformation$ & Non-Causal & Open \\
+$smoking \leftarrow SES \rightarrow age \rightarrow diet \rightarrow malformation$ & Non-Causal & Open \\
+$smoking \rightarrow SES \leftarrow age \rightarrow malformation$ & Non-Causal & Open \\
+$smoking \rightarrow birth\; status \leftarrow Y$ & Non-Causal & Closed \\
+\hline
+\end{tabular}
+\end{table}
+
+
+\newpage
+
+# References

@@ -1,0 +1,200 @@
+# Estimating Causal Effects
+
+We consider a simple setting with a single binary exposure ($X$), a set of continuous confounders ($\mathbf{C} = \{C_1,C_2, C_3, C_4\}$) measured at baseline, and a single continuous outcome ($Y$) measured at the end of follow-up. In an observational cohort study to estimate the effect of $X$ on $Y$, $\mathbf{C}$ might be assumed a minimally sufficient adjustment set [@Greenland1999a], and the outcome and exposure would be assumed generated according to some unknown models, for example:
+\begin{align}
+		& E(Y \mid X, \mathbf{C}) = g(X,\mathbf{C}), \label{outcome} \tag{Model 1} \\
+		& P(X = 1 \mid \mathbf{C}) = f(\mathbf{C}).\label{propensity} \tag{Model 2}
+\end{align}
+In the above equations, we use $g(\bullet)$ and $f(\bullet)$ to emphasize that the expected outcome conditional on $X$ and $C$, and the probability of the exposure given $C$ need not be considered standard linear or logistic regression functions. Rather, $g(\bullet)$ and $f(\bullet)$ represent arbitrary functions relating the exposure and confounders to the outcome, and the confounders to the exposure. Importantly, **in an observational cohort study assuming a correct confounder adjustment set,** these arbitrary functions usually represent the extent of what is known about the exposure and outcome models [@Robins2001] That is, while these models may typically be assumed to be in the family of generalized linear models [@Nelder1972], we note below why this may not often be ideal.
+
+Say we are interested in the average treatment effect:
+\begin{equation*}
+	\psi = E(Y^{x=1} - Y^{x=0}) 
+\end{equation*}
+where $Y^x$ is the outcome that would be observed if $X$ were set to $x$. This estimand is (point) identified under positivity, consistency, no interference, and exchangeability [@Robins2009,@Naimi2016b]. If these assumptions hold, $\psi$ can be estimated using a number of approaches. In the equations that follow, we let $i$ index sample observations which range from 1 to $N$, $\hat{g}_i(X=x,\mathbf{C})$ and $\hat{f}_i(\mathbf{C})$ are individual sample predictions for $E(Y \mid X=x,\mathbf{C})$ and $P(X = 1 \mid \mathbf{C})$, respectively.
+
+With predictions from \ref{outcome}, $\psi$ can be estimated via g computation [@Naimi2016b], as we did in the previous section. Mathematically, we can write g computation for a time fixed exposure as:
+\begin{equation}
+	\hat{\psi}_{gComp} = \frac{1}{N}\sum_{i=1}^N \big \{ \hat{g}_i(X=1,\mathbf{C}) - \hat{g}_i(X=0,\mathbf{C}) \big \}. \label{gComp}
+\end{equation}
+
+With predictions from \ref{propensity}, $\psi$ can be estimated via inverse probability weighting [@Hernan2006] as:
+\begin{equation}
+	\hat{\psi}_{ipw} = \frac{1}{N} \sum_{i = 1}^N \left \{ \left [ \frac{X_iY_i}{\hat{f}_i(\mathbf{C})} \right ] -  \left [ \frac{(1-X_i)Y_i}{1-\hat{f}_i(\mathbf{C})} \right ]\right \}. \label{ipw}
+\end{equation} 
+
+Both approaches \ref{gComp} and \ref{ipw} are ``singly robust'' in that they typically rely entirely on the correct specification of the appropriate single regression model. If these models are misspecified, the estimators will not generally converge to the true value (they will be "biased").
+
+:::{.rmdnote data-latex="{tip}"}
+
+__Technical Note__:
+
+|               Often when we use the word "bias", particularly in epidemiology, we actually mean "inconsistent" in the statistical sense. Technically, an estimator $\hat{\theta}$ is consistent if, for some arbitrarily small $\epsilon > 0$: $$\lim_{n \rightarrow \infty} P( | \hat{\theta} - \theta | > \epsilon ) = 0.$$ When we have unadjusted confounding, selection, information bias, the estimator will not converge to the truth no matter how large a sample we have. 
+
+In contrast, we say that an estimator is biased (in finite samples) if: $$E(\hat{\theta} - \theta) \neq 0.$$ That is, we can have zero confounding (i.e., a consistent estimator), but still have a biased estimator because of how it performs at using the data to estimate the effect at a given sample size. One example of this is the partial likelihood estimator used to quantify parameters of a Cox regression model (see @Johnson1982). Usually, this statistical bias will disappear as the sample size increases.
+
+:::
+
+## Parametric Estimation
+
+For continuous $Y$ and binary $X$, it is customary to specify models \ref{outcome} and \ref{propensity} parametrically using linear and logistic regression, respectively. Doing so effectively states that we know enough about the form of $g(X,\mathbf{C})$ and $f(\mathbf{C})$ to define them as:
+\begin{align}
+		& g(X,\mathbf{C}) = E(Y \mid X, \mathbf{C}) = \beta_0 + \beta_1 X + \beta_2 C_1 + \beta_3 C_2 + \beta_4 C_3 + \beta_5 C_4, \label{parm_outcome}\\& \hskip 4.5cm Y \mid X, \mathbf{C} \sim \mathcal{N}\Big(E(Y \mid X, \mathbf{C}),\sigma^2 \Big) \notag \\
+		& f(\mathbf{C}) = P(X = 1 \mid \mathbf{C}) = \expit(\alpha_0 + \alpha_1C_1 + \alpha_2C_2 + \alpha_3C_3 + \alpha_4C_4), \label{parm_propensity}\\ & \hskip 4.5cm  \expit(\bullet) = 1/(1+\exp[-\bullet])  \notag
+\end{align}
+Imposing these forms on $g(X,\mathbf{C})$ and $f(\mathbf{C})$ permits use of maximum likelihood for estimation and inference [@Cole2013a].
+
+Equation \ref{parm_outcome} imposes several parametric constraints on the form of $g(X, \mathbf{C})$: (i) $Y$ follows a conditional normal distribution with constant variance not depending on $X$ or $\mathbf{C}$; and (ii) the conditional mean of $Y$ is related to the covariates $X$ and $\mathbf{C}$ additively, as defined in equation \ref{parm_outcome}. If these constraints on $g(X,\mathbf{C})$ are true, and other identification and regularity conditions hold [@Longford2008]$^{(ch2)}$ the maximum likelihood estimates of $\boldsymbol{\beta}$ are asymptotically efficient [@Rencher2000]$^{(p144)}$ Relatedly, under the model constraints and identification and regularity conditions, as the sample size increases, the estimates of $g(X,\mathbf{C})$ and/or $f(\mathbf{C})$ will converge to the true values at an optimal (i.e., $\sqrt{N}$) rate, and their distribution will be such that confidence intervals can be easily derived.
+
+If constraint (i) is violated, the maximum likelihood estimator is no longer the most efficient, but can still be used to estimate $\psi$ consistently. If constraint (ii) is violated, then the maximum likelihood estimator is no longer consistent. Depending on the severity to which constraint (ii) is violated, the bias may be substantial. Unfortunately, in an observational study the true form of equation \ref{parm_outcome} is almost never known. This means that such maximum likelihood estimates are almost always biased, with the degree of bias depending on the (unknown) extent to which the model is mis-specified [@Box1976].
+
+One way to avoid relying on correct outcome model specification is to use a parametric approach for  \ref{propensity}, and estimate $\psi$ via $\hat{\psi}_{ipw}$. Specifically, with IP-weighting, one need not model the interactions between the exposure and any covariates [@Hernan2001]. Such an estimator is not as efficient as $\hat{\psi}_{gComp}$, and can be subject to important finite-sample biases when weights are very large, or when there are no observations to weight in certain exposure-confounder strata. But as the sample size increases, the inverse probability weighted estimator converges at the same standard $\sqrt{N}$ rate as the g computation estimator [@Westreich2012a]. Unfortunately, as with the outcome model, the true form of \ref{propensity} will almost never be known in an observational study. Mis-specification of equation \ref{parm_propensity} will also lead to biased estimation of $\psi$, again with the degree of bias depending on the unknown extent of model mis-specification.
+
+## Causes of Misspecification
+
+It's important to understand what mis-specification bias is and where it comes from. A misspecified model form can occur if the analyst fails to correctly account for the manner in which exposure and confounders relate to the outcome. For a generalized linear model, this would occur if chosen link function is not compatible with how the data were actually generated [@Weisberg1994], if the analyst fails to account for curvilinear relations between the covariates and the outcome, or fails to include important exposure-confounder or confounder-confounder interactions. Unfortunately, in an observational study the true nature of these relations is typically not known, which is one reason underlying the increasing popularity of machine learning methods. However, misspecification resulting an incomplete confounder adjustment set, or incorrectly adjusting for a mediator, cannot be fixed with doubly robust machine learning methods [@Keil2018].
+
+Again, recall that for this simple model would could have up to:
+
+$$ 2^5 - 5 - 1 = 26$$
+$k$-way interactions (including 2, 3, 4, and 5 way). This means that for this simple modely, from only the perspective of variable interactions, there are 26 possible chances for us to induce potential misspecification.
+
+The point of this is not to emphasize interactions per se, but rather to point out that, in any given analysis, there will always be choices that can potentially lead to mistakes. These choices, particularly about the form of parametric models, pervade empirical regression analyses, and represent a potential weak link in the process of scientific investigation. This is one reason why machine learning methods have become so popular.
+
+# Machine Learning for Causal Effect Estimation: The Curse of Dimensionality
+
+Nonparametric methods are an alternative to parametric models. For example, nonparametric maximum likelihood estimation (NPMLE) for \ref{propensity} or \ref{outcome} would entail fitting equations \ref{parm_outcome} or \ref{parm_propensity}, but with a parameter for each unique combination of values defined by the cross-classification of all covariates (i.e., saturating the model). 
+
+Consider another simple simulated setting with four continuous confounders, one binary exposure, and a sample size of 250:
+
+```{r}
+set.seed(123)
+n = 250
+
+c1 <- factor(round(rnorm(n),2))
+c2 <- factor(round(rnorm(n),2))
+c3 <- factor(round(rnorm(n),2))
+c4 <- factor(round(rnorm(n),2))
+x <- factor(rbinom(n, 1, .5))
+
+dat_ <- data.frame(x,c1,c2,c3,c4)
+
+head(dat_, 10)
+
+mod_mat <- model.matrix(~., data=dat_)
+
+dim(mod_mat)
+
+mod_mat_int <- model.matrix(~.^2, data=dat_)
+
+dim(mod_mat_int)
+
+```
+
+Even if we (1) round all continuous variables to two decimal places, and (2) ignore any potential interactions, and include a parameter for every level of all variables in the model, we end up with a total of `r dim(mod_mat)[2]` parameters in the model. Adding two way interactions alone increases this number to a whopping `r dim(mod_mat_int)[2]` parameters for a sample size of N = 250! Consequently, in any realistic setting, the NPMLE will be undefined, particularly in a finite sample with a continuous confounder, since there will be no covariate patterns containing both treated and untreated subjects. In these settings, while the NPMLE makes no assumptions about model form, it will not be possible to use it for quantifying the average treatment effect.
+
+Alternatively, one can use ``machine learning'' methods like kernel regression, splines, random forests, boosting, etc.. These approaches exploit smoothness across covariate patterns to estimate the regression function, without imposing arbitrary parametric forms such as what is articulated in Models \ref{parm_outcome} or \ref{parm_propensity}. However, for any nonparametric approach there will always be an explicit bias-variance trade-off that arises in the choice of tuning parameters; less smoothing yields smaller bias but larger variance, while more smoothing yields smaller variance but larger bias (parametric models can be viewed as an extreme form of smoothing). 
+
+This tradeoff has important consequences. In particular, there is no generally optimal solution for estimating regression functions nonparametrically at the standard $\sqrt{N}$ rates attained by correctly specified parametric estimators [@vanderVaart2000]. These slow rates generally require sample sizes that are exponentially larger than those required for (fast converging) parametric methods to maintain the same degree of accuracy.
+
+Convergence rates for nonparametric estimators become slower with more flexibility and more covariates. For example, a standard rate for estimating smooth regression functions is $N^{-\beta/(2\beta+d)}$, where $\beta$ represents the number of derivatives of the true regression function, and $d$ represents the dimension of, or number of covariates in, the true regression function. This issue is known as the curse of dimensionality [@Gyorfi2002,@Robins1997c,@Wasserman2006]. Sometimes this is viewed as a disadvantage of nonparametric methods; however, it is just the cost of making weaker assumptions: if a parametric model is misspecified, it will converge very quickly to the wrong answer. 
+
+In addition to slower convergence rates, confidence intervals are harder to obtain. Specifically, even in the rare case where one can derive asymptotic distributions for nonparametric estimators, it is typically not possible to construct confidence intervals (even via the bootstrap, as it requires certain convergence rate conditions to hold) without impractically undersmoothing the regression function (i.e., overfitting the data) [@Hahn1998]. 
+
+These complications (slow rates and lack of valid confidence intervals) are generally inherited by the singly robust estimators \ref{ipw} and \ref{gComp} (apart from a few special cases which require simple estimators, such as kernel methods with strong smoothness assumptions and careful tuning parameter choices that are suboptimal for estimating $f$ or $g$).  For general nonparametric estimators $\hat{f}$ and $\hat{g}$, the estimators \ref{ipw} and \ref{gComp} will converge at slow rates, and honest confidence intervals (defined as confidence intervals that are at least nominal over a large nonparametric class of regression functions) [@Li1989] will not be computable.
+
+We recently conducted a simulation study [@Naimi2022] that demonstrates some of the consequences of these issues. Figure \ref{fig:mlresults1} shows the absolute bias of g computation and inverse probability weighting, compared to two double robust estimators, when machine learning methods are used. 
+
+```{r mlresults1, out.width="12cm", fig.align='center', fig.cap="Absolute bias of inverse probability weighted, g-computation, and doubly robust estimators for sample sizes of  N = 200, N = 1200, and N = 5000. Bar color intensity, from black to light gray, represent IPW, g Computation, AIPW, and TMLE estimators, respectively. Plot labels refer to the following scenarios: Nonpar Complex = nonparametric method fit to the transformed confounders; Nonpar Simple = nonparametric method fit to the untransformed confounders; Par Misspec = parametric method fit to transformed confounders; Par Correct = parametric method fit to untransformed confounders. Parametric regression included logistic regression for the exposure model, and linear regression for the outcome model. Nonparametric method consisted of a stacked generalization with random forests and extreme gradient boosting algorithms, and no sample splitting.", echo=F}
+knitr::include_graphics(here("figures", "AJE-00517-2020_Naimi_Figure1_v2.pdf"))
+```
+
+As can be seen in the Figure, when machine learning methods are used, g computation or IP-weighting perform poorly relative to the double-robust approaches (Indeed, in the simulation scenario presented, using a machine learning approach with g computation or IP weighting yielded a bias higher than when we used a misspecified parametric model). Similarly, when machine learning methods were used with g computation or IP-weighting, 95% confidence interval coverage was as low as 0%, and typically ranged between 20-30% [@Naimi2022].
+
+# Takeaway
+
+The important takeaway here is that, even though machine learning methods do not require strict parametric modeling assumptions in the way that standard regression (e.g., generalized linear models) do, they do not necessarily deliver "better" results than standard regression modeling approaches. 
+
+Now, it's important to recognize that we are ignoring a lot of important concepts in the statistical theory of estimation here. What it means for one estimation approach to be "better" than another, or to say that an estimation approach does not "work" or that another does, must be understood in a specific mathematical context. That is, the notions of "better" or "work" are often formalized mathematically. We have not covered these formalities, though we have alluded to them in various ways (e.g., bias, confidence interval coverage, mean squared error).
+
+# Bonus Material
+
+```{r, warning = F, message = F, include = F}
+library(boot)
+library(ranger)
+
+nhefs <- read_csv(here("data","nhefs.csv")) %>% 
+  mutate(wt_delta = as.numeric(wt82_71>median(wt82_71)),
+         age = scale(age),
+         sbp = scale(sbp),
+         dbp = scale(dbp),
+         price71 = scale(price71), 
+         tax71 = scale(tax71)) %>% 
+  select(-wt82_71) 
+
+#' Marginal Standardization
+formulaVars <- "sex + age + income + sbp + dbp + price71 + tax71 + race"
+modelForm <- as.formula(paste0("wt_delta ~", formulaVars))
+
+model0 <- glm(modelForm,data=subset(nhefs,qsmk==0),family=binomial("logit"))
+model1 <- glm(modelForm,data=subset(nhefs,qsmk==1),family=binomial("logit"))
+mu1 <- predict(model1,newdata=nhefs,type="response")
+mu0 <- predict(model0,newdata=nhefs,type="response")
+
+marg_stand_RD <- mean(mu1)-mean(mu0)
+
+bootfunc <- function(data,index){
+  boot_dat <- data[index,]
+  model0 <- glm(modelForm,data=subset(boot_dat,qsmk==0),family=binomial("logit"))
+  model1 <- glm(modelForm,data=subset(boot_dat,qsmk==1),family=binomial("logit"))
+  mu1 <- predict(model1,newdata=boot_dat,type="response")
+  mu0 <- predict(model0,newdata=boot_dat,type="response")
+  
+  marg_stand_RD_ <- mean(mu1)-mean(mu0)
+  return(marg_stand_RD_)
+}
+
+#' Run the boot function. Set a seed to obtain reproducibility
+set.seed(123)
+boot_res <- boot(nhefs,bootfunc,R=2000)
+boot_RD <- boot.ci(boot_res)
+
+marg_stand_RD
+boot_RD
+```
+
+To see the difficulty, consider our estimated average treatment effect using marginal standardization in the NHEFS data. However, instead of using the GLM function in the code we used for marginal standardization with a random forest algorithm using the `ranger` function.^[We will discuss random forests and `ranger` in a subsequent section.]
+
+```{r, warning=F, message=F}
+library(ranger)
+#' Marginal Standardization with Random Forest
+model0 <- ranger(modelForm, num.trees=500, mtry=3, min.node.size = 50, data=subset(nhefs, qsmk==0))
+model1 <- ranger(modelForm, num.trees=500, mtry=3, min.node.size = 50, data=subset(nhefs, qsmk==1))
+mu1 <- predict(model1, data=nhefs, type="response")$pred
+mu0 <- predict(model0, data=nhefs, type="response")$pred
+
+marg_stand_RDrf <- mean(mu1) - mean(mu0)
+
+bootfunc <- function(data,index){
+  boot_dat <- data[index,]
+  model0 <- ranger(modelForm, num.trees=500, mtry=5, data=subset(boot_dat, qsmk==0))
+  model1 <- ranger(modelForm, num.trees=500, mtry=5, data=subset(boot_dat, qsmk==1))
+  mu1 <- predict(model1,data=boot_dat,type="response")$pred
+  mu0 <- predict(model0,data=boot_dat,type="response")$pred
+  
+  marg_stand_RD_ <- mean(mu1)-mean(mu0)
+  return(marg_stand_RD_)
+}
+
+#' Run the boot function. Set a seed to obtain reproducibility
+set.seed(123)
+boot_res <- boot(nhefs,bootfunc,R=2000)
+boot_RDrf <- boot.ci(boot_res)
+
+marg_stand_RDrf
+boot_RDrf$bca
+```
+
+When we use parametric generalized linear models to estimate this effect, we get a risk difference of `r round(marg_stand_RD,2)`, with 95% (bca) confidence intervals of `r round(boot_RD$bca[4:5],2)`. When we use random forest to estimate this effect, we get exactly the same risk difference of `r round(marg_stand_RDrf,2)`, with 95% (bca) confidence intervals of `r round(boot_RDrf$bca[4:5],2)`.
+
+Unfortunately, even though we get the same point estimates when we switch from the `glm` function to the `ranger` function, this does not actually suggest that the random forest approach works as well as the parametric approach. This can be a subtle point, and it makes it difficult to understand why we simply shouldn't use machine learning with g computation or IP weighting.

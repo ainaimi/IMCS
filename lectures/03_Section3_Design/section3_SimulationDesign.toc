@@ -1,0 +1,8 @@
+\contentsline {section}{\numberline {1}The Aims of a Simulation Study}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Understanding p-values}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Non-Collapsibility of the OR}{7}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Defining your Data Generating Mechanism Using Directed Acyclic Graphs}{13}{section.2}%
+\contentsline {section}{\numberline {3}What is Your Estimand?}{17}{section.3}%
+\contentsline {section}{\numberline {4}No, really, What is Your Estimand?}{18}{section.4}%
+\contentsline {section}{\numberline {5}The True Value and Monte Carlo Integration}{18}{section.5}%
+\contentsfinish 

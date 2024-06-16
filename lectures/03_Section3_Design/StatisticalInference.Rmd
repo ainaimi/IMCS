@@ -1,0 +1,277 @@
+---
+title: "Statistical Inference"
+author: Ashley I. Naimi, PhD 
+header-includes:
+   - \DeclareMathOperator{\logit}{logit}
+   - \DeclareMathOperator{\expit}{expit}
+   - \usepackage{setspace}
+   - \usepackage{booktabs}
+output: #pdf_document
+  tufte::tufte_handout: default
+  #tufte::tufte_html: default
+bibliography: ref_main_v4.bib
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(here)
+library(VIM)
+library(ggExtra)
+library(Publish)
+
+install.packages("coin",repos="http://lib.stat.cmu.edu/R/CRAN/")
+library(coin)
+
+thm <- theme_classic() +
+  theme(
+    legend.position = "top",
+    legend.title=element_blank(),
+    legend.background = element_rect(fill = "transparent", colour = NA),
+    legend.key = element_rect(fill = "transparent", colour = NA) 
+  )
+theme_set(thm)
+options(width = 90)
+```
+
+\newpage
+\noindent {\Large \bf Outline}
+\vskip .25cm
+\noindent \underline{Statistical Inference}
+\begin{itemize}
+  \item Statistical versus Epidemiologic Inference
+  \item p Values (Permutation Test)
+  \item Confidence Intervals (Bootstrap)
+\end{itemize}
+
+\newpage
+\onehalfspacing
+
+\noindent {\Large \bf Statistical verus Epidemiologic Inference}
+
+What distinguishes statistics from epidemiologic methods? There are many ways to anwswer this question. Here, we will focus on the fact that statstics deals primarily with random variation, whereas epidemiologic methods focus primarily on systematic bias. To set the stage for what we have to cover, let's motivate our discussion with an example. Suppose we conducted a simple randomized trial among roughly 700 individuals. Let's denote the expsoure $X$ and the outcome $Y$. Suppose we obtain the following two-by-two table:
+
+```{r}
+  rct_data <- matrix(c(53,193,139,350),ncol=2,byrow=T)
+
+  colnames(rct_data) <- c("event","nonevent")
+  rownames(rct_data) <- c("exposed","unexposed")
+  rct_data <- as.table(rct_data)
+  rct_data
+  
+  risk_ratio <- (rct_data[1,1]/sum(rct_data[1,]))/(rct_data[2,1]/sum(rct_data[2,]))
+  round(risk_ratio,2)
+```
+The estimated risk ratio suggests that the risk of the outcome among the exposed is `r round(risk_ratio,2)` times the risk of the outcome among those who are unexposed. 
+
+Now the question is: how do we interpret this effect? Not specifically how do we interpret the risk ratio. Rather, what makes us think that if we did the study again, we'd get a result that suggests roughly the same effect? Why wouldn't we expect to see a result that suggests something completely opposite? 
+
+These are questions about random variation. Typically, we quantify any potential effect of random variation using statistics: $\chi$-squared or $z$ test stastistics, p-values, and confidence intervals. We can use standard equations for a two-by-two table in this case to estimate the standard error of the estimate:
+\begin{equation*}
+  SE_{ln(RR)} = \sqrt{ \underset{\text{Number of exposed cases}}{\frac{1}{\sum{(Y \mid X = 1) }}} - \underset{\text{Number of exposed}}{\frac{1}{\sum{X}}} + \underset{\text{Number of unexposed cases}}{\frac{1}{\sum{(Y \mid X = 0)}}} - \underset{\text{Number of unexposed}}{\frac{1}{\sum{(1-X)}}} }
+\end{equation*}
+ 
+ Using this equation, we can compute the standard error of our risk ratio:
+
+```{r}
+
+SE_lnRR <- sqrt( (1/rct_data[1,1] - 1/sum(rct_data[1,])) + (1/rct_data[2,1] - 1/sum(rct_data[2,])) )
+
+```
+With this risk ratio and standard error, we can compute a (2-sided) $p$-value under the null hypothesis based on the $Z$ statistic or the $\chi^2$ statistic:
+
+```{r}
+z <- (log(risk_ratio) - 0)/SE_lnRR
+round(2*pnorm(-abs(z)),4)
+
+chisq.test(rct_data,correct=F)
+
+```
+
+This represents the typical approach one would pursue to quantify the impact of random variation on our point estimate. In previous lectures, we discussed threats to the identifiability. These are violations of the correct model specification, counterfactual consistency, no interference, positivity, and exchangeability assumptions. In this lecture, we will assume there are no such threats. In other words, we will assume our risk ratio estimate of `r round(risk_ratio,2)` represents a valid causal effect. Under this assumption, we will be able to see how the complications from random variation impact our interpretation of causal effect estimates.
+
+\noindent {\Large \bf P-Values}
+
+Let's start with the interpetation of our p-value. You were likely taught that the p-value can be interpreted as the probability of observing a result as or more extreme than the one we observed if the null hypothesis were true^[**Don't forget.** This interpretation assumes no selection, no information, and no confounding bias. Consideration of these issues takes precedence over and above the value of $p$.]. We quantified a p-value of `r round(2*pnorm(-abs(z)),4)`. Thus, if there were absolutely no effect of the exposure on the outcome (null hypothesis is true), and we repeated this study 100 times, we'd expect to see a result at or more extreme than `r round(risk_ratio,2)` roughly `r round(2*pnorm(-abs(z)),4)*100`\% of the time.
+
+Let's dive into what, precisely, a p-value is. To do this, we are going to rearrange the data in the `rct_data` so it looks more like a traditional dataset, with two columns and `r sum(rct_data)` rows:
+
+```{r}
+rct_data
+rct_data_long <- rbind(matrix(rep(c(1,1),rct_data[1,1]),ncol=2),
+                       matrix(rep(c(0,1),rct_data[2,1]),ncol=2),
+                       matrix(rep(c(1,0),rct_data[1,2]),ncol=2),
+                       matrix(rep(c(0,0),rct_data[2,2]),ncol=2))
+nrow(rct_data_long)
+
+# re-shuffle rows
+rct_data_long <- data.frame(rct_data_long[sample(nrow(rct_data_long)),])
+names(rct_data_long) <- c("X","Y")
+```
+
+Our new dataset looks like this:
+```{r}
+head(rct_data_long)
+tail(rct_data_long)
+```
+
+The first thing we'll do with this dataset is based on the assumption that there is **no effect** of the exposure on the outcome (the null hypothesis). If this is the case, then it follows that shuffling around (or permuting) the expsoure and re-estimating the risk ratio every time we shuffle would give us a valid distribution of the effect around the null. For example, we can pick (randomly) the exposure value for observation 732 and switch that value with observation 4. Doing this randomly for each observation would give as a new dataset in which everyone's exposure value was switched, but there outcome remained the same.
+
+If we did this re-shuffling and re-estimation multiple times, we'd get a distribution of risk ratios that looked like this:
+
+```{r}
+set.seed(123)
+rr_permuted <- NULL
+permutations <- 2000
+for(i in 1:permutations){
+  permuted <- rct_data_long
+  permuted$X <- permuted$X[sample(length(permuted$X))]
+  res <- log(mean(subset(permuted,X==1 )$Y)/mean(subset(permuted,X==0)$Y))
+  rr_permuted <- rbind(rr_permuted,res)
+}
+
+rr_permuted <- data.frame(rr_permuted)
+names(rr_permuted) <- "estimates"
+```
+
+```{r, warning=F, message=F, out.width = "250px",fig.cap="Distribution of log risk ratios after 2,000 random permutations of the exposure variable in the 2x2 table data above. The solid blue density curve represents a nonparametric kernel density estimate of the distribution. The solid red density curve represents a normal density estimate of the distribution. The dashed red vertical line indicates the value of the log risk ratio estimated in the original unpermuted data.",echo=F}
+ggplot(rr_permuted) +  
+  geom_histogram(aes(estimates,y=..density..),color="gray",fill="white") + 
+  geom_density(aes(estimates),color="blue") + 
+  stat_function(
+    fun = dnorm, 
+    args = with(rr_permuted, c(mean = mean(estimates), sd = sd(estimates))),
+    color="red"
+  ) + 
+  geom_vline(xintercept = log(risk_ratio),color="red",linetype=2)
+```
+
+This permutation procedure gives us a critical component of a significance test: **the distribution of the estimates under the null.** It turns out, we can compute the p-value directly from this distribution.
+
+There are a total of `r permutations` estimates. How many of them are the same as or "more extreme" than the one we estimated in the actual data? We can compute this easily:
+```{r}
+sum(rr_permuted$estimate <= log(risk_ratio))
+```
+
+Dividing the number of estimates that are as or more extreme than the original risk ratio by `r permutations` gives us a one-sided p-value:
+```{r}
+sum(rr_permuted$estimate <= log(risk_ratio))/permutations
+```
+To get a two-sided test, we simply take the absolute values of both the original risk ratio and each estimate obtained in the permutation test, and repeat the comparison. Note that we have to change the direction of the "less than" sign for this to work:
+```{r}
+sum(abs(rr_permuted$estimate) >= abs(log(risk_ratio)))/permutations
+```
+
+\noindent {\Large \bf Confidence Intervals}
+
+Next we'll construct confidence intervals for the same data. With both the risk ratio and standard error that we obtained above, we can compute the (2-sided) Wald (or normal interval) confidence limits: 
+
+```{r}
+ UCL <- exp( log(risk_ratio) + 1.96*SE_lnRR )
+ LCL <- exp( log(risk_ratio) - 1.96*SE_lnRR )
+ 
+ round(risk_ratio,2)
+ round(LCL,2)
+ round(UCL,2)
+```
+
+As we've seen before, we can also use the bootstrap to obtain the standard error. To do this, we can resample the `rct_data_long` 100 times, estimate the risk ratio in each resample, and take standard deviation of all these estimates. This is straightforward to accomplish using R:
+```{r}
+
+set.seed(123)
+rr_boot <- NULL
+for(i in 1:100){
+  index <- sample(1:nrow(rct_data_long),nrow(rct_data_long),replace=T)
+  boot_dat <- rct_data_long[index,]
+  res <- log(mean(subset(boot_dat,X==1 )$Y)/mean(subset(boot_dat,X==0)$Y))
+  rr_boot <- rbind(rr_boot,res)
+}
+
+head(rr_boot)
+
+LCL_boot <- exp(log(risk_ratio) - 1.96*sd(rr_boot))
+UCL_boot <- exp(log(risk_ratio) + 1.96*sd(rr_boot))
+
+
+```
+So far, we have a risk ratio of `r round(risk_ratio,2)` with 95\% normal interval Wald limits of `r round(LCL,2)`, `r round(UCL,2)` and 95\% normal interval bootstrap limits of `r round(LCL_boot,2)`, `r round(UCL_boot,2)`.
+
+These are referred to as "normal interval" confidence limits because they rely on the normal distribution assumption to obtain the interval. Any time one uses $1.96 \pm SE$, one is relying on the normal distribution. Note that this assumption applies to the distribution of the **estimates** and not the outcome, exposure, or other elements of the sample.
+
+One way to avoid relying on the normal distribution is to use the **percentile bootstrap estimator**. We can follow the same procedure we used to get normal interval bootstrap CIs almost exactly. The first difference is we must use well more than 100 resamples:
+
+```{r}
+set.seed(123)
+rr_boot <- NULL
+for(i in 1:2000){
+  index <- sample(1:nrow(rct_data_long),nrow(rct_data_long),replace=T)
+  boot_dat <- rct_data_long[index,]
+  res <- log(mean(subset(boot_dat,X==1 )$Y)/mean(subset(boot_dat,X==0)$Y))
+  rr_boot <- rbind(rr_boot,res)
+}
+
+```
+
+The second difference is that instead of taking the standard deviation of these estimates, we simply estimate the 2.5th and 97.5th percentile values from this distribution:
+
+```{r}
+LCL_bootP <- exp(quantile(rr_boot,probs=2.5/100))
+UCL_bootP <- exp(quantile(rr_boot,probs=97.5/100))
+```
+
+The following table summarizes our results from all three confidence interval estimators:
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{lll}
+\caption{Upper and lower 95\% confidence limit values obtained from three interval estimators: normal wald interval, normal bootstrap interval, percentile bootstrap interval.}
+&&\\
+\hline
+Interval Type & Lower & Upper \\
+\hline \hline
+Normal Interval Wald & `r round(LCL,2)` & `r round(UCL,2)` \\
+Normal Interval Bootstrap & `r round(LCL_boot,2)` & `r round(UCL_boot,2)` \\
+Percentile Interval Bootstrap & `r round(LCL_bootP,2)` & `r round(UCL_bootP,2)` \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\noindent {\Large \bf Interpretation}
+
+We've covered several methods that can be used to **quanfity** measures of uncertainty due to random variation. However, now it's time to interpret these measures. 
+
+The $p$-values we estimated ranged from between `r sum(abs(rr_permuted$estimate) >= abs(log(risk_ratio)))/permutations` for the permutation test, to `r round(2*pnorm(-abs(z)),4)` for the $Z$ test. The first thing to note is that, even though the permutation test and the $Z$ test are **valid methods**, they yielded two fairly distinct $p$-values. These two appraoches make different assumptions about the nature of the data, but there is no reason to believe that any of these assumptions are invalid.^[Particularly, the $Z$-test assumes that the parameter estimates are normally distributed, which should hold based on the central limit theorem. On the other hand, the permutation test makes no such assumption, as it is nonparametric. While there are reasons to expect differences between these two tests, none of these suggest one or the other is invalid.]
+
+More relevant to our interpretation, however, is the fact that the estimated risk ratio of `r round(risk_ratio,2)` is actually compatible with the null hypothesis.^[Note that if we assume the distribution around the null is normal, technically, any effect is compatible. This is because in theory, the range of a random variable generated from the normal distribution is $\pm \infty$.] If we were to do this study again, we'd expect to see a result as extreme or more roughly 5\% of the time.
+
+The big question is: how do we know whether this is an instance of the 5\% of the null distribution, or an instance of an actual effect? The answer is: we don't.
+
+This lack of knowing whether the variation is suggestive of a null or actual effect applies to confidence intervals too. In fact, it is easier to see this issue with confidence intervals. 
+
+```{r,warning=F,message=F}
+class_data <- fread("./CIsimulation_2018.csv")
+head(class_data)
+nrow(class_data)*.05
+
+class_data$logRR <- log((class_data$a/(class_data$a+class_data$b))
+                        /(class_data$c/(class_data$c+class_data$d)))
+class_data$SE_logRR <- sqrt( (1/class_data$a - 1/(class_data$a+class_data$b)) 
+                             + (1/class_data$c - 1/(class_data$c+class_data$d)) )
+
+class_data$LCL <- class_data$logRR - 1.96*class_data$SE_logRR
+class_data$UCL <- class_data$logRR + 1.96*class_data$SE_logRR
+
+pdf("./CI_figure.pdf",width=4,height=6)
+ggplot(class_data) + geom_hline(yintercept=0, colour="gray", lty=2) +
+        geom_linerange(aes(x = Name, 
+                           ymin = LCL,ymax = UCL),
+                       position = position_dodge(width = 1/2)) + 
+        coord_flip() +
+        ylab("log Risk Ratio") + xlab("Student")
+dev.off()
+```
+
+```{r, warning=F, message=F,out.width = "300px",fig.cap="Confidence intervals for the log risk ratio comparing the exposed and unexposed individuals in the class 2x2 table data. Data were generated from a null model. As expected, roughly 5 percent of the intervals did not include the null.",echo=F}
+knitr::include_graphics("CI_figure.pdf")
+```
