@@ -1,0 +1,323 @@
+---
+title: "Why Simulate?"
+author: "Ashley I Naimi"
+date: "Summer `r format(Sys.Date(), '%Y')`"
+urlcolor: blue
+bibliography: ref.bib
+link-citations: yes
+output: 
+    bookdown::pdf_book:
+      base_format: tint::tintPdf
+      toc: true
+      number_sections: true
+      includes:
+        in_header: ../../misc/preamble.tex
+      latex_engine: xelatex
+    html_document:
+      theme: readable
+      toc: true
+      toc_float: true
+      number_sections: true
+      css: ../../misc/style.css
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(formatR)
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+
+packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
+               "gridExtra","skimr","here","RColorBrewer","survival")
+
+for (package in packages) {
+  if (!require(package, character.only=T, quietly=T)) {
+    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
+  }
+}
+
+for (package in packages) {
+  library(package, character.only=T)
+}
+
+remotes::install_github("rstudio/fontawesome")
+
+library(fontawesome)
+
+thm <- theme_classic() +
+  theme(
+    legend.position = "top",
+    legend.background = element_rect(fill = "transparent", colour = NA),
+    legend.key = element_rect(fill = "transparent", colour = NA)
+  )
+theme_set(thm)
+
+knitr::knit_hooks$set(purl = knitr::hook_purl)
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+\newpage
+\onehalfspacing
+
+# Why Simulate?
+
+The last two decades have seen tremendous growth in the quantitative sciences.^[Much of this section is based on @Rudolph2021a] Statistical and analytic methods have become more nuanced, more complex, and more theoretical. The volume and complexity of these newer topics can make it difficult to gain a deeper understanding of basic concepts. 
+
+Even in cases where deep dives are possible, deep understanding of a complex concept is usually facilitated by breaking it down into simpler components and understanding the role that each component plays in the whole [@Gleick2011]. Tools that can be used to do this would therefore be of great benefit. Simulation is one such tool [@Burton2006; @Mooney1995; @Hodgson2000]. 
+
+Simulation is most commonly applied when assessing or comparing the performance of methods (e.g., estimators) in terms of bias or precision under known conditions. However, simulation can also be used to demonstrate many fundamental principles of data analysis, including study design, bias, and error, in a clear and systematic way. Additionally, simulation can be used to develop a deeper understanding of the scientific method, since theories, methods, or hypotheses can be subjected to experiments in a well-controlled, simulated environment.
+
+Overall, developing an ability to use simulation methods can be invaluable in pursuing a deeper understanding of important scientific and quantitative concepts.
+
+# An Overview of Simulation Designs
+
+@Morris2019 define a Monte Carlo simulation study as "computer experiments that involve creating data by pseudo-random sampling from known probability distributions." This is a good definition, but it captures at least four roughly distinct activities encountered in the quantitative sciences: compartmental modeling, generative modeling, Monte Carlo *estimation*, and Monte Carlo *simulation*.
+
+## Compartmental Models
+
+Compartmental models are common in infectious disease modeling [@Vynnycky2010] and the social sciences [@Epstein2006]. These models divide a population of individuals into sub-groups, or compartments, and creates relationships between them that are then tracked across time. 
+
+This models are quite common in infectious disease epidemiology, and include sub-variants such as the Susceptible, Infectious, and Recovered (SIR) model, or the Susceptible, Exposed, Infectious, and Recovered (SEIR) model. These are often used to understand how infections might spread in a population, where compartments are constructed to represent subsets of the population. 
+
+## Generative Modeling
+
+While the term "generative model" has been around for some time [@Epstein2006], it is more recently being used to denote a specific type of *synthetic* data generation. Though there are multiple potential uses of "synthetic data" [@Figueira2022], in the context of simulation, synthetic data generation methods are being developed to solve one very specific but very important problem: the need to rely on parametric models to simulate data. 
+
+As we will see in this course, Monte Carlo simulations are conducted primarily by specifying a data generating mechanism with very specific forms. For example, the variables that we simulate might be normally distributed with constant variance. The relationships between them will often be linear, or deviate from linearity in very well behaved ways (e.g., using squared or cubic terms to define polynomial relationships). 
+
+This reliance on well behaved parametric forms creates an inference problem: we might find that a particular method performs very well in data simulated with well-behaved parametric models. But can we expect this same performance to hold in settings where we collect our own data that is not guaranteed to follow some set of well-behaved parametric models?
+
+Generative models are meant to solve this problem. They rely on, for example, neural networks [@Burkov2019, chapter 6], variational autoencoders [@Doersch2021], generative adversarial networks [@Goodfellow2020], or other algorithms that generally follow an "encoder-decoder" strategy. One part of algorithm encodes the relationship in an empirical dataset that we are potentially using for a specific analysis, and simulates a dataset from this encoding. Some approaches try to simulate this data with a known true relationship between (say) an exposure and outcome of interest [@Athey2024, @Parikh2022]. 
+
+The second part of the algorithm tries to "decode" the relationship, to see if it can tell whether the simulated data are "different" from the actual data. If certain parts of the data are, in fact, different, the initial encoder algorithm can re-simulate the data trying to improve the overall fidelity between the simulated and real data.
+
+After several iterations of this, the hope is that the final simulated dataset should be indistinguishable from the real dataset. In doing so, these generative algorithms can then be used to evaluate the performance of analytic methods in datasets that look very much like real data, thus avoiding the problem that the simulated data are too artificial to be of general use.
+
+## Monte Carlo Estimation
+
+Monte Carlo estimation (sometimes referred to as Monte Carlo integration) is a general procedure usually used in the context of an applied scientific question, such as when external data are used to address a particular question of interest. Monte Carlo estimation is usually deployed to solve for a parameter that answers this question using pseudo-random number generators. The most common use of Monte Carlo estimation in quantitative settings (to my knowledge) is in the context of causal inference to solve for the parametric g formula, first introduced by @Robins1986.
+
+The g formula is a complex equation that (under some basic causal identifiability assumptions) allows us to quantify outcomes that would be observed under different exposure scenarios in a population of interest. The equation is often defined as:
+
+$$E(Y^{\overline{a}_M}) = \int \cdots \int \int E(Y \mid \overline{a}_M, \overline{z}_M) \prod_{m = 0}^M f(z_m \mid \overline{z}_{m-1}, \overline{a}_{m-1}) d\mu(z_m)$$
+
+This complex equation does not usually have a closed-form solution, and thus Monte Carlo estimation is the standard procedure for solving this function. Several explanations of this are available in the literature [@Robins2009; @Keil2014; @Daniel2013; @McGrath2020], as well as a large number of applied examples implementing the procedure [@Naimi2021a, @Taubman2009; @Westreich2012; @Cole2013; @Edwards2014; @Young2011].
+
+For example, we [@Naimi2021a] had a question about whether daily, low-dose aspirin can be used to prevent pregnancy loss in women trying to get pregnant, but who are at a higher risk of pregnancy loss and having a hard time getting and staying pregnant. We collected data on roughly 1200 women trying to get pregnant at a number of medical centers across the United States. These data were from the Effects of Aspirin for Gestation and Reproduction (EAGeR) Trial. One of our goals was to quantify the following parameter:
+
+$$E(Y^{\overline{a}_M = 1}  -  Y^{\overline{a}_M = 0}),$$
+which is the difference in outcomes that would be observed if all women took aspirin consistently over the course of follow-up, versus if all women took placebo consistently over the course of follow-up. This contrast is an answer to our underlying research question, and we used the g formula with Monte Carlo estimation to quantify this contrast of interest. 
+
+We will see a simpler example of Monte Carlo estimation below with an example of estimating $\pi$.
+
+## Monte Carlo Simulation
+
+Monte Carlo simulation is an extension/generalization of Monte Carlo estimation. While Monte Carlo estimation is often used with data collected to answer a substantive question of interest, Monte Carlo simulation is often used to estimate a parameter that addresses a methodological question of interest.^[This distinction, however, is somewhat artificial, as the separation between Monte Carlo estimation versus simulation is not always straightforward.] This short course will be primarily about Monte Carlo simulation, and we will see many examples of this over the course of the next few days.
+
+## The Monte Carlo Method
+
+What's important is that all three of these approaches rely on the Monte Carlo method to be deployed. The Monte Carlo method was introduced in the early 20th century [@Metropolis1949]. It was developed by John von Neumann, Stanislav Ulam, and Nicholas Metropolis to solve problems around the behavior of fissionable material under different conditions [@Metropolis1987]. The basic idea behind this method is to use chance to solve problems that would either be intractable, or just too difficult to solve analytically. Because of it's use of chance, it is named after the famed Monte Carlo Casino in Monaco [@Dunn2022].
+
+# Example Simulation Questions
+
+Monte Carlo estimation proceeds by using pseudo-random number generation to quantify a parameter of interest. The number of questions that could be answered using Monte Carlo simulation is endless. More generally, Monte Carlo methods can be used to gain insights, experiment, and answer an enormously wide range of questions related to quantitative methodology. Here are a few examples:
+
+<!-- ## What is a p-value? -->
+
+<!-- The p-value is a statistic defined as the probability of observing a result as extreme or more extreme than the one observed if the null hypothesis were, in fact, true. This definition is often misinterpreted and/or miscommunicated, largely because it is difficult to understand. However, we can construct an example using the Monte Carlo method to demonstrate some of the underlying logic of a p-value as a measure of evidence.  -->
+
+<!-- Suppose you are trying to construct a simulation-based example and visualizations that can aid in understanding the p-value. There are many ways we could do this, with one example illustrated in @Rudolph2021a. The key to this procedure is to recognize the logic of each step of the simulation example. If this intuition can be gained from the underlying steps in this simulation example, this can lead to a better understanding of the definition and interpretation of a p-value in more realistic settings. -->
+
+## Can we estimate the value of $\pi$?
+
+For thousands of years, the ratio of a circle's circumference to its diameter has played an important role in the unfoldment of human history. Equally fascinating is the history of how this constant $\pi$ has been quantified over the millenia [@Beckmann1971]. Interestingly, we can use the Monte Carlo method to quantify $\pi$.^[Note that this is not nearly the most efficient way of calculating $\pi$. To my knowledge, the current "best" approach to quantifying $\pi$ is based on a hexadecimal algorithm in base 16. See @Bailey1997.] For example, suppose you didn't know, but had to estimate $\pi$. Suppose further that you knew the area of a circle included $\pi$ as a constant:
+
+$$A_{C} = \pi \times r^2$$
+
+We can construct an equation to solve for $\pi$ by taking the ratio of a quarter of a unit circle to the area of the unit square:
+
+$$\frac{A_{C}/4}{A_{S}} = \frac{(\pi \times r^2)/4}{L \times W}.$$
+
+Because we're dealing with the unit circle and square, we can replace $r$, $L$, and $W$ by 1, and we get:
+
+$$\frac{A_{C}/4}{A_{S}} = \pi/4 $$
+If you chose $L = W = r = 1$, you could take the ratio of the area of the quarter circle to the area of the unit square to give: 
+
+$$ \pi = 4 \times \frac{A_{C/{4}}}{A_{S}} $$
+
+You could then randomly spread points over the entire unit square. Taking four times the proportion of points that fall in the quarter circle relative to the unit square will give you an estimate of $\pi$:
+
+```{r tidy = F, warning = F, message = F}
+
+# estimating pi
+pi_est <- function(simulation_n) {
+
+   x <- runif(simulation_n, 0, 1)
+   y <- runif(simulation_n, 0, 1)
+
+   # if point lies within radius, set to one, otherwise zero
+   rad <- as.numeric(x^2 + y^2 <= 1)
+   
+   # proportion of points within quarter circle (circle area) to 
+   # proportion of points within unit square (square area)
+   res <- c(simulation_n, (sum(rad)/simulation_n)*4)
+   
+   return(res)
+
+}
+
+n_list <- c(500, 1000, 5000, 50000, 500000, 100000, 10000000)
+
+pi_data <- NULL
+for(i in n_list){
+  pi_data <- rbind(pi_data, pi_est(simulation_n = i))
+}
+
+```
+
+We can present the results in a fancy-ish table using the `kable` function in the `knitr` package. Here we see that, as we increase the sample size used to estimate $\pi$, the estimated value gets closer and closer to the truth:
+
+```{r tidy = F, message = F, warning = F}
+knitr::kable(pi_data, "simple",
+             col.names = c("Simulation N", 
+                           "Estimated pi"))
+
+```
+
+## Estimating the Central Tendency of a Random Variable
+
+Here, we'll use another example to illustrate the concept of simulation in a slightly more familiar setting. Suppose we have a dataset that contains information on the body mass index of 20 individuals sampled from the general population. We assume this BMI variable is distributed normally. 
+
+Suppose further that we'd like to estimate the central tendency of this distribution as accurately and efficiently as possible. 
+
+We know that we can use either the mean, the median, or the mode value of this distribution as a measure of central tendency, and if BMI is normally distributed, then they should all be the same. 
+So should we use the mean, the median, or the mode to summarize this distribution? Does it matter? Why or why not? We can use simulation to gain some insight into this question:
+
+```{r tidy = F, warning = F, message = F}
+
+# write a function that computes the statistical 
+# mode. modified from: https://stackoverflow.com/a/8189441
+mode_func <- function(x) {
+  ux <- unique(y)
+  ix <- which.max(tabulate(match(y, ux)))
+  if(ix==1){
+    warning("no duplicates in data, mode does not exist")
+    res <- sample(ux, size = 1)
+  } else{
+    res <- ux[ix]
+  }
+  return(res)
+}
+
+# set the seed value
+set.seed(123)
+
+# how many observations?
+n = 200
+
+# start the simulation loop
+res <- NULL
+for(i in 1:1e4){
+  
+  # simulate a variable from a normal 
+  # with mean 26.5 and SD 5.25
+  y <- round(rnorm(n, mean = 26.5, sd = 5.25))
+  
+  # estimate mean, median, and mode
+  mode_estimator <- mode_func(y)
+  mean_estimator <- mean(y)
+  median_estimator <- median(y)
+  
+  # store results
+  res <- rbind(res, 
+               cbind(mode_estimator, 
+                     mean_estimator, 
+                     median_estimator)
+  )
+  
+}
+
+head(res)
+
+# convert results to data frame
+res <- data.frame(res)
+
+# plot results
+ggplot(res) + 
+  geom_histogram(aes(mode_estimator), 
+                 alpha = .2, fill = "blue") +
+  geom_histogram(aes(mean_estimator), 
+                 alpha = .2, fill = "red") +
+  geom_histogram(aes(median_estimator), 
+                 alpha = .2, fill = "green") +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
+
+```
+
+Is one better than the other? Why? Clearly, the figure shows us that the mode as an estimator is not great. It has a much wider spread than the other two. But what about the mean versus median?
+
+
+```{r tidy = F, warning = F, message = F}
+
+res %>% 
+  summarize_all(list(mean = mean, 
+                     std_dev = sd))
+
+```
+
+This simple table shows that the average of all the values from the mean, median, and mode estimators are the same: roughly 26.5, which is what we set the true mean to in the simulation code above. 
+
+However, the standard deviation of each estimator is very different across the three. The estimator with the smallest standard deviation is the mean estimator, which suggests the mean is the best option in our setting.
+
+As we proceed through this course, we'll see how these and other tools can be used to answer questions about the performance of quantitative methods in a wider range of settings.
+
+# Some Example Simulation Research Questions
+
+The number of questions that can be addressed using simulation methods is nearly endless. However, to gain a more precise understanding of the kinds of questions asked and answered in actual research settings, let's consider a few published research papers that rely on simulation:
+
+## Inverse Probability Weighting versus G Comptuation in Time-Dependent Settings
+
+In 2023, @Rudolph2023 compared different variations of inverse probability weighting and different variations of the g computation estimator for estimating the average treatment effect in survival data with a time-dependent treatment. Generally, there are few methods available to estimate effects for treatments that vary over time. The most commonly used techniques are IP weighting and g computation. However, researchers are often unsure about which approach to pick in a given setting. @Rudolph2023 sought to generate insights about how to navigate this question using simulation. They found that methods performed similarly, except for a variation of g computation known as the iterative conditional expectation (ICE) g computation estimator. This latter estimator had the lowest bias, but also the lowest precision, in the settings explored.
+
+## The Impact of Random Measurement Error in Observational Data Analysis
+
+Measurement error occurs when the tools used to collect data can yield incorrect information about the underlying feature being measured. Measurement error can be non-random, or differential, where the degree of error can depend on other variables; or it can be random, or non-differential, where the degree of error does not depend on any other variables in the system under study.
+
+Researchers in epidemiology and other quantitative sciences often state that non-differential misclassification biases results towards the null effect. Practically, this means that if non-differential measurement error is present, and a study yields an effect that is non-null, then this effect represents a conservative estimate of the exposure under study. This implies the effect is stronger than estimated in the study. However, this is only true if non-differential misclassification biases towards the null, and only towards the null. If this type of error can bias away from the null, then all bets are off, and we cannot conclude that the effect estimated is conservative. 
+
+In 2018, @Brakenhoff2018 conducted a simulation study that mimicked research in cardiovascular epidemiology to evaluate whether, in these more realistic settings, non-differential measurement error biases only towards the null. They showed that the direction of effect of random measurement error on the estimated exposure-outcome relations can be difficult to anticipate, suggesting that caution is warranted when concluding that estimated effects are conservative.
+
+## Hetergeneous Treatment Effects in the Presence of Null Overall Effects
+
+Interest in heterogeneous treatment effects, a term meant to connote the fact that the effect of a treatment or exposure might differ widely across sub-groups of a population, is increasing. There has been some theoretical work suggesting that, in a given sample, if there is no overall effect of a treatment under study, then the existence of strong sub-group effects is unlikely. This is important, since researchers often estimate "significant" subgroup effects in the absence of overall effects, suggesting that these estimates are the result of noise and variability. 
+
+In 2013, @Abrahamowicz2013 conducted a simulation study to see how common it would be to encounter null overall effects even in the presence of strong sub-group effects. They also explored what factors affected the presence of such scenarios. They explored three study designs: small clinical studies, case–control studies, and large cohort studies, each under different total sample size (N), relative size of the affected subgroup, and true treatment effect. Overall, their simulation provided evidence against previous theoretical conceptualizations of the problem: if the treatment really only has an effect in one subgroup of the population, a null overall effect can often coincide with a non-null treatment-by-subgroup interaction.
+
+# Some Motivating Questions
+
+This short course will be motivated by an actual simulation study. Throughout, we will demonstrate the concepts and tools needed to conduct a simulation study using some actual examples to motivate our study. We will focus on the following research questions:
+
+## Example 1: Simple Regression in an RCT setting
+
+Estimating intention-to-treat effects in randomized trials is usually a simple procedure comparing the summary measure (e.g., risk) of the outcome between the treated and placebo groups. However, there is some evidence suggesting that if we further adjust for variables that explain variability in the outcome, we can increase the efficiency of the intention-to-treat effects estimator. We'll conduct a simulation to address the following research question:
+
+*How much improvement in the performance of an ITT effect estimator do we gain when we adjust for variables that explain the outcome?*
+
+## Example 2: IPW vs Marginal Standardization
+
+Similar to the study by @Rudolph2023, we can ask whether there is a difference in the performance of an IP weighted estimator versus a g computation (i.e., marginal standardization) estimator in settings where the exposure does not vary over time. We can use simulation to address the following research question:
+
+*How does inverse probability weighting compare to marginal standardization when used to adjust for confounding in a treatment effect estimation setting?*
+
+## Example 3: Causal Mediation Analysis
+
+Mediation analysis is an extremely popular form of analyzing data to determine whether an estimated association between an exposure and outcome of interest is due entirely, partially, or not at all to a third potentially mediating variable. Several methods have been developed to estimate direct and indirect effects due to mediation in observational data. Most require that certain very strong assumptions hold. For example, one usually has to adjust for *confounders* of the relationship between the mediator and outcome of interest to avoid bias. However, many methods also require that these confounders are not affect by the exposure under study. We can use simulation to answer the following research question:
+
+*If we don't use methods that account for mediator-outcome confounders affected by the exposure, how misleading can the results of a mediation analysis be?*
+
+Over the next few days, we will explore concepts, tools, and strategies to enable us to more clearly define what we mean by this question, and how we can construct a simulation study to provide us with some answers to these questions. 
+
+\newpage
+
+# References
