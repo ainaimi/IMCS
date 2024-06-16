@@ -1,0 +1,643 @@
+---
+title: "Designing Simulation Studies"
+author: "Ashley I Naimi"
+date: "`r paste0('Spring ', 2024)`" #format(Sys.Date(), '%Y')
+urlcolor: blue
+bibliography: ref.bib
+link-citations: yes
+output: 
+    bookdown::pdf_book:
+      base_format: tint::tintPdf
+      toc: true
+      number_sections: true
+      includes:
+        in_header: ../../misc/preamble.tex
+      latex_engine: xelatex
+    html_document:
+      theme: readable
+      toc: true
+      toc_float: true
+      number_sections: true
+      css: ../../misc/style.css
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(formatR)
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+
+packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
+               "gridExtra","skimr","here","RColorBrewer","survival")
+
+for (package in packages) {
+  if (!require(package, character.only=T, quietly=T)) {
+    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
+  }
+}
+
+for (package in packages) {
+  library(package, character.only=T)
+}
+
+remotes::install_github("rstudio/fontawesome")
+
+library(fontawesome)
+
+thm <- theme_classic() +
+  theme(
+    legend.position = "top",
+    legend.background = element_rect(fill = "transparent", colour = NA),
+    legend.key = element_rect(fill = "transparent", colour = NA)
+  )
+theme_set(thm)
+
+knitr::knit_hooks$set(purl = knitr::hook_purl)
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+\newpage
+\onehalfspacing
+
+# The Aims of a Simulation Study
+
+So far in the course, we've mostly covered technical ingredients needed to conduct a simulation study. These include things such writing functions, deploying loops, and using seeds. In this section, we're going to take a look at some more general, less technical items that need to be considered when designing and implementing a simulation study. 
+
+Much of this short course is motivated by an excellent article on conducting simulation studies by @Morris2019. In this article, the authors outline the ADEMP framework for motivating a simulation study, which stands for:
+
+- Aims
+- Data Generating Mechanisms
+- Estimands
+- Methods
+- Performance Measures
+
+We'll cover these next, starting with the **aims** of a simulation study. There are a wide variety of reasons on why one might conduct a simulation study. Among these include:
+
+- checking whether a given algebraic solution or new code to deploy a particular method works as expected.  
+- assessing the finite-sample properties of methods whose validity has been established using asymptotic approximations.
+- comparing two or more different statistical methods under identical simulated conditions.
+- calculating sample sizes or power for a given study design under known conditions. 
+- unpacking a particular method to better understand it's underlying logic.
+- understanding the importance of certain assumptions on the validity of a particular method. 
+
+Let's provide some examples of simulation studies motivated by some of these aims.
+
+## Understanding p-values
+
+This example is less of a simulation study and more of a simulation illustration. The primary aim of this example is to demonstrate some of the underlying logic of a p-value. P-values are notoriously difficult to understand and interpret [@Wasserstein2016], and led to a considerable and voluminous literature on the topic. We can demonstrate some basic ideas with a very simple simulated dataset.
+
+The following two-by-two table demonstrates some simple data we can do this with:
+
+```{r tidy=F}
+
+rct_data <- matrix(
+  c(53,193,139,350),
+  ncol=2,
+  byrow=T)
+
+colnames(rct_data) <- c("event","nonevent")
+rownames(rct_data) <- c("exposed","unexposed")
+rct_data <- as.table(rct_data)
+rct_data
+
+```
+
+We can estimate the risk ratio, defined as the ratio of the probability of the outcome in the exposed versus unexposed:
+
+```{r}
+
+risk_ratio <- (rct_data[1,1]/sum(rct_data[1,]))/(rct_data[2,1]/sum(rct_data[2,]))
+round(risk_ratio,2)
+
+```
+
+We can also use standard equations to obtain an estimate of the standard error for this risk ratio:
+
+```{r}
+
+SE_lnRR <- sqrt((1/rct_data[1,1] - 1/sum(rct_data[1,])) + (1/rct_data[2,1] - 1/sum(rct_data[2,])))
+
+```
+
+Using this standard error and risk ratio, we can construct a p-value using a standard z-test:
+
+```{r}
+
+z <- (log(risk_ratio) - 0)/SE_lnRR
+round(2*pnorm(-abs(z)),4)
+
+```
+
+This p-value suggests the probability of observing a risk ratio of `r round(risk_ratio,2)` or larger (in absolute value) if there were no actual association between the exposure and the outcome is `r round(2*pnorm(-abs(z)),4)`. Unfortunately, this example doesn't shed much intuitive light on what's happening here.
+
+Instead, we can break this procedure into several underlying steps. First, we'll construct a long dataset out of the table:
+
+```{r}
+rct_data
+rct_data_long <- rbind(matrix(rep(c(1,1),rct_data[1,1]),ncol=2),
+                       matrix(rep(c(0,1),rct_data[2,1]),ncol=2),
+                       matrix(rep(c(1,0),rct_data[1,2]),ncol=2),
+                       matrix(rep(c(0,0),rct_data[2,2]),ncol=2))
+nrow(rct_data_long)
+
+# re-shuffle rows
+rct_data_long <- data.frame(rct_data_long[sample(nrow(rct_data_long)),])
+names(rct_data_long) <- c("X","Y")
+```
+
+Our new dataset looks like this:
+
+```{r}
+head(rct_data_long)
+```
+
+The first thing we'll do with this dataset is based on the assumption that there is **no effect** of the exposure on the outcome (the null hypothesis). If this is the case, then it follows that shuffling around (or permuting) the expsoure and re-estimating the risk ratio every time we shuffle would give us a valid distribution of the effect around the null. For example, we can pick (randomly) the exposure value for observation 732 and switch that value with observation 4. 
+
+Doing this randomly for each observation would give as a new dataset in which everyone's exposure value was switched, but there outcome remained the same.
+
+This is where the simulation can come in useful. We can construct a variety of different datasets . 
+
+If we did this re-shuffling and re-estimation multiple times, we'd get a distribution of risk ratios that looked like this:
+
+```{r tidy=F}
+
+set.seed(123)
+
+rr_permuted <- NULL
+
+permutations <- 20000
+
+for(i in 1:permutations){
+  
+  permuted <- rct_data_long
+  
+  permuted$X <- permuted$X[sample(length(permuted$X))] # shuffle the exposure, N = 735
+  
+  res <- log(mean(subset(permuted,X==1 )$Y)/mean(subset(permuted,X==0)$Y)) # recalculate RR
+  
+  rr_permuted <- rbind(rr_permuted,res)
+  
+}
+
+rr_permuted <- data.frame(rr_permuted)
+names(rr_permuted) <- "estimates"
+```
+
+```{r, warning=F, message=F, out.width = "5cm",fig.cap="Distribution of log risk ratios after 2,000 random permutations of the exposure variable in the 2x2 table data above. The solid blue density curve represents a nonparametric kernel density estimate of the distribution. The solid red density curve represents a normal density estimate of the distribution. The dashed red vertical line indicates the value of the log risk ratio estimated in the original unpermuted data.",echo=F}
+ggplot(rr_permuted) +  
+  geom_histogram(aes(estimates,y=..density..),color="gray",fill="white") + 
+  geom_density(aes(estimates),color="blue") + 
+  stat_function(
+    fun = dnorm, 
+    args = with(rr_permuted, c(mean = mean(estimates), sd = sd(estimates))),
+    color="red"
+  ) + 
+  geom_vline(xintercept = log(risk_ratio),color="red",linetype=2)
+```
+
+This permutation procedure gives us a critical component of a significance test: **the distribution of the estimates under the null.** It turns out, we can compute the p-value directly from this distribution.
+
+There are a total of `r permutations` estimates. How many of them are the same as or "more extreme" than the one we estimated in the actual data? We can compute this easily:
+```{r}
+sum(rr_permuted$estimate <= log(risk_ratio))
+```
+
+Dividing the number of estimates that are as or more extreme than the original risk ratio by `r permutations` gives us a one-sided p-value:
+```{r}
+sum(rr_permuted$estimate <= log(risk_ratio))/permutations
+```
+
+To get a two-sided test, we simply take the absolute values of both the original risk ratio and each estimate obtained in the permutation test, and repeat the comparison. Note that we have to change the direction of the "less than" sign for this to work:
+
+```{r}
+sum(abs(rr_permuted$estimate) >= abs(log(risk_ratio)))/permutations
+```
+
+## Non-Collapsibility of the OR
+
+The next example will look at the impact of non-collapsiblility of the odds ratio [@Greenland1999,@Greenland2005b,@Pang2013]. The odds ratio is a non-collapsible measure of association, and for this reason its use in epidemiology is somewhat controversial [@Pang2013a,Kaufman2010a]. Non-collapsibility is a mathematical property of the odds ratio that results from Jensen's inequality (the average of a non-linear function does not equal the function its average; see @Greenland2011), and has confused many a statistician and epidemiologist [@Greenland1999; @Hernan2011].
+
+In simple terms, non-collapsibility of the OR will be apparent when estimating an adjusted exposure-outcome association using a conditional and marginal approach (using standard logistic regression for the conditional approach, and IP-weighting or marginal standardization for the marginal approach). For example, in Figure 2, 
+
+```{r, out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $A$, confounder $C$, and outcome $Y$.",echo=F}
+knitr::include_graphics(here("_images","triangle_dag.pdf"))
+```
+
+we can adjust for the confounding effects of $C$ conditionally using standard regression model:
+
+$$ \logit P(Y = 1 \mid A, C) = \beta_0 + \beta_1 A + \beta_2 C, $$
+
+and interpreting $\beta_1$ as the conditionally adjusted effect. Or, we can output predicted probabilities from this model for each person in the sample under two conditions: $A = 1$ and $A = 0$. We can then average these two probabilities over the sample, and compare the odds for the $A = 1$ to the odds for the $A = 0$. To explore the impact of noncollapsibility, we can simulate data following the causal relation in Figure 2.
+
+Noncollapsibility is less of an issue when the outcome is rare. Often, the threshold for defining "rarity" is taken to be $\lessapprox 10$%. But how valid is this $\lessapprox 10$\% cutoff? We can answer this using Monte Carlo simulation. To do this, let's simulate data following the causal relation in Figure 2.
+
+```{r, echo=T,fig.star=T,tidy=F,highlight=T}
+  
+  expit <- function(a){1/(1+exp(-a))}
+
+  set.seed(123)
+
+  n = 500
+  # simulate confounder from a normal distribution
+  ## first argument is sample size
+  ## second argument is mean
+  ## third argument is SD
+  C <- rnorm(n,0,1)
+
+  # propensity model
+  ## theta is a 2-dimensional vector (list) of parameters for the exposure model
+  ## theta[1] is the intercept and theta[2] is the log-OR for the confounder-exposure relation
+  ## pi is the probability that the exposure is 1
+  theta <- c(0,log(2))
+  pi <- expit(theta[1]+theta[1]*C)
+  
+  # simulate exposure from binomial distribution
+  ## second argument is number of trials
+  ## third argument is probability that A = 1
+  A <- rbinom(n,1,pi)
+
+  # outcome model
+  ## beta is a 3-dimensional vector (list) of parameters for the outcome model
+  ## beta[1] is the intercept, beta[2] is the exp(OR) for the exposure-outcome relation
+  ## beta[3] is the log-OR for the confounder-outcome relation
+  beta <- c(-2.75,log(2),log(2))
+  mu <- expit(beta[1] + beta[2]*A + beta[3]*C)
+  Y <- rbinom(n,1,mu)
+
+```
+
+Our result of interest from this simulation study will be how collapsibility is affected by the prevalence of the outcome, and whether a $\lessapprox 10$% outcome prevalence is sufficient to render the conditional and marginal OR approximately equal. The prevalence of $Y$ can be changed by varying the intercept parameter in the outcome model above (`beta[1]`). To answer our question, we will need to store the prevalence of $Y$ in a variable:
+
+```{r, echo=T,fig.star=T,tidy=F,highlight=T}
+  # glm.res0 is the outcome's prevalence
+  ## we store this to ouput it from the function
+  glm.res0 <- mean(Y)
+
+  print(glm.res0)
+```
+
+So our outcome prevalence is `r glm.res0*100`%. Our dataset consists of three variables, and the first and last three entries are:
+
+```{r, echo=T,fig.star=T,tidy=F,highlight=T}
+
+head(data.frame(Y,A,C=round(C,2)),3)
+
+tail(data.frame(Y,A,C=round(C,2)),3)
+
+```
+
+We can now estimate the conditionally and marginally adjusted odds ratios in this sample of 500 observations. We can fit a conditionally adjusted model using the following code:
+
+```{r, echo=T,fig.star=T,tidy=F,highlight=T}
+
+  # estimate the true exposure odds ratio using a conditonally adjusted logit model
+  ## NB: conditionally adjusted logit model is not the same as "conditional logistic regression"
+  ## glm.res1 is the conditional log-odds ratio
+  
+  m1 <- glm(Y~A+C,family=binomial(link="logit"))
+  glm.res1 <- m1$coefficients[2]
+  
+```
+
+We can fit a marginally adjusted approach using the following code:
+```{r, echo=T,fig.star=T,tidy=F,highlight=T}
+
+  # estimate the true exposure odds ratio using a marginally adjusted logit model
+  ## compute the average predicted probabilities under A = 1 and then A = 0
+  muhat1 <- mean(predict(m1,newdata=data.frame(A=1,C),type="response"))
+  muhat0 <- mean(predict(m1,newdata=data.frame(A=0,C),type="response"))
+  
+  ## compute the odds from these average probabilities
+  odds1 <- muhat1/(1-muhat1)
+  odds0 <- muhat0/(1-muhat0)
+  
+  ## glm.res2 is the marginal log-odds ratio
+  glm.res2 <- log(odds1/odds0)
+
+```
+
+Summarizing our results, we found that for an outcome prevalence of  `r glm.res0*100`%, the conditionally adjusted OR was `r round(exp(glm.res1),2)`, and the marginally adjusted OR was `r round(exp(glm.res2),2)`. Not a huge difference. Keep in mind, this simulation study is extremely limited. We only used a single sample of 500 observations. Thus, the pattern in these results can be explained entirely by random noise. In typical simulation studies, one would repeat the above process 1,000, 5,000 or even 10,000 times, and take the averages of each result. 
+
+Let's fix this briefly to see if it changes anything:
+
+```{r tidy = F, warning = F, message = F}
+
+  expit<-function(a){1/(1+exp(-a))}
+
+  set.seed(123)
+  
+  collapsibility_function <- function(index, intercept){
+      n=500
+      
+      C <- rnorm(n,0,1)
+    
+      theta <- c(0,log(2))
+      pi <- expit(theta[1]+theta[1]*C)
+      
+      A <- rbinom(n,1,pi)
+    
+      beta <- c(intercept,log(2),log(2))
+      mu <- expit(beta[1] + beta[2]*A + beta[3]*C)
+      Y <- rbinom(n,1,mu)
+    
+      glm.res0 <- mean(Y)
+    
+      m1 <- glm(Y~A+C,family=binomial(link="logit"))
+      glm.res1 <- m1$coefficients[2]
+      
+      muhat1 <- mean(predict(m1,newdata=data.frame(A=1,C),type="response"))
+      muhat0 <- mean(predict(m1,newdata=data.frame(A=0,C),type="response"))
+      
+      ## compute the odds from these average probabilities
+      odds1 <- muhat1/(1-muhat1)
+      odds0 <- muhat0/(1-muhat0)
+      
+      ## glm.res2 is the marginal log-odds ratio
+      glm.res2 <- log(odds1/odds0)
+      
+      res <- data.frame(prevalenceY = glm.res0, 
+                        conditionalOR = glm.res1, 
+                        marginalOR = glm.res2)
+      
+      return(res)
+  }
+  
+  sim_res <- lapply(1:2000, function(x) collapsibility_function(index = x, intercept = -2.75))
+  
+  sim_res <- do.call(rbind, sim_res)
+  
+  head(sim_res)
+  
+  mean(sim_res$conditionalOR)
+  
+  mean(sim_res$marginalOR)
+
+```
+
+Once again, not a major difference. The next step would be to evaluate how the prevalence of the outcome affects the difference in the conditionally and marginally adjusted odds ratios, but we'll leave that for later if time permits.
+
+# Defining your Data Generating Mechanism Using Directed Acyclic Graphs
+
+In designing a simulation study, it is important to understand how to generate random variables so that the relevant causal and statistical associations between them hold as expected. An important tool in accomplishing this goal is the use of causal diagrams, or directed acyclic graphs. Figures 2 is a directed acyclic graph, which must generally be drawn using rules that govern a DAG, sometimes referred to as the Markov properties of the model.
+
+A directed acyclic graph is a graphical model with **three key properties**:
+
+1. All arrows (edges) are directed from one variable (node) to another.
+2. There are no cycles/loops in the diagram.
+3. All common causes are included in the DAG.
+
+If any of these properties is not met in a particular graphical model, it is not a DAG. There are several concepts and techniques relevant to the use of DAGs that we cannot cover here. However, for simulation studies, the most important concept related to DAGs is the concept of variable exogeneity and / or endogeneity. 
+
+With respect to a particular DAG, a variable is exogenous if it has no arrows pointing into it. On the other hand, the most endogenous variable in a DAG is the one that has the most arrows pointing into it. If we re-visit Figure 2, we can note the following:
+
+```{r, out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $A$, confounder $C$, and outcome $Y$.",echo=F}
+knitr::include_graphics(here("_images","triangle_dag.pdf"))
+```
+
+- The variable $C$ is most exogenous to this system
+- The variable $A$ is second most exogenous
+- The variable $Y$ is the most endogenous
+
+Note how this aligns with how we simulated our data:
+
+```{r, eval=F}
+
+collapsibility_function <- function(index, intercept){
+      
+      n=500
+      
+      C <- rnorm(n,0,1) ## FIRST!!!
+    
+      theta<- c(0,log(2))
+      pi <- expit(theta[1]+theta[1]*C)
+      
+      A <- rbinom(n,1,pi) ## SECOND!!
+    
+      beta <- c(intercept,log(2),log(2))
+      mu <- expit(beta[1] + beta[2]*A + beta[3]*C)
+      Y <- rbinom(n,1,mu) ## THIRD!
+    
+      ...
+      
+}
+
+```
+
+This highlights an important point about how we can construct a data-generating mechanism of interest. If we start with a DAG, we can use each variables relative exogeneity to determine how we can simulate a dataset of interest. As a more complicated example, consider the following mediation diagram:
+
+```{r, out.width = "10cm",fig.cap="Complex mediation diagram with unmeasured confounder $U$, baseline confounders $C$, mediator-outcome confounder affected by the exposure $L$, mediator $Z$, exposure $X$, and outcome $Y$.",echo=F}
+knitr::include_graphics(here("_images","mediation_dag.pdf"))
+```
+
+This DAG might be used to motivate a simulation study on the properties of different methods to quantify mediation effects (e.g., direct and indirect effects). Using the concept of relative exogeneity/endogeneity. We first have to identify the most exogenous variables, and work our way down to the most endogenous variables. We can do this by counting the number of arrows that goes into each variable:
+
+|  Variable  | Arrow Number |
+|----|---|
+| $U$  |  0 |
+| $C$  |  0 |
+| $X$  |  1 |
+| $L$  |  2 |
+| $Z$  |  2 |
+| $Y$  |  5 |
+
+In this table, there are two sets of variables that share a tie. The first are totally exogenous, and so it doesn't really matter whether we simulate one first or the other. The second set that share a tie are the variables $L$ and $Z$, each with two arrows. However, in this case, one of the arrows going into $Z$ comes from $L$. This means we need to simulate $L$ before we simulate $Z$. 
+
+This suggests that we need to simulate our variables in the following order:
+
+$$U, C, X, L, Z, Y$$
+
+We can do this using the following code:
+
+```{r}
+
+expit <- function(x){1/(1 + exp(-x))}
+
+set.seed(123)
+
+n = 500
+
+U <- rnorm(n)
+
+C <- rnorm(n)
+
+X <- rbinom(n, size = 1, p = expit(-1 + log(2)*C ))
+
+L <- rnorm(n, mean = 0 + 1.5*X + 1.5*U)
+
+Z <- rbinom(n, size = 1, expit(-1.5 + log(2)*X + log(2)*L ))
+
+Y <- rnorm(n, mean = 10 + 5*X + 5*C + 5*Z + 4*L + 4*U, sd = 5)
+
+med_data <- data.frame(Y, Z, L, X, C)
+
+head(med_data)
+
+```
+
+This flexible procedure is a useful tool in generating data from potentially complex data structures. Note, however, that there is a whole lot in addition to the ordering of variables that has to be decided to successfully simulate data. For instance, we simulated the outcome $Y$ based on a normal distribution with a constant variance. We could have used a binomial or Poisson distribution. We did not include any interactions between any of these variables in our simulation. This should be determined on the basis of the question of interest motivating the simulation. Finally, and perhaps most importantly, we selected coefficients for our outcome model in such a way that isolates the independent effect of each variable, without considering the overall effect that we might be interested in. We'll discuss this issue in the next sections.
+
+# What is Your Estimand? 
+
+In a given study, the estimand is the target parameter we seek to quantify with the study data. In a simulation setting, the estimand can be identified as the true underlying relationship in the data that we are primarily interested in quantifying. For example, in the above Figure 2, there are two possible estimands that we can adopt as our target. The first is the conditionally adjusted odds-ratio, which in the context of our simulated data is 2. Here is that code again:
+
+```{r, eval = F}
+
+  # outcome model
+  ## beta is a 3-dimensional vector (list) of parameters for the outcome model
+  ## beta[1] is the intercept, beta[2] is the exp(OR) for the exposure-outcome relation
+  ## beta[3] is the log-OR for the confounder-outcome relation
+  beta <- c(-2.75,log(2),log(2))
+  mu <- expit(beta[1] + beta[2]*A + beta[3]*C)
+  Y <- rbinom(n,1,mu)
+
+```
+
+The second estimand we can pick in this setting is the marginally adjusted odds-ratio, but the actual value of this estimand is more difficult to determine. In fact, it will require integration to solve for:
+
+$$\mu(A = a) = \int_C \expit \{ \beta_0 + \beta_1a + \beta_2 C \} dC$$
+which we can then use to compute the marginally adjusted odds ratio:
+
+$$\frac{\mu(A = 1)}{1 - \mu(A = 1)}/\frac{\mu(A = 0)}{1 - \mu(A = 0)}$$
+
+The problem is that, even in this simple single $C$ setting, computing this integral is challenging because of the $\expit$ function and the fact that $C$ is normally distributed. In this case, I never attempt to solve for the true value of the marginally adjuted odds ratio (or marginally adjusted effect, more generally). Instead, I rely on the Oracle method, which will be described below.
+
+# No, really, What is Your Estimand?
+
+As we will soon see, we need the true value of the estimand in any situation we are interested in quantifying bias, mean squared error, or most measures of estimator performance we usually want from a simulation study. But the challenge in solving for the true parameter value can be real. Take, for example, Figure 4 and suppose we are interesed in the effect defined as a contrast of the outcome that would be observed if everyone in the population were exposed versus unexposed. How can we determine this from the code we used to generate our data? This effect is actually represented in the DAG (Figure 4) by the combined arrows emanating from $X$ into $Y$. This includes:
+
+|  Path |
+|-----|
+| $X \rightarrow Y$ |
+| $X \rightarrow Z \rightarrow Y$ |
+| $X \rightarrow L \rightarrow Y$ |
+| $X \rightarrow L \rightarrow Z \rightarrow Y$ |
+
+We actually know the magnitude of each arrow represented in this Table. The tough question is, how do we combine them?
+
+# The True Value and Monte Carlo Integration
+
+Fortunately, there is a general technique that we can use to determine the actual numerical value of interest, without having to solve for complex integral equations or determine how to combine multiple effect magnitudes of interest into a single estimand value of interest. To illustrate this technique, let's start with the simpler data generating mechanism evaluating the difference between the conditionally and marginally adjusted odds ratio. Here's the data generating mechanism we used, with a few key differences. First, we put an argument for the exposure in the function. Second, we generate only the marginally adjusted odds under a specific exposure value. Third, we increase the sample size to as large as we can tolerate:
+
+```{r}
+
+expit<-function(a){1/(1+exp(-a))}
+
+set.seed(123)
+  
+collapsibility_function <- function(intercept, exposure){
+      n = 5e6 # five million observations
+      
+      C <- rnorm(n,0,1)
+    
+      theta <- c(0,log(2))
+      pi <- expit(theta[1]+theta[1]*C)
+      
+      A <- exposure # set the exposure to a specific value
+    
+      beta <- c(intercept,log(2),log(2))
+      mu <- expit(beta[1] + beta[2]*A + beta[3]*C)
+      Y <- rbinom(n,1,mu)
+    
+      mu_ <- mean(Y) # output the mean of Y under the specific exposure value
+    
+      ## compute the odds from these average probabilities
+      odds <- mu_/(1-mu_)
+
+      ## output the marginally adjusted odds
+      return(odds)
+  }
+
+```
+
+In this modified function, we can now compute the odds from the data generating mechanism under a condition where everyone is exposed:
+
+```{r}
+
+odds1 <- collapsibility_function(intercept = -2.75, exposure = 1)
+
+odds1
+
+```
+
+We can do the same thing where everyone is unexposed:
+
+```{r}
+
+odds0 <- collapsibility_function(intercept = -2.75, exposure = 0)
+
+odds0
+
+```
+
+We can now take the ratio of these two odds to quantify the true value using Monte Carlo integration:
+
+```{r}
+
+true_ORm <- odds1/odds0
+
+true_ORm
+
+```
+
+When implementing this procedure, it's important to NOT change change anything else except the exposure status and the sample size in the function used to conduct the simulation. If something else is changed, you may end up quantifying an estimand that does not correspond to the effect of interest that you're after.
+
+<!-- # The Simulation Oracle -->
+
+<!-- ```{r tidy = F, warning = F, message = F} -->
+
+<!--   expit<-function(a){1/(1+exp(-a))} -->
+
+<!--   set.seed(123) -->
+
+<!--   collapsibility_function <- function(index, intercept){ -->
+
+<!--       n=500 -->
+
+<!--       C <- rnorm(n,0,1) -->
+
+<!--       theta <- c(0,log(2)) -->
+<!--       pi <- expit(theta[1]+theta[1]*C) -->
+
+<!--       A <- rbinom(n,1,pi) -->
+
+<!--       beta <- c(intercept,log(2),log(2)) -->
+<!--       mu <- expit(beta[1] + beta[2]*A + beta[3]*C) -->
+<!--       Y <- rbinom(n,1,mu) -->
+
+<!--       glm.res0 <- mean(Y) -->
+
+<!--       m1 <- glm(Y~A+C,family=binomial(link="logit")) -->
+<!--       glm.res1 <- m1$coefficients[2] -->
+
+<!--       muhat1 <- mean(predict(m1,newdata=data.frame(A=1,C),type="response")) -->
+<!--       muhat0 <- mean(predict(m1,newdata=data.frame(A=0,C),type="response")) -->
+
+<!--       ## compute the odds from these average probabilities -->
+<!--       odds1 <- muhat1/(1-muhat1) -->
+<!--       odds0 <- muhat0/(1-muhat0) -->
+
+<!--       ## glm.res2 is the marginal log-odds ratio -->
+<!--       glm.res2 <- log(odds1/odds0) -->
+
+<!--       res <- data.frame(prevalenceY = glm.res0,  -->
+<!--                         conditionalOR = glm.res1,  -->
+<!--                         marginalOR = glm.res2) -->
+
+<!--       return(res) -->
+<!--   } -->
+
+<!--   sim_res <- lapply(1:2000, function(x) collapsibility_function(index = x, intercept = -2.75)) -->
+
+<!--   sim_res <- do.call(rbind, sim_res) -->
+
+<!--   head(sim_res) -->
+
+<!--   mean(sim_res$conditionalOR) -->
+
+<!--   mean(sim_res$marginalOR) -->
+
+<!-- ``` -->
+
+\newpage
+
+# References
