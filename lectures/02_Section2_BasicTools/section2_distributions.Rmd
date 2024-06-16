@@ -1,0 +1,446 @@
+---
+title: "Key Distributions in R"
+author: "Ashley I Naimi"
+date: "Summer `r format(Sys.Date(), '%Y')`"
+urlcolor: blue
+bibliography: ref.bib
+link-citations: yes
+output: 
+    bookdown::pdf_book:
+      base_format: tint::tintPdf
+      toc: true
+      number_sections: true
+      includes:
+        in_header: ../../misc/preamble.tex
+      latex_engine: xelatex
+    html_document:
+      theme: readable
+      toc: true
+      toc_float: true
+      number_sections: true
+      css: ../../misc/style.css
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(formatR)
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+
+packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
+               "gridExtra","skimr","here","RColorBrewer","survival")
+
+for (package in packages) {
+  if (!require(package, character.only=T, quietly=T)) {
+    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
+  }
+}
+
+for (package in packages) {
+  library(package, character.only=T)
+}
+
+remotes::install_github("rstudio/fontawesome")
+
+library(fontawesome)
+
+thm <- theme_classic() +
+  theme(
+    legend.position = "top",
+    legend.background = element_rect(fill = "transparent", colour = NA),
+    legend.key = element_rect(fill = "transparent", colour = NA)
+  )
+theme_set(thm)
+
+knitr::knit_hooks$set(purl = knitr::hook_purl)
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+\newpage
+\onehalfspacing
+
+# Distribution Functions in R
+
+Base R comes with a wide variety of pseudo-random number generators that we can use to simulate from a wide variety of probability distributions, including the Gaussian, uniform, binomial, Poisson, and other distributions. Additionally, there are several packages written that can be used to simulate from other common and less common distributions, including the multivariate Normal, double-exponential, Gumbel, and others. Generally, functions written in R to generate data from a distribution follow a particular convention. For example, generating from a normal distribution, we have the following functions in base R:
+
+  - rnorm: generate Normal random variable
+  - dnorm: evaluate the Normal probability density (with a given mean/SD) at specific points
+  - pnorm: evaluate the cumulative distribution function for a Normal distribution 
+  - qnorm: evaluate the inverse of the cumulative distribution function for a Normal distribution 
+  
+Generally, functions that start with an "r" generate random variables. Functions that start with a "d" generate density values for a specific value of the random variable. Functions that start with a "p" and a "q" evaluate the cumulative distribution function, and the inverse of the cumulative distribution (quantile) function, respectively.
+
+|  Prefix  | Function |
+|----|---|
+| d  |  density |
+| r  |  random variable generation |
+| p  |  cumulative distribution |
+| q  |  inverse cumulative distribution (quantile) |
+
+
+Mostly, to conduct simulation studies, we'll rely on the "r" functions, which will allow us to generate random variables. Next we'll look at specific functions that generate random variables in R and explore their use for simulation.
+
+## Gaussian (or Normal) Distribution
+
+We can simulate data from a Normal distribution using the `rnorm` function in R. This function can be deployed as:
+
+```{r gaussianplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for Univariate Normal Distribution with Mean = 0 and Standard Deviation = 1 for 5000 Simulated Observations."}
+
+set.seed(123)
+ggplot() + 
+  geom_histogram(aes(x = rnorm(n = 5000))) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
+
+```
+
+```{r, warning = F, message = F}
+
+set.seed(123)
+
+n <- 5
+
+y <- rnorm(n, mean = 0, sd = 1)
+
+y
+
+```
+
+The univariate Normal distribution is fully defined by its mean and standard deviation. The default values for these in R are 0 and 1, respectively. 
+
+In a regression context, the mean of a Normally distributed random variable is often what is made conditional on other variables. For example, in a simple setting, we might have a Normally distributed outcome $Y$ with a mean conditional on $X$. This can be accomplished in R in two ways^[Note the use of three `set.seed()` functions in this code chunk. This is not advisable, but I'm doing it here to demonstrate an equivalence between two ways of generating a $Y$ variable conditional on $X$.]:
+
+```{r, warning = F, message = F}
+
+n <- 5
+
+set.seed(123)
+x <- rnorm(n)
+
+set.seed(123)
+y_version1 <- rnorm(n, mean = 1 + 2*x, sd = 1)
+
+set.seed(123)
+y_version2 <- 1 + 2*x + rnorm(n, mean = 0, sd = 1)
+
+y_version1
+
+y_version2
+
+```
+
+## Multivariate Normal Distribution
+
+```{r mvnplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Contour Plot for Multivariate Normal Distribution with Mean = [0,0], and Standard Deviation = [1,1], and covariance [.5, .5] for 5000 Simulated Observations."}
+
+set.seed(123)
+m <- c(0, 0)
+sigma <- matrix(c(1,.5,.5,1), nrow=2)
+data.grid <- expand.grid(x = seq(-3, 3, length.out=200), y = seq(-3, 3, length.out=200))
+q.samp <- cbind(data.grid, prob = mvtnorm::dmvnorm(data.grid, mean = m, sigma = sigma))
+ggplot(q.samp, aes(x=x, y=y, z=prob)) + 
+    geom_contour() +
+    coord_fixed(xlim = c(-3, 3), ylim = c(-3, 3), ratio = 1) 
+
+```
+
+It is sometimes useful to generate data from a multivariate Normal distribution. For example, if you are trying to simulate a large number of independent covariates (e.g., confounders or predictors) that will be included in a regression model, rather than copy and paste code for the univariate Normal distribution multiple times, you can use code for generating a multivariate Normal vector, and make the covariance between them zero. 
+
+Alternatively, if you are interested in exploring the impact of non-zero covariance between a set of covariates on the performance of an estimator, you can use multivariate Normal functions to do so. 
+
+There are two packages in R that can be used to generate multivariate Normal data: the `MASS` package and the `mvtnorm` package. Here's how to use the functions in `MASS`:
+
+```{r, warning = F, message = F}
+
+  n <- 5
+
+  set.seed(123)
+
+  # create variance - covariance matrix:
+  sigma <- matrix(0,nrow=3,ncol=3) 
+  diag(sigma) <- 1
+  
+  sigma
+  
+  # create mean vector:
+  mu <- rep(1, 3)
+  
+  mu
+   
+  # simulate variables
+  c <- MASS::mvrnorm(n, mu=mu, Sigma=sigma)
+  
+  c
+
+```
+
+Here's how to do the same thing in `mvtnorm`:
+
+```{r, warning = F, message = F}
+
+  n <- 5
+
+  set.seed(123)
+
+  # create variance - covariance matrix:
+  sigma <- matrix(0,nrow=3,ncol=3) 
+  diag(sigma) <- 1
+  
+  sigma
+  
+  # create mean vector:
+  mu <- rep(1, 3)
+  
+  mu
+   
+  # simulate variables
+  c <- mvtnorm::rmvnorm(n, mean=mu, sigma=sigma)
+  
+  c
+
+```
+
+Note the flexibility that can be introduced into these function calls. You can specify different means for each column, different standard deviations for each column, as well as different variance-covariance relations between columns, all depending on the nature of the question you are interested in answering. 
+
+:::{.rmdnote data-latex="{note}"}
+
+__Technical Note__:
+
+|               Recently in our work, we have been exploring the impact of increasing or decreasing the number of variables in a regression model on the performance of a range of estimators. To do this, we are using the `mvtnorm` package, with code that looks like this:
+
+```{r tidy = FALSE, attr.source='.numberLines'}
+  
+  n = 5
+  
+  p <- c_number <- 3
+  
+  ## confounder matrix
+  sigma <- matrix(0,nrow=p,ncol=p)
+  diag(sigma) <- 1
+  c <- mvtnorm::rmvnorm(n, mean=rep(0,p), sigma=sigma)
+  
+  # DESIGN MATRIX FOR THE OUTCOME MODEL
+  muMatT <- model.matrix(  
+    as.formula(  
+      paste("~(",  
+            paste("c[,",1:ncol(c),"]", collapse="+"),  
+            ")"  
+            )  
+      )  
+    )[,-1]
+  
+  parmsC <- rep(1.5,c_number)
+  
+  y <- 10 + muMatT%*%parmsC + rnorm(n)
+  
+  data.frame(y,c)
+```
+
+By changing the `c_number` value, you can automatically increase or decrease the number of covariates included in the model for $Y$.
+
+:::
+
+## Uniform Distribution
+
+```{r uniformplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Uniform Distribution with Upper and Lower Bounds of 0 and 1, respectively for 5000 Simulated Observations."}
+
+set.seed(123)
+ggplot() + 
+  geom_histogram(aes(x = runif(n = 5000))) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
+
+```
+
+The uniform distribution is fully defined by its upper and lower bounds. The default values for these in R are 0 and 1, respectively. 
+
+This distribution can be useful in a number of ways. In principle, this distribution can be made conditional on other variables by specifying the bounds of the distribution as a function of some other variable. However, this is not often seen in practice. One can generate a uniform random variable in R using the following code:
+
+```{r}
+
+set.seed(123)
+
+n <- 5
+
+y <- runif(n, min = 0, max = 1)
+
+y
+
+```
+
+This distribution is central to the inverse transformation method, which is a generic technique used to simulate data from arbitrary distributions. We will see this method shortly.
+
+## Binomial Distribution
+
+```{r binomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Barplot for the Binomial (Bernoulli) Distribution with p = 0.25 for 5000 Simulated Observations."}
+
+set.seed(123)
+ggplot() + 
+  geom_bar(aes(x = rbinom(n = 5000, size = 1, p = .25))) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
+
+```
+
+The binomial distribution is defined by two parameters: the probability of a success in a given "trial" and the number of trial conducted. When the number of "trials" is one, the binomial distribution is equivalent to the Bernoulli distribution, which generates a $[0,1]$ indicator of whether an event occurred or not. In settings where logistic regression is used, the dependent variable is usually from a Bernoulli distribution with a probability depending on variables that will be included in the model. There are no default values for probability of success and the trial size, so these must be specified as follows. 
+
+```{r}
+
+set.seed(123)
+
+n <- 5
+
+y <- rbinom(n, size = 1, p = .5)
+
+y
+
+```
+
+Note what happens when we increase the size of the trial to, say, 8:
+
+```{r}
+
+set.seed(123)
+
+n <- 5
+
+y <- rbinom(n, size = 8, p = .5)
+
+y
+
+```
+
+Each instance of the simulated `y` becomes a sum of all of the successes (one's) encountered over the eight trials.
+
+## Multinomial Distribution
+
+```{r multinomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Barplot for the Multinomial Distribution with Three Levels and p = {0.2, 0.1, 0.7} for 5000 Simulated Observations."}
+
+mn_vars <- t(rmultinom(n = 5000, size = 1, p = c(.2, .1, .7)))
+mn_vars <- do.call(rbind, 
+  lapply(1:nrow(mn_vars), function(x) which(mn_vars[x,]==1))
+)
+
+set.seed(123)
+ggplot() + 
+  geom_bar(aes(x = mn_vars)) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
+
+```
+
+The multinomial distribution is a generalization of the binomial distribution that can be used to generate categorical variables where the probability of each level is governed by a (possibly) unique probability value. The multinomial distribution is defined by two parameters: the set of values defining the probabilities of realizing a specific category. and the number of trial conducted. Similar to the binomial distribution, when the number of "trials" is one, the multinomial distribution is equivalent to the categorical distribution, which generates a $[0,1]$ indicator of whether an event occurred or not. In the multinomial (categorical) case, the "event" can take on more than 2 levels. There are no default values for probabilities of success and the trial size, so these must be specified. 
+
+We can start by using the multinomial distribution in R to model the physical mechanism by which we roll a single (size = 1), six sided die. The "six-sidedness" comes from the fact we are repeating the "1/6" value six times (using the `rep()` function). Here, we roll a six-sided dice 5 times:
+
+```{r}
+
+set.seed(123)
+
+n <- 5
+
+y <- rmultinom(n, size = 1, p = rep(1/6, 6))
+
+y
+
+```
+
+Alternatively, we can imagine a situation where an individual can experience one of three outcomes in a study related to cardiovascular health. Suppose the individual can be censored (y = 1), can experience a competing event such as death (y = 2), or can experience the outcome of interest, such as a heart attack (y = 3). Suppose further that these probabilities are 0.1, 0.05, and 0.15, respectively. This means that thirty percent of the sample experienced some event, and the remaining seventy percent experienced no event (such individuals would often be identified as administratively censored). We can simulate these data with the following code:
+
+```{r tidy = F, warning = F, message = F}
+
+set.seed(123)
+
+n <- 5
+
+y <- rmultinom(n, size = 1, 
+               p = c(0.1,0.05,0.15, 1 - sum(0.1,0.05,0.15)))
+
+y
+
+t(y)
+
+```
+
+Note here that in this simulation, the first two observations experienced a competing event, the third and the fifth observations were censored, and the fourth observation experienced a heart attack.
+
+<!-- ## Hypergeometric Distribution -->
+
+<!-- ## Chi squared Distribution -->
+
+## Poisson Distribution
+
+```{r poisplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Poisson Distribution with lamba = 5 for 5000 Simulated Observations."}
+
+set.seed(123)
+ggplot() + 
+  geom_bar(aes(x = rpois(n = 5000, lambda = 5))) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
+
+```
+
+The Poisson distribution is fully defined by a single parameter, usually denoted $\lambda$. This distribution is usually used to model counts of discrete events, such as the number of cigarettes smoked in one hour among smokers. A Poisson random variable can be simulated using the following code:
+
+```{r}
+
+set.seed(123)
+
+n <- 5
+
+y <- rpois(n, lambda = 3)
+
+y
+
+```
+
+<!-- ## Negative Binomial Distribution -->
+
+<!-- ```{r nbinomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Negative Binomial Distribution with mu = 5 and size = 100 for 5000 Simulated Observations."} -->
+
+<!-- set.seed(123) -->
+<!-- ggplot() +  -->
+<!--   geom_bar(aes(x = rnbinom(n = 5000, mu = 10, size=100 ) )) + -->
+<!--   scale_x_continuous(expand = c(0,0)) + -->
+<!--   scale_y_continuous(expand = c(0,0)) -->
+
+<!-- ``` -->
+
+<!-- The negative binomial distribution is related to the binomial distribution in a complementary fashion.  -->
+
+<!-- :::{.rmdnote data-latex="{dive}"} -->
+
+<!-- __Deeper Dive__: Overdispersion -->
+
+<!-- |               Overdispersion describes a situation where the variance in an outcome variable is greater than the variance that can be captured by the model of that outcome variable. This concept is most commonly encountered with a Poisson random variable. The variance of a Poisson distribution is equal to the mean. If we let $\mu$ denote the mean of an outcome variable $Y$, and we let $\sigma^2$ denote it's variance, then modeling $Y$ with a Poisson regression model (GLM or GEE) implies that $\mu = \sigma^2$. However, if we let $\bar{y}$ denote the sample mean and $s^2$ denote the sample variance, we may find that: $\bar{y} < s^2$. -->
+
+<!-- In this case, we would say that the outcome is "overdispersed". One solution to overdispersion is to estimate a scale parameter in a GLM or GEE model. In a Poisson regression context, adding a scale parameter re-defines the variance of the outcome to be: -->
+
+<!-- $$V(Y) = \phi \lambda,$$ -->
+<!-- where $\lambda$ is the variance of the Poisson distribution (which is equal to the mean), and $\phi$ is a scale that multiplies this variance accordingly. In a regression modeling context, we can set the scale parameter $\phi$ to be 1 if there is no overdispersion. Or we can estimate it, and scale the standard errors from the regression model, thus accounting for overdispersion in the outcome.  -->
+
+<!-- Other distributions can be affected by overdispersion (e.g., binomial distribution with $N>1$). However, the Gaussian distribution and Binomial distribution with $N = 1$ (i.e., a Bernoulli random variable) are not typically affected by overdispersion. In this cases, it is common to set the scale parameter to 1 instead of estimate it. Other techniques are also available to handle overdispersion (e.g., using the Negative Binomal distribution instead, which allows the variance to exceed the mean for count outcome data).  -->
+
+<!-- ::: -->
+
+<!-- ## Exponential Distribution -->
+
+<!-- ## Weibull Distribution -->
+
+<!-- ## Generalized Gamma Distribution -->
+
+<!-- ## Mixture Distributions -->
+
+<!-- ## Zero Inflated and Hurdle Distributions -->
+
+<!-- ## Beta and Dirichlet -->
+
+<!-- ## **ExtDist Package:** https://cran.r-project.org/web/packages/ExtDist/index.html -->
+
+<!-- ## The Inverse Transformation Method -->
+
+<!-- The code presented in the sections above provide a way to simulate random variables from distributions whose properties are well known. However, in some settings, we may need to find our own way to simulate random variables from a distribution that does not have a pre-programmed off-the-shelf software method that can be used. In this case, there is a general technique that can be used to simulate random variables, known as the inverse transformation method.  -->
+
+\newpage
+
+# References
