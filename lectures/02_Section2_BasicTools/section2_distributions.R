@@ -204,6 +204,23 @@ y <- rbinom(n, size = 8, p = .5)
 y
 
 
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+set.seed(123)
+
+n <- 5
+
+c <- rnorm(n)
+
+expit <- function(x){1/(1+exp(-x))}
+
+y <- rbinom(n, size = 1, p = expit(-2 + log(2)*c))
+
+data <- data.frame(y, c)
+
+data
+
+
 ## ----multinomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Barplot for the Multinomial Distribution with Three Levels and p = {0.2, 0.1, 0.7} for 5000 Simulated Observations."----
 
 mn_vars <- t(rmultinom(n = 5000, size = 1, p = c(.2, .1, .7)))
