@@ -1,5 +1,5 @@
 ---
-title: "Key Distributions in R"
+title: "Simulating Random Variables in R"
 author: "Ashley I Naimi"
 date: "Summer `r format(Sys.Date(), '%Y')`"
 urlcolor: blue
@@ -22,27 +22,26 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-library(knitr)
-library(formatR)
-opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 
-packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
-               "gridExtra","skimr","here","RColorBrewer","survival")
-
-for (package in packages) {
-  if (!require(package, character.only=T, quietly=T)) {
-    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
-  }
+# Load pacman (install if necessary)
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman", repos = 'http://lib.stat.cmu.edu/R/CRAN')
 }
 
-for (package in packages) {
-  library(package, character.only=T)
+# Use pacman to load (and install if missing) all required packages
+pacman::p_load(
+  data.table, tidyverse, ggplot2, ggExtra, formatR,
+  gridExtra, skimr, here, RColorBrewer, survival,
+  knitr, remotes
+)
+
+# Ensure fontawesome is installed from GitHub if not available
+if (!requireNamespace("fontawesome", quietly = TRUE)) {
+  remotes::install_github("rstudio/fontawesome")
 }
-
-remotes::install_github("rstudio/fontawesome")
-
 library(fontawesome)
 
+# Set ggplot2 theme
 thm <- theme_classic() +
   theme(
     legend.position = "top",
@@ -51,8 +50,15 @@ thm <- theme_classic() +
   )
 theme_set(thm)
 
-knitr::knit_hooks$set(purl = knitr::hook_purl)
-knitr::opts_chunk$set(echo = TRUE)
+# Set global chunk options
+opts_chunk$set(
+  tidy.opts = list(width.cutoff = 60),
+  tidy = TRUE,
+  echo = TRUE
+)
+
+# Set knit hook for purling
+knit_hooks$set(purl = hook_purl)
 
 ```
 
@@ -131,7 +137,7 @@ y_version2
 
 ## Multivariate Normal Distribution
 
-```{r mvnplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Contour Plot for Multivariate Normal Distribution with Mean = [0,0], and Standard Deviation = [1,1], and covariance [.5, .5] for 5000 Simulated Observations."}
+```{r mvnplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Contour Plot for Multivariate Normal Distribution with Mean = (0,0), Standard Deviation = (1,1), and covariance (.5, .5) for 5000 Simulated Observations."}
 
 set.seed(123)
 m <- c(0, 0)
@@ -412,14 +418,14 @@ y
 
 <!-- __Deeper Dive__: Overdispersion -->
 
-<!-- |               Overdispersion describes a situation where the variance in an outcome variable is greater than the variance that can be captured by the model of that outcome variable. This concept is most commonly encountered with a Poisson random variable. The variance of a Poisson distribution is equal to the mean. If we let $\mu$ denote the mean of an outcome variable $Y$, and we let $\sigma^2$ denote it's variance, then modeling $Y$ with a Poisson regression model (GLM or GEE) implies that $\mu = \sigma^2$. However, if we let $\bar{y}$ denote the sample mean and $s^2$ denote the sample variance, we may find that: $\bar{y} < s^2$. -->
+<!-- |               Overdispersion describes a situation where the variance in an outcome variable exceeds the variance assumed under a model's distributional assumptions. This concept is most commonly encountered with a Poisson random variable. The variance of a Poisson distribution is equal to the mean. If we let $\mu$ denote the mean of an outcome variable $Y$, and we let $\sigma^2$ denote it's variance, then modeling $Y$ with a Poisson regression model (GLM or GEE) implies that $\mu = \sigma^2$. However, in actuality for some variables **assumed** to follow a Poisson distribution, we may find that: $\mu < \sigma^2$. -->
 
 <!-- In this case, we would say that the outcome is "overdispersed". One solution to overdispersion is to estimate a scale parameter in a GLM or GEE model. In a Poisson regression context, adding a scale parameter re-defines the variance of the outcome to be: -->
 
-<!-- $$V(Y) = \phi \lambda,$$ -->
-<!-- where $\lambda$ is the variance of the Poisson distribution (which is equal to the mean), and $\phi$ is a scale that multiplies this variance accordingly. In a regression modeling context, we can set the scale parameter $\phi$ to be 1 if there is no overdispersion. Or we can estimate it, and scale the standard errors from the regression model, thus accounting for overdispersion in the outcome.  -->
+<!-- $$V(Y) = \phi \mu,$$ -->
+<!-- where $\phi$ is a scale parameter that multiplies this variance accordingly. In a regression modeling context, we can set the scale parameter $\phi$ to 1 if there is no overdispersion. Or we can estimate it, and scale the standard errors from the regression model, thus accounting for overdispersion in the outcome. -->
 
-<!-- Other distributions can be affected by overdispersion (e.g., binomial distribution with $N>1$). However, the Gaussian distribution and Binomial distribution with $N = 1$ (i.e., a Bernoulli random variable) are not typically affected by overdispersion. In this cases, it is common to set the scale parameter to 1 instead of estimate it. Other techniques are also available to handle overdispersion (e.g., using the Negative Binomal distribution instead, which allows the variance to exceed the mean for count outcome data).  -->
+<!-- Other distributions can be affected by overdispersion (e.g., binomial distribution with $N>1$). However, the Gaussian distribution and Binomial distribution with $N = 1$ (i.e., a Bernoulli random variable) are not typically affected by overdispersion. In these cases, it is common to set the scale parameter to 1 instead of estimate it. Other techniques are also available to handle overdispersion (e.g., using the Negative Binomal distribution instead, which allows the variance to exceed the mean for count outcome data). -->
 
 <!-- ::: -->
 
@@ -437,15 +443,17 @@ y
 
 <!-- ## **ExtDist Package:** https://cran.r-project.org/web/packages/ExtDist/index.html -->
 
-## The Inverse Transformation Method
+# The Inverse Transformation Method
 
-Thus far, we've demonstrated a range of canned packages that can be used to simulate random variables from a wide variety of distributions. One strength of the R programming language is that it does have a wide range of functions that can be used for a diversity of tasks, including random variable generation.
+Thus far, we've demonstrated a range of packages that can be used to simulate random variables from a wide variety of distributions. One strength of the R programming language is that it many functions that can be used for a diversity of tasks, including random variable generation.
 
-But what happens if we want to simulate a random variable from a distribution, and there is no associated R package or function that would allow us to do this? For example, supposed I wanted to simulate from a Pareto distribution to generate a heavy-tailed random variable. I could use the corresponding suite of function from the `EnvStats` package, including the `rpareto()` functions, but let's say I don't trust them and want to test them against something that I can guarantee. 
+But what happens if we want to simulate a random variable from a distribution, and there is no associated R package or function that would allow us to do this? Or what happens if we don't immediately trust the package that's available to us? For example, supposed I wanted to simulate from a Pareto distribution to generate a heavy-tailed random variable. I could use the corresponding suite of function from the `EnvStats` package, including the `rpareto()` functions, but let's say I don't trust the function because it is no longer being maintained, or that I suspect there might be an error in the function. Is there a way I can generate a random variable from a Pareto (or other) distribution that I can guarantee? 
 
-We can rely on the inverse transformation method, or inverse transform sampling, to do this. This approach allows us to derive an equation that we can write up in R, and then use a uniform random variable to draw random realizations from the distribution fo interest. 
+It turns out, there is a generic mathematical tool we can use to do this. This tool is called the inverse transformation method, or inverse transform sampling. The approach allows us to derive an equation that we can write up in R, and then use a uniform random variable to draw random realizations from the distribution fo interest. 
 
-Here's an example of the inverse transform sampling method to generate data from a Pareto distribution with an 80:20 property. First, we note that the general CDF of Pareto distribution is defined as:
+Here's an example use of the inverse transform sampling method to generate data from a Pareto distribution with an 80:20 property. This distribution is useful to model some heavy tailed distributions. For example, consider the distribution of wealth in the United States. There are several lines of evidence suggesting that the distribution of wealth in the US is "heavy tailed." Some estimates demonstrate that the top 10% of individuals in the US possess 70% of the wealth, which is close to what we'd expect if wealth was distributed according to a Pareto random variable.
+
+First, we note that the CDF of Pareto (type 1) distribution is defined as:
 
 $$
 F(x) = 
@@ -455,18 +463,16 @@ F(x) =
 \end{cases}
 $$
 
-This equation defines the CDF for a Pareto distribution as a function of two parameters: $x_m$, which defines the minimum value the variable can take (the scale parameter); and $\alpha$, which defines the shape of the distribution. We can do some basic math to let this distribution be equal to a draw from a uniform random variable, and focus on the kernel of this equation, we get:
+This equation defines the CDF for a Pareto distribution as a function of two parameters: $x_m$, which defines the minimum value the variable can take (the scale parameter); and $\alpha$, which defines the shape of the distribution. Since $F(x)$ is a cumulative probability, it lies on the [0,1] interval. So, we can let this distribution be equal to a draw from a uniform random variable on the [0,1] interval, and focus on the core part of this equation to get:
 
 $$u = 1 - \left( \dfrac{x_m}{x} \right)^{\alpha}$$
-which, with some basic algebra to re-arrange, gives:
+With some basic algebra, we can re-arrange this equation:
 
 $$x = x_m (1 - u)^{-1/\alpha}$$
 
 This latter equation tells us that a realization of the random variable $x$ drawn from a Pareto distribution can be obtained from a draw from the uniform distribution $u$, if the uniform draw is entered into this equation. We can write R code that does this as:
 
 ```{r tidy = F, warning = F, message = F}
-
-pacman::p_load(EnvStats)
 
 set.seed(123)
 
@@ -477,22 +483,33 @@ pareto_shape <- log(5, base = 4) # this sets the distribution to be Pareto 80:20
 ## generate uniform random variable
 u <- runif(n = 1000)
 
+## the equation that let's us apply inverse transform sampling from a uniform
+## distribution to get a Pareto random variable
 x <- pareto_scale*(1-u)^(-1/pareto_shape)
 
-## Draw RV from same distribuiton but with the EnvStats Package function
+## Draw RV from same distribution but with the EnvStats Package function
+## to compare the two random variables
+pacman::p_load(EnvStats)
 x_prime <- rpareto(n = 1000, 
                    location = pareto_scale, 
                    shape = pareto_shape)
 
 ```
 
-We can compare the `x` and `x_prime` variables to see if our function worked. But because we generated from a Pareto distribution with a scale parameter of roughly 1.16 ($\approx \log_4(5)$), standard comparisons won't work very well. Figure \@ref(fig:paretocomparison) shows that both methods generate a random variables that have roughly the same tail distribution properties.
+We can compare the `x` and `x_prime` variables to see if our function worked. But because we generated from a Pareto distribution with a scale parameter of roughly $1.16 \approx \log_4(5)$, standard comparisons won't work very well. Figure \@ref(fig:paretocomparison) shows a log-log complementary CDF curve, that can be used to better understand how a heavy tailed random variable is behaving [@Clauset2009]. This Figure shows that both methods generate a random variables that have roughly the same tail distribution properties.
 
-```{r paretocomparison, out.width="5cm", fig.align='center', fig.margin=TRUE, fig.cap="Log of the complement of the CDF against the log of X for the random variable generated using the inverse transform method (red lines) and the rpareto function in the EnvStats package.", echo=F}
+```{r paretocomparison, out.width="5cm", fig.align='center', fig.margin=TRUE, fig.cap="Log of the complement of the CDF against the log of X for the random variable generated using the inverse transform method (red lines) and the rpareto function in the EnvStats package (blue lines).", echo=F}
 knitr::include_graphics(here("_images", "pareto_comparison.pdf"))
 ```
 
+The inverse transform sampling method can be a powerful tool for generating random variables from a wide variety of distributions. The basic steps involved include:
 
+1) Defining the CDF of the variable we want to generate as a uniform random variable
+2) Invert the CDF so that the variable is isolated as a function of the distribution parameters and the uniform random variable
+3) Program the equation in 2 using code
+4) Simulate a uniform random variable bounded between 0 and 1, and enter it into the equation coded in 3
+
+This inverse transform sampling method is a generic procedure that can be used for any distribution whose inverse CDF can be derived.
 
 <!-- The code presented in the sections above provide a way to simulate random variables from distributions whose properties are well known. However, in some settings, we may need to find our own way to simulate random variables from a distribution that does not have a pre-programmed off-the-shelf software method that can be used. In this case, there is a general technique that can be used to simulate random variables, known as the inverse transformation method.  -->
 
