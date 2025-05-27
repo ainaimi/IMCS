@@ -5,3 +5,8 @@ _images/aRtsy.R
 /misc*
 /sandbox*
 bfg.jar
+*.log
+*.pdf
+*.aux
+*.toc
+*.tex
