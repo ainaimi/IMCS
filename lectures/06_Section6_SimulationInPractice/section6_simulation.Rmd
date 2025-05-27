@@ -1,5 +1,5 @@
 ---
-title: "Simulation Study: Example 1"
+title: "Simulation Study: Example 1 - IP Weighting versus Marginal Standardization for a Time-Fixed Exposure"
 author: "Ashley I Naimi"
 date: "`r paste0('Spring ', 2024)`" #format(Sys.Date(), '%Y')
 urlcolor: blue

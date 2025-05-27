@@ -1,25 +1,24 @@
 ## ----setup, include=FALSE-----------------------------------------------------
-library(knitr)
-library(formatR)
-opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 
-packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
-               "gridExtra","skimr","here","RColorBrewer","survival")
-
-for (package in packages) {
-  if (!require(package, character.only=T, quietly=T)) {
-    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
-  }
+# Load pacman (install if necessary)
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman", repos = 'http://lib.stat.cmu.edu/R/CRAN')
 }
 
-for (package in packages) {
-  library(package, character.only=T)
+# Use pacman to load (and install if missing) all required packages
+pacman::p_load(
+  data.table, tidyverse, ggplot2, ggExtra, formatR,
+  gridExtra, skimr, here, RColorBrewer, survival,
+  knitr, remotes
+)
+
+# Ensure fontawesome is installed from GitHub if not available
+if (!requireNamespace("fontawesome", quietly = TRUE)) {
+  remotes::install_github("rstudio/fontawesome")
 }
-
-remotes::install_github("rstudio/fontawesome")
-
 library(fontawesome)
 
+# Set ggplot2 theme
 thm <- theme_classic() +
   theme(
     legend.position = "top",
@@ -28,8 +27,15 @@ thm <- theme_classic() +
   )
 theme_set(thm)
 
-knitr::knit_hooks$set(purl = knitr::hook_purl)
-knitr::opts_chunk$set(echo = TRUE)
+# Set global chunk options
+opts_chunk$set(
+  tidy.opts = list(width.cutoff = 60),
+  tidy = TRUE,
+  echo = TRUE
+)
+
+# Set knit hook for purling
+knit_hooks$set(purl = hook_purl)
 
 
 ## ----gaussianplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for Univariate Normal Distribution with Mean = 0 and Standard Deviation = 1 for 5000 Simulated Observations."----
@@ -70,7 +76,7 @@ y_version1
 y_version2
 
 
-## ----mvnplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Contour Plot for Multivariate Normal Distribution with Mean = [0,0], and Standard Deviation = [1,1], and covariance [.5, .5] for 5000 Simulated Observations."----
+## ----mvnplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Contour Plot for Multivariate Normal Distribution with Mean = (0,0), Standard Deviation = (1,1), and covariance (.5, .5) for 5000 Simulated Observations."----
 
 set.seed(123)
 m <- c(0, 0)
@@ -244,8 +250,6 @@ y
 
 t(y)
 
-apply(t(y), 2, mean)
-
 
 ## ----poisplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Poisson Distribution with lamba = 5 for 5000 Simulated Observations."----
 
@@ -266,4 +270,30 @@ y <- rpois(n, lambda = 3)
 
 y
 
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+set.seed(123)
+
+pareto_scale <- 10000 # this sets the minimum to the distribution
+pareto_shape <- log(5, base = 4) # this sets the distribution to be Pareto 80:20
+
+# now we use the inverse transform sampling method 
+## generate uniform random variable
+u <- runif(n = 1000)
+
+## the equation that let's us apply inverse transform sampling from a uniform
+## distribution to get a Pareto random variable
+x <- pareto_scale*(1-u)^(-1/pareto_shape)
+
+## Draw RV from same distribution but with the EnvStats Package function
+## to compare the two random variables
+pacman::p_load(EnvStats)
+x_prime <- rpareto(n = 1000, 
+                   location = pareto_scale, 
+                   shape = pareto_shape)
+
+
+## ----paretocomparison, out.width="5cm", fig.align='center', fig.margin=TRUE, fig.cap="Log of the complement of the CDF against the log of X for the random variable generated using the inverse transform method (red lines) and the rpareto function in the EnvStats package (blue lines).", echo=F----
+knitr::include_graphics(here("_images", "pareto_comparison.pdf"))
 

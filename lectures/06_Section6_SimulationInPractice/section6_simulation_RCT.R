@@ -1,130 +1,93 @@
-## ----setup, include=FALSE-----------------------------------------------------
-library(knitr)
-library(formatR)
-opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 
-packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
-               "gridExtra","skimr","here","RColorBrewer","survival")
+ library(parallel)
+ library(lmtest)
+ library(sandwich)
 
-for (package in packages) {
-  if (!require(package, character.only=T, quietly=T)) {
-    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
-  }
-}
+ expit<-function(a){1/(1+exp(-a))}
 
-for (package in packages) {
-  library(package, character.only=T)
-}
+ set.seed(123)
 
-remotes::install_github("rstudio/fontawesome")
+ simulation_function <- function(index,
+                                 sample_size = 500,
+                                 true_value = 2,
+                                 c_number = 10,
+                                 cov_mat = 0,
+                                 diag_cov = 1){
 
-library(fontawesome)
+   # printing to console won't work with parallel processing
+   print(index)
 
-thm <- theme_classic() +
-  theme(
-    legend.position = "top",
-    legend.background = element_rect(fill = "transparent", colour = NA),
-    legend.key = element_rect(fill = "transparent", colour = NA)
-  )
-theme_set(thm)
+   # DATA GENERATION
+   n <- sample_size
+   print(n)
 
-knitr::knit_hooks$set(purl = knitr::hook_purl)
-knitr::opts_chunk$set(echo = TRUE)
+   # how many confounders to simulate?
+   p <- c_number
+   print(p)
 
+   ## confounder matrix
+   sigma <- matrix(cov_mat, nrow=p, ncol=p)
+   diag(sigma) <- diag_cov
+   c <- mvtnorm::rmvnorm(n, mean=rep(0,p), sigma=sigma)
 
-## ----out.width = "10cm",fig.cap="Simple causal diagram representing a randomized trial, with randomized treatmetn assignment $A$, outcome cause $C$, and outcome $Y$.",echo=F----
-knitr::include_graphics(here("_images","rct_dag.pdf"))
+   # DESIGN MATRIX FOR THE PROPENSITY SCORE MODEL
+   piMat <- model.matrix(
+     as.formula(
+       paste("~(",
+             paste("c[,",1:ncol(c),"]", collapse="+"),
+             ")"
+       )
+     )
+   )[,-1]
 
-## ----tidy = F, warning = F, message = F, eval = F-----------------------------
-#  library(parallel)
-#  library(lmtest)
-#  library(sandwich)
-#  
-#  expit<-function(a){1/(1+exp(-a))}
-#  
-#  set.seed(123)
-#  
-#  simulation_function <- function(index,
-#                                  sample_size = 500,
-#                                  true_value = 2,
-#                                  c_number = 10,
-#                                  cov_mat = 0,
-#                                  diag_cov = 1){
-#  
-#    # printing to console won't work with parallel processing
-#    print(index)
-#  
-#    # DATA GENERATION
-#    n <- sample_size
-#    print(n)
-#  
-#    # how many confounders to simulate?
-#    p <- c_number
-#    print(p)
-#  
-#    ## confounder matrix
-#    sigma <- matrix(cov_mat, nrow=p, ncol=p)
-#    diag(sigma) <- diag_cov
-#    c <- mvtnorm::rmvnorm(n, mean=rep(0,p), sigma=sigma)
-#  
-#    # DESIGN MATRIX FOR THE PROPENSITY SCORE MODEL
-#    piMat <- model.matrix(
-#      as.formula(
-#        paste("~(",
-#              paste("c[,",1:ncol(c),"]", collapse="+"),
-#              ")"
-#        )
-#      )
-#    )[,-1]
-#  
-#    # simulate the treatment via 50:50 randomization
-#    x <- rbinom(n, size = 1, p = .5)
-#  
-#    # parameters for the covariate outcome relation
-#    parmsC_mu <- rep(1.25, c_number)
-#  
-#    # simulate the outcome
-#    y <- rnorm(n, mean = 100 + true_value*x + piMat%*%parmsC_mu, sd = 2)
-#  
-#    # construct dataset
-#    analysis_data <- data.frame(y, x, c)
-#  
-#    # ANALYSIS
-#  
-#    mod1 <- lm(y ~ x, data = analysis_data)
-#    unadjusted_effect <- summary(mod1)$coefficients[2,1:2]
-#  
-#    mod2 <- lm(y ~ ., data = analysis_data)
-#    adjusted_effect <- summary(mod2)$coefficients[2,1:2]
-#  
-#    # SIMULATION FUNCTION OUTPUT
-#  
-#    res <- data.frame(sample_size = sample_size,
-#                      c_number = c_number,
-#                      cov_mat  = cov_mat,
-#                      diag_cov = diag_cov,
-#                      true_value = true_value,
-#                      unadjusted_effect,
-#                      adjusted_effect)
-#  
-#    return(res)
-#  }
-#  
-#  simulation_results <- mclapply(1:5000,
-#                                 function(x) simulation_function(index = x,
-#                                                                 sample_size = 500,
-#                                                                 true_value = 2,
-#                                                                 c_number = 10,
-#                                                                 cov_mat = 0,
-#                                                                 diag_cov = 1),
-#                                 mc.cores = detectCores() - 2)
-#  
-#  sim_res <- do.call(rbind, simulation_results)
-#  
-#  # # save the data to file!
-#  
-#  write_csv(sim_res, here("lectures/06_Section6_SimulationInPractice", "simulation_results_rct.csv"))
-#  
+   # simulate the treatment via 50:50 randomization
+   x <- rbinom(n, size = 1, p = .5)
+
+   # parameters for the covariate outcome relation
+   parmsC_mu <- rep(1.25, c_number)
+
+   # simulate the outcome
+   y <- rnorm(n, mean = 100 + true_value*x + piMat%*%parmsC_mu, sd = 2)
+
+   # construct dataset
+   analysis_data <- data.frame(y, x, c)
+
+   # ANALYSIS
+
+   mod1 <- lm(y ~ x, data = analysis_data)
+   unadjusted_effect <- summary(mod1)$coefficients[2,1:2]
+
+   mod2 <- lm(y ~ ., data = analysis_data)
+   adjusted_effect <- summary(mod2)$coefficients[2,1:2]
+
+   # SIMULATION FUNCTION OUTPUT
+
+   res <- data.frame(sample_size = sample_size,
+                     c_number = c_number,
+                     cov_mat  = cov_mat,
+                     diag_cov = diag_cov,
+                     true_value = true_value,
+                     unadjusted_effect,
+                     adjusted_effect)
+
+   return(res)
+ }
+
+ simulation_results <- mclapply(1:5000,
+                                function(x) simulation_function(index = x,
+                                                                sample_size = 500,
+                                                                true_value = 2,
+                                                                c_number = 10,
+                                                                cov_mat = 0,
+                                                                diag_cov = 1),
+                                mc.cores = detectCores() - 2)
+
+sim_res <- do.call(rbind, simulation_results)
+
+ # # save the data to file!
+
+write_csv(sim_res, here("lectures/06_Section6_SimulationInPractice", "simulation_results_rct.csv"))
+
 
 ## ----tidy = F, warning = F, message = F---------------------------------------
 

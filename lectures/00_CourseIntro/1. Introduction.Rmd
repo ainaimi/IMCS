@@ -72,7 +72,7 @@ Simulation studies are preeminently useful in any quantitative science that uses
 
 # Overview of the Course
 
-Over the next few days, we will cover the following topics:
+In this course, we will cover the following topics:
 
 ## Section 1: Background and Context
 - Why simulate? Example questions that can be asked and answered via simulation studies; 
@@ -81,6 +81,7 @@ Over the next few days, we will cover the following topics:
 
 ## Section 2: Basic Tools
 - Key Distributions in the R stats and other packages
+- Inverse Transform Sampling to Construct Distributions
 - Constructing user defined functions in R
 - For Loops and the Apply Family of Functions
 - Seeds in R 
