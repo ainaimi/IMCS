@@ -437,7 +437,62 @@ y
 
 <!-- ## **ExtDist Package:** https://cran.r-project.org/web/packages/ExtDist/index.html -->
 
-<!-- ## The Inverse Transformation Method -->
+## The Inverse Transformation Method
+
+Thus far, we've demonstrated a range of canned packages that can be used to simulate random variables from a wide variety of distributions. One strength of the R programming language is that it does have a wide range of functions that can be used for a diversity of tasks, including random variable generation.
+
+But what happens if we want to simulate a random variable from a distribution, and there is no associated R package or function that would allow us to do this? For example, supposed I wanted to simulate from a Pareto distribution to generate a heavy-tailed random variable. I could use the corresponding suite of function from the `EnvStats` package, including the `rpareto()` functions, but let's say I don't trust them and want to test them against something that I can guarantee. 
+
+We can rely on the inverse transformation method, or inverse transform sampling, to do this. This approach allows us to derive an equation that we can write up in R, and then use a uniform random variable to draw random realizations from the distribution fo interest. 
+
+Here's an example of the inverse transform sampling method to generate data from a Pareto distribution with an 80:20 property. First, we note that the general CDF of Pareto distribution is defined as:
+
+$$
+F(x) = 
+\begin{cases}
+1 - \left( \dfrac{x_m}{x} \right)^{\alpha}, & \text{for } x \geq x_m \\\\
+0, & \text{for } x < x_m
+\end{cases}
+$$
+
+This equation defines the CDF for a Pareto distribution as a function of two parameters: $x_m$, which defines the minimum value the variable can take (the scale parameter); and $\alpha$, which defines the shape of the distribution. We can do some basic math to let this distribution be equal to a draw from a uniform random variable, and focus on the kernel of this equation, we get:
+
+$$u = 1 - \left( \dfrac{x_m}{x} \right)^{\alpha}$$
+which, with some basic algebra to re-arrange, gives:
+
+$$x = x_m (1 - u)^{-1/\alpha}$$
+
+This latter equation tells us that a realization of the random variable $x$ drawn from a Pareto distribution can be obtained from a draw from the uniform distribution $u$, if the uniform draw is entered into this equation. We can write R code that does this as:
+
+```{r tidy = F, warning = F, message = F}
+
+pacman::p_load(EnvStats)
+
+set.seed(123)
+
+pareto_scale <- 10000 # this sets the minimum to the distribution
+pareto_shape <- log(5, base = 4) # this sets the distribution to be Pareto 80:20
+
+# now we use the inverse transform sampling method 
+## generate uniform random variable
+u <- runif(n = 1000)
+
+x <- pareto_scale*(1-u)^(-1/pareto_shape)
+
+## Draw RV from same distribuiton but with the EnvStats Package function
+x_prime <- rpareto(n = 1000, 
+                   location = pareto_scale, 
+                   shape = pareto_shape)
+
+```
+
+We can compare the `x` and `x_prime` variables to see if our function worked. But because we generated from a Pareto distribution with a scale parameter of roughly 1.16 ($\approx \log_4(5)$), standard comparisons won't work very well. Figure \@ref(fig:paretocomparison) shows that both methods generate a random variables that have roughly the same tail distribution properties.
+
+```{r paretocomparison, out.width="5cm", fig.align='center', fig.margin=TRUE, fig.cap="Log of the complement of the CDF against the log of X for the random variable generated using the inverse transform method (red lines) and the rpareto function in the EnvStats package.", echo=F}
+knitr::include_graphics(here("_images", "pareto_comparison.pdf"))
+```
+
+
 
 <!-- The code presented in the sections above provide a way to simulate random variables from distributions whose properties are well known. However, in some settings, we may need to find our own way to simulate random variables from a distribution that does not have a pre-programmed off-the-shelf software method that can be used. In this case, there is a general technique that can be used to simulate random variables, known as the inverse transformation method.  -->
 
