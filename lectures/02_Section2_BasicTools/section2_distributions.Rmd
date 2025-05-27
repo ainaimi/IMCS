@@ -212,39 +212,35 @@ Note the flexibility that can be introduced into these function calls. You can s
 
 __Technical Note__:
 
-|               Recently in our work, we have been exploring the impact of increasing or decreasing the number of variables in a regression model on the performance of a range of estimators. To do this, we are using the `mvtnorm` package, with code that looks like this:
+|               Recently in our work, we have been exploring the impact of increasing or decreasing the number of variables in a regression model on the performance of a range of estimators. There is an easy way to do this using matrix multiplication in R. To do this, we are using the `mvtnorm` package, with code that looks like this:
 
-```{r tidy = FALSE, attr.source='.numberLines'}
+```{r  tidy = F, warning = F, message = F}
   
-  n = 5
-  
-  p <- c_number <- 3
-  
-  ## confounder matrix
-  sigma <- matrix(0,nrow=p,ncol=p)
-  diag(sigma) <- 1
-  c <- mvtnorm::rmvnorm(n, mean=rep(0,p), sigma=sigma)
-  
-  # DESIGN MATRIX FOR THE OUTCOME MODEL
-  muMatT <- model.matrix(  
-    as.formula(  
-      paste("~(",  
-            paste("c[,",1:ncol(c),"]", collapse="+"),  
-            ")"  
-            )  
-      )  
-    )[,-1]
-  
-  parmsC <- rep(1.5,c_number)
-  
-  y <- 10 + muMatT%*%parmsC + rnorm(n)
-  
-  data.frame(y,c)
+library(mvtnorm)
+
+n <- 5
+p <- c_number <- 3
+
+# Covariate matrix
+sigma <- diag(p)
+c <- rmvnorm(n, mean = rep(0, p), sigma = sigma)
+
+# Outcome model
+parmsC <- rep(1.5, c_number)
+y <- 10 + c %*% parmsC + rnorm(n)
+
+# Final data
+data <- data.frame(y, c)
+
 ```
 
-By changing the `c_number` value, you can automatically increase or decrease the number of covariates included in the model for $Y$.
+The portion of code that multiplies the covariates by the parameters, `c %*% parmsC` represents a matrix multiplication operation, and can be used without the need to manually include additive terms. By simply changing the `c_number` value, you can automatically increase or decrease the number of covariates included in the model for $Y$.
+
+This approach works for continuous variables entered into the outcome model for `y` linearly. It can also work for binary indicator variables. However, this code won't work for categorical variables without some additional pre-processing. An easy way to do this pre-processing is to rely on the `model.matrix()` function. 
 
 :::
+
+\newpage
 
 ## Uniform Distribution
 
@@ -400,19 +396,19 @@ y
 
 ```
 
-<!-- ## Negative Binomial Distribution -->
+## Negative Binomial Distribution
 
-<!-- ```{r nbinomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Negative Binomial Distribution with mu = 5 and size = 100 for 5000 Simulated Observations."} -->
+```{r nbinomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Negative Binomial Distribution with mu = 5 and size = 100 for 5000 Simulated Observations."}
 
-<!-- set.seed(123) -->
-<!-- ggplot() +  -->
-<!--   geom_bar(aes(x = rnbinom(n = 5000, mu = 10, size=100 ) )) + -->
-<!--   scale_x_continuous(expand = c(0,0)) + -->
-<!--   scale_y_continuous(expand = c(0,0)) -->
+set.seed(123)
+ggplot() +
+  geom_bar(aes(x = rnbinom(n = 5000, mu = 10, size=100 ) )) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
 
-<!-- ``` -->
+```
 
-<!-- The negative binomial distribution is related to the binomial distribution in a complementary fashion.  -->
+The negative binomial distribution is related to the binomial distribution in a complementary fashion.
 
 <!-- :::{.rmdnote data-latex="{dive}"} -->
 
@@ -510,8 +506,6 @@ The inverse transform sampling method can be a powerful tool for generating rand
 4) Simulate a uniform random variable bounded between 0 and 1, and enter it into the equation coded in 3
 
 This inverse transform sampling method is a generic procedure that can be used for any distribution whose inverse CDF can be derived.
-
-<!-- The code presented in the sections above provide a way to simulate random variables from distributions whose properties are well known. However, in some settings, we may need to find our own way to simulate random variables from a distribution that does not have a pre-programmed off-the-shelf software method that can be used. In this case, there is a general technique that can be used to simulate random variables, known as the inverse transformation method.  -->
 
 \newpage
 

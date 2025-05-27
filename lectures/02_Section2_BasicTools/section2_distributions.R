@@ -134,32 +134,24 @@ ggplot(q.samp, aes(x=x, y=y, z=prob)) +
   c
 
 
-## ----tidy = FALSE, attr.source='.numberLines'---------------------------------
+## ----tidy = F, warning = F, message = F---------------------------------------
   
-  n = 5
-  
-  p <- c_number <- 3
-  
-  ## confounder matrix
-  sigma <- matrix(0,nrow=p,ncol=p)
-  diag(sigma) <- 1
-  c <- mvtnorm::rmvnorm(n, mean=rep(0,p), sigma=sigma)
-  
-  # DESIGN MATRIX FOR THE OUTCOME MODEL
-  muMatT <- model.matrix(  
-    as.formula(  
-      paste("~(",  
-            paste("c[,",1:ncol(c),"]", collapse="+"),  
-            ")"  
-            )  
-      )  
-    )[,-1]
-  
-  parmsC <- rep(1.5,c_number)
-  
-  y <- 10 + muMatT%*%parmsC + rnorm(n)
-  
-  data.frame(y,c)
+library(mvtnorm)
+
+n <- 5
+p <- c_number <- 3
+
+# Covariate matrix
+sigma <- diag(p)
+c <- rmvnorm(n, mean = rep(0, p), sigma = sigma)
+
+# Outcome model
+parmsC <- rep(1.5, c_number)
+y <- 10 + c %*% parmsC + rnorm(n)
+
+# Final data
+data <- data.frame(y, c)
+
 
 ## ----uniformplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Uniform Distribution with Upper and Lower Bounds of 0 and 1, respectively for 5000 Simulated Observations."----
 
@@ -269,6 +261,15 @@ n <- 5
 y <- rpois(n, lambda = 3)
 
 y
+
+
+## ----nbinomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Negative Binomial Distribution with mu = 5 and size = 100 for 5000 Simulated Observations."----
+
+set.seed(123)
+ggplot() +
+  geom_bar(aes(x = rnbinom(n = 5000, mu = 10, size=100 ) )) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
 
 
 ## ----tidy = F, warning = F, message = F---------------------------------------
