@@ -1,7 +1,7 @@
 ---
 title: "Constructing User Defined Functions in R"
 author: "Ashley I Naimi"
-date: "`r paste0('Spring ', 2024)`" #format(Sys.Date(), '%Y')
+date: "Summer `r format(Sys.Date(), '%Y')`"
 urlcolor: blue
 bibliography: ref.bib
 link-citations: yes
@@ -334,16 +334,33 @@ One essential component of successfully deploying a simulation study is the appr
 
 <!-- ::: -->
 
-To understand seeds, it is important to understand the idea of a pseudo random number generator. The basic idea behind a pseudo-random number generator is to find a sequence of digits with no apparent pattern or regularities to them. For example, if we can establish that the sequence of digits in the constant $\pi$ doesn't have any regular patterns to it, we can use it as our base to generate randomness:
+To understand seeds, it is important to understand the idea of a pseudo random number generator. A very basic (but perhaps slightly misleading) way to explain the idea behind pseudo-random number generation is to find a sequence of digits with no apparent pattern or regularities to them. For example, if we can establish that the sequence of digits in the constant $\pi$ doesn't have any regular patterns to it, we can use it as our base to generate randomness:
 
 $$3.14159265358979 \cdots$$
-The so-called "pseudo-randomness" occurs in the transition from one number in the sequence to the next. For example, if we start the random number sequence at the third digit (4), the next numbers in the sequence will be 1, then 5, then 9, and so on. 
+Here, the so-called "pseudo-randomness" occurs in the transition from one number in the sequence to the next. For example, if we start the random number sequence at the third digit (4), the next numbers in the sequence will be 1, then 5, then 9, and so on. 
 
 Since there is no obvious predictability or regularity in this sequence, we can use these digits as the base to initialize a range of complex functions that mimic random behavior. 
 
 However, because $\pi$ is a fixed constant, the numbers in the sequence don't change. So, if we want to initialize functions that mimic randomness, but want to be able to reproduce this randomness, we can use a seed value to start the random sequence at the same point every time. 
 
-In the above simplified $\pi$ example, we could say that the "seed" value will be 3, because we relied on the **third** digit in the sequence. 
+To make the illustration a bit more concrete, consider a scenario where we'd like to generate a set of probabilities (i.e., numbers bounded between 0 and 1) that are "random" using the sequence of digits in $\pi$. We can construct an algorithm such as:
+
+- Pick a seed value, which corresponds to a digit in the sequence of numbers of $\pi$
+- Select the three consecutive digits of $\pi$ after seed, and divide these three digits by 1000
+- Return the value as output
+- Move the seed forward by one digit position in $\pi$, and repeat the procedure
+
+If we did this, we'd get a sequence of "random" probabilities that look like this:
+
+| Iteration | Seed | Digits Used | Output (Random Number) |
+| ------: | :--: | :---------- | :--------------------- |
+|       1 |   3  | 1 5 9       | 0.159                  |
+|       2 |   4  | 5 9 2       | 0.592                  |
+|       3 |   5  | 9 2 6       | 0.926                  |
+|       4 |   6  | 2 6 5       | 0.265                  |
+|       5 |   7  | 6 5 3       | 0.653                  |
+
+However, this procedure is entirely reproducible.
 
 The above description of seeds and random number generators is obviously way simplified. However, this example represents the core idea of a seed, and sets the stage for understanding some of the negative consequences that we can encounter using seed values. 
 
