@@ -325,6 +325,33 @@ y <- rgeom(n = 5, prob = .5)
 y
 
 
+## ----exponentialplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Exponential Distribution with rate = 1 for 5000 Simulated Observations."----
+
+set.seed(123)
+ggplot() + 
+  geom_histogram(aes(x = rexp(n = 5000, rate = 1)), bins = 50) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+set.seed(123)
+
+n <- 5
+
+y <- rexp(n, rate = 0.5)
+
+y
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+sim_dat <- data.frame(y_obs = ifelse(y<=1, y, 1), delta = as.numeric(y <= 1))
+
+sim_dat
+
+
 ## ----tidy = F, warning = F, message = F---------------------------------------
 
 set.seed(123)

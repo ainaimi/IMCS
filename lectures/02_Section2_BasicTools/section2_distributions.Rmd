@@ -521,17 +521,74 @@ y
 
 This tells us that we had to try one time before we observed a success in the first round, then we had to try 3 times before observing a success, and then we achieved success on the first try for the next three rounds.
 
-<!-- ## Exponential Distribution -->
+## Exponential Distribution
 
-<!-- ## Weibull Distribution -->
+```{r exponentialplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Exponential Distribution with rate = 1 for 5000 Simulated Observations."}
 
-<!-- ## Generalized Gamma Distribution -->
+set.seed(123)
+ggplot() + 
+  geom_histogram(aes(x = rexp(n = 5000, rate = 1)), bins = 50) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
 
-<!-- ## Mixture Distributions -->
+```
 
-<!-- ## Zero Inflated and Hurdle Distributions -->
+The exponential distribution is often used in time-to-event analyses, where it models the time until a single event occurs. It is fully defined by a single parameter $\lambda$, the rate parameter. The mean of the exponential distribution is the inverse of the rate. The exponential distribution assumes a constant hazard over time, which is sometimes considered a limitation, and a reason that researchers rely on more flexible models, such as the Weibull or Generalized Gamma distributions (discussed later).
 
-<!-- ## Beta and Dirichlet -->
+```{r tidy = F, warning = F, message = F}
+
+set.seed(123)
+
+n <- 5
+
+y <- rexp(n, rate = 0.5)
+
+y
+
+```
+
+In the absence of right censoring, time to event (or survival) outcomes are often characterized by two pieces of information: the time at which the event occurred, and an indicator of when the event occurred. The outcome `y` simulated from the exponential distribution with `rate = 0.5` does not have an event indicator. However, we can construct one using a few different motivations. 
+
+The easiest way is to assume that all individuals experienced the event at the simulated time. For example, the first individual experienced the event at time 1.7, the second at time 1.2, the third at time 2.7, and so on. 
+
+However, if we wanted to limit the proportion of events, we could set an arbitrary administrative censoring time. For instance, if we assume that our study followed individuals from time zero to time 1, we'd end up with the following time to event data:
+
+```{r tidy = F, warning = F, message = F}
+
+sim_dat <- data.frame(y_obs = ifelse(y<=1, y, 1), 
+                      delta = as.numeric(y <= 1))
+
+sim_dat
+
+```
+
+The `sim_dat` dataset shows us that the first three observations were followed from the start to the end of follow-up, while the last two experienced the event during follow up. 
+
+## Weibull Distribution
+
+## Generalized Gamma Distribution
+
+## Mixture Distributions
+
+## Zero Inflated and Hurdle Distributions
+
+## Beta and Dirichlet
+
+## Hypergeometric
+## Chi Squared
+## Uniform
+## Logistic
+## Gaussian
+## Poisson
+## Gamma
+## Inverse Gaussian
+## Beta
+## Log Normal
+## Tweedie
+## Students t
+## Gompertz
+## Power Law Distributions
+## Pareto Type 1 and Type 2 (Lomax)
 
 <!-- ## **ExtDist Package:** https://cran.r-project.org/web/packages/ExtDist/index.html -->
 
