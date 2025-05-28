@@ -280,13 +280,31 @@ y <- rpois(n, lambda = 3)
 y
 
 
-## ----nbinomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Negative Binomial Distribution with mu = 5 and size = 100 for 5000 Simulated Observations."----
+## ----nbinomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Negative Binomial Distribution with p = 0.5 and size = 100 for 5000 Simulated Observations."----
 
 set.seed(123)
 ggplot() +
-  geom_bar(aes(x = rnbinom(n = 5000, mu = 10, size=100 ) )) +
+  geom_bar(aes(x = rnbinom(n = 5000, prob = .2, size = 10) )) +
   scale_x_continuous(expand = c(0,0)) +
   scale_y_continuous(expand = c(0,0))
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+set.seed(123)
+
+y <- rnbinom(n = 5, prob = .2, size = 2) 
+
+y
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+set.seed(123)
+
+y <- rnbinom(n = 5, mu = 5, size = 2) 
+
+y
 
 
 ## ----tidy = F, warning = F, message = F---------------------------------------

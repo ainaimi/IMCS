@@ -420,32 +420,78 @@ y
 
 ## Negative Binomial Distribution
 
-```{r nbinomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Negative Binomial Distribution with mu = 5 and size = 100 for 5000 Simulated Observations."}
+```{r nbinomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Negative Binomial Distribution with p = 0.5 and size = 100 for 5000 Simulated Observations."}
 
 set.seed(123)
 ggplot() +
-  geom_bar(aes(x = rnbinom(n = 5000, mu = 10, size=100 ) )) +
+  geom_bar(aes(x = rnbinom(n = 5000, prob = .2, size = 10) )) +
   scale_x_continuous(expand = c(0,0)) +
   scale_y_continuous(expand = c(0,0))
 
 ```
 
-The negative binomial distribution is related to the binomial distribution in a complementary fashion.
+The negative binomial distribution is commonly used in epidemiology. There are a few ways in which one can represent a negative binomial distribution. The first is in relation to the standard binomial. This representation is sometimes referred to as the Pascal distribution [e.g., @Leemis2008] or the "counting failures" version of the negative binomial distribution. This version is related to the binomial distribution in a complementary fashion. That is, the binomial distribution can be used to model the number of successes $X$ we'd expect to see for a scenario where there are a fixed number of trials $N$ and a fixed probability of success $p$. In contrast, a negative binomial distribution can be used to model the number of failures $Y$ we'd expect to see before we encounter a fixed number of successes $r$ and a fixed probability of success $p$. 
 
-<!-- :::{.rmdnote data-latex="{dive}"} -->
+In R, we can generate a random variable from a negative binomial distribution using this formulation as follows:
 
-<!-- __Deeper Dive__: Overdispersion -->
+```{r tidy = F, warning = F, message = F}
 
-<!-- |               Overdispersion describes a situation where the variance in an outcome variable exceeds the variance assumed under a model's distributional assumptions. This concept is most commonly encountered with a Poisson random variable. The variance of a Poisson distribution is equal to the mean. If we let $\mu$ denote the mean of an outcome variable $Y$, and we let $\sigma^2$ denote it's variance, then modeling $Y$ with a Poisson regression model (GLM or GEE) implies that $\mu = \sigma^2$. However, in actuality for some variables **assumed** to follow a Poisson distribution, we may find that: $\mu < \sigma^2$. -->
+set.seed(123)
 
-<!-- In this case, we would say that the outcome is "overdispersed". One solution to overdispersion is to estimate a scale parameter in a GLM or GEE model. In a Poisson regression context, adding a scale parameter re-defines the variance of the outcome to be: -->
+y <- rnbinom(n = 5, prob = .2, size = 2) 
 
-<!-- $$V(Y) = \phi \mu,$$ -->
-<!-- where $\phi$ is a scale parameter that multiplies this variance accordingly. In a regression modeling context, we can set the scale parameter $\phi$ to 1 if there is no overdispersion. Or we can estimate it, and scale the standard errors from the regression model, thus accounting for overdispersion in the outcome. -->
+y
 
-<!-- Other distributions can be affected by overdispersion (e.g., binomial distribution with $N>1$). However, the Gaussian distribution and Binomial distribution with $N = 1$ (i.e., a Bernoulli random variable) are not typically affected by overdispersion. In these cases, it is common to set the scale parameter to 1 instead of estimate it. Other techniques are also available to handle overdispersion (e.g., using the Negative Binomal distribution instead, which allows the variance to exceed the mean for count outcome data). -->
+```
 
-<!-- ::: -->
+This tells us that we observed six failures before the first two successes, 16 failures before the next two successes, then eleven, then three, then seven. In other words, these represent the number of failures before we see two successes (since `size = 2`).
+
+However, there is another way to formulate the negative binomial distribution, as a mixture of the Poisson and the Gamma distribution [@Casella2002; p196, exercise 4.34]. This formulation allows us to think of the negative binomial distribution as a Poisson distribution, but without the assumption that the variance of this distribution is exactly equal to the mean. This is the most common formulation used in epidemiologic settings [see, e.g., @Lloyd-Smith2005]. In R, this formulation can be deployed as:
+
+```{r tidy = F, warning = F, message = F}
+
+set.seed(123)
+
+y <- rnbinom(n = 5, mu = 5, size = 2) 
+
+y
+
+```
+
+In this formulation, the variance of the negative binomial random variable is defined as:
+$$Var(Y) = \mu + \frac{\mu^2}{\text{size}},$$
+so for small values of `size`, we generate data that has a variance greater than the mean. As we increase the `size` parameter, we decrease the variance. In the limit as size $\rightarrow \infty$, this negative binomial distribution becomes a Poisson distribution [@Cameron2013; p85].
+
+<!-- This code shows that as size gets very large, nbinom becomes poisson. Importantly, the lamba in pois is the mu in binom. -->
+<!-- ```{r tidy = F, warning = F, message = F} -->
+<!-- set.seed(123) -->
+
+<!-- y1 <- rnbinom(n = 50000, mu = 5, size = 1e7) -->
+
+<!-- y2 <- rpois(n = 50000, lambda = 5) -->
+
+<!-- hist(y1, breaks = 50, col = rgb(1, 0, 0, 0.5), main = "y1 vs y2", xlim = c(0, 20)) -->
+<!-- hist(y2, breaks = 50, col = rgb(0, 0, 1, 0.5), add = TRUE) -->
+<!-- legend("topright", legend = c("NB", "Poisson"), fill = c("red", "blue")) -->
+
+<!-- ks.test(y1, y2) -->
+<!-- ``` -->
+
+
+:::{.rmdnote data-latex="{dive}"}
+
+__Deeper Dive__: Overdispersion
+
+|               Overdispersion describes a situation where the variance in an outcome variable exceeds the variance assumed under a model's distributional assumptions. This concept is most commonly encountered with a Poisson random variable. The variance of a Poisson distribution is equal to the mean. If we let $\mu$ denote the mean of an outcome variable $Y$, and we let $\sigma^2$ denote it's variance, then modeling $Y$ with a Poisson regression model (GLM or GEE) implies that $\mu = \sigma^2$. However, in actuality for some variables **assumed** to follow a Poisson distribution, we may find that: $\mu < \sigma^2$.
+
+In this case, we would say that the outcome is "overdispersed". One solution to overdispersion is to estimate a scale parameter in a GLM or GEE model. In a Poisson regression context, adding a scale parameter re-defines the variance of the outcome to be:
+
+$$V(Y) = \phi \mu,$$
+where $\phi$ is a scale parameter that multiplies this variance accordingly. In a regression modeling context, we can set the scale parameter $\phi$ to 1 if there is no overdispersion. Or we can estimate it, and scale the standard errors from the regression model, thus accounting for overdispersion in the outcome.
+
+Other distributions can be affected by overdispersion (e.g., binomial distribution with $N>1$). However, the Gaussian distribution and Binomial distribution with $N = 1$ (i.e., a Bernoulli random variable) are not typically affected by overdispersion. In these cases, it is common to set the scale parameter to 1 instead of estimate it. Other techniques are also available to handle overdispersion (e.g., using the Negative Binomal distribution instead, which allows the variance to exceed the mean for count outcome data).
+
+:::
 
 <!-- ## Exponential Distribution -->
 
