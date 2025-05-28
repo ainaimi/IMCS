@@ -347,9 +347,129 @@ y
 
 ## ----tidy = F, warning = F, message = F---------------------------------------
 
-sim_dat <- data.frame(y_obs = ifelse(y<=1, y, 1), delta = as.numeric(y <= 1))
+sim_dat <- data.frame(y_obs = ifelse(y<=1, y, 1), 
+                      delta = as.numeric(y <= 1))
 
 sim_dat
+
+
+## ----weibullplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Weibull Distribution with a shape parameter = 2 and a scale parameter = 1 for 5000 Simulated Observations."----
+
+set.seed(123)
+ggplot() + 
+  geom_histogram(aes(x = rweibull(n = 5000, shape = 2, scale = 1)), bins = 50) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+set.seed(123)
+n <- 5
+shape <- 2
+scale <- 1
+y <- rweibull(n, shape = shape, scale = scale)
+y
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+set.seed(123)
+
+n <- 5000
+rate <- 2
+
+y1 <- rweibull(n, shape = 1, scale = 1 / rate)
+
+y2 <- rexp(n, rate = rate)
+
+
+## ----tidy = F, warning = F, message = F, echo = F-----------------------------
+df <- data.frame(
+  value = c(y2, y1),
+  distribution = factor(rep(c("Exponential", "Weibull"), each = n))
+)
+
+# Create histogram bins for each distribution
+bin_width <- 0.2
+max_val <- max(df$value)
+breaks <- seq(0, ceiling(max_val), by = bin_width)
+
+hist_df <- df %>%
+  mutate(bin = cut(value, breaks = breaks, include.lowest = TRUE, right = FALSE)) %>%
+  group_by(distribution, bin) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  mutate(
+    count = ifelse(distribution == "Weibull", -count, count),
+    bin_mid = as.numeric(sub("\\[(.+),.*", "\\1", bin)) + bin_width / 2
+  )
+
+# Plot: Vertical bars with central x-axis
+p1 <- ggplot(hist_df, aes(x = bin_mid, y = count, fill = distribution)) +
+  geom_col(width = bin_width, color = "black", alpha = 0.7) +
+  geom_hline(yintercept = 0, color = "black") +
+  scale_y_continuous(labels = abs) +
+  labs(
+    x = "Random Variable Value",
+    y = "Count"
+  ) +
+  theme(
+    axis.title.y = element_text(margin = margin(r = 10)),
+    axis.text.y = element_text(color = "black"),
+    legend.title=element_blank()
+  ) +
+  scale_fill_manual(values = c("Exponential" = "steelblue", "Weibull" = "darkorange"))
+
+ggsave(here("_images", "weibull_exponential_comparison.pdf"), width = 8, height = 8, units = "cm")
+
+
+## ----expweib, out.width="8cm", fig.align='center', fig.cap="Comparison of the Distribution of a Random Variable Generated from the rexp() function with a rate parameter = 2, and the rweibull() function with shape = 1 and scale = 1 / rate.", echo=F----
+knitr::include_graphics(here("_images", "weibull_exponential_comparison.pdf"))
+
+## ----gengammaplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Generalized Gamma Distribution with a location parameter = log(2), a sigma parameter = 1, and a  Q parameter = 0.5 for 5000 Simulated Observations."----
+
+pacman::p_load(flexsurv)
+shape <- 2
+scale <- 1
+k <- 0.5
+set.seed(123)
+ggplot() + 
+  geom_histogram(aes(x = rgengamma(n, mu = log(scale), sigma = 1/shape, Q = k)), bins = 50) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+pacman::p_load(flexsurv)
+
+set.seed(123)
+n <- 5
+shape <- 2
+scale <- 1
+q <- 0.5
+
+y <- rgengamma(n, mu = log(scale), sigma = 1/shape, Q = k)
+
+y
+
+
+## -----------------------------------------------------------------------------
+
+set.seed(123)
+n <- 5000
+rate <- 2
+scale <- 1 / rate
+
+# Generate generalized gamma with exponential parameters
+y <- rgengamma(n, mu = log(scale), sigma = 1, Q = 1)
+
+# Compare with exponential
+exp_y <- rexp(n, rate = rate)
+
+# Kolmogorov-Smirnov test
+ks.test(y, exp_y)
+
 
 
 ## ----tidy = F, warning = F, message = F---------------------------------------
