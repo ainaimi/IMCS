@@ -493,6 +493,34 @@ Other distributions can be affected by overdispersion (e.g., binomial distributi
 
 :::
 
+## Geometric Distribution
+
+The geometric distribution models the number of trials one needs to get to a first success. It's called the "geometric" distribution because the probabilities that arise from this distribution follow a geometric sequence, which is straightforward to see if we examine the pdf of the distribution. 
+
+```{r geomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Geometric Distribution with p = 0.5 for 5000 Simulated Observations."}
+
+set.seed(123)
+ggplot() +
+  geom_bar(aes(x = rgeom(n = 5000, prob = .5) )) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
+
+```
+
+In R, a geometric random variable can be generated as follows.
+
+```{r tidy = F, warning = F, message = F}
+
+set.seed(123)
+
+y <- rgeom(n = 5, prob = .5)
+
+y
+
+```
+
+This tells us that we had to try one time before we observed a success in the first round, then we had to try 3 times before observing a success, and then we achieved success on the first try for the next three rounds.
+
 <!-- ## Exponential Distribution -->
 
 <!-- ## Weibull Distribution -->

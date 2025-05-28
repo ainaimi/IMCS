@@ -307,6 +307,24 @@ y <- rnbinom(n = 5, mu = 5, size = 2)
 y
 
 
+## ----geomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Geometric Distribution with p = 0.5 for 5000 Simulated Observations."----
+
+set.seed(123)
+ggplot() +
+  geom_bar(aes(x = rgeom(n = 5000, prob = .5) )) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0))
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+set.seed(123)
+
+y <- rgeom(n = 5, prob = .5)
+
+y
+
+
 ## ----tidy = F, warning = F, message = F---------------------------------------
 
 set.seed(123)
