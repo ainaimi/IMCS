@@ -220,8 +220,3 @@ Casella, George, and Christian P. Robert. “Monte Carlo Statistical Methods.”
 |              |    - Example 1: simple regression in an RCT |
 |              |    - Example 2: IP-weighting versus marginal standardization |
 |              |    - Example 3: causal mediation analysis |
-
-| &sect; 7 (**optional**)    | Topics | 
-|:-------------|--------|
-| Week TBD:     | Computation: Parallel Processing in General and in R  |
-| Week TBD:     | Working on a Computing Cluster |

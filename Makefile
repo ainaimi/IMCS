@@ -9,8 +9,9 @@
 #   make clean      remove LaTeX debris (aux/log/toc/synctex)
 #   make clean-pdfs remove all generated PDFs (never the static figure inputs)
 #
-# Builds are intentionally serial: the section 6 and 8 lectures each write the
-# shared _images/nested_loop_plot_rct.pdf during knit, so `make -j` can race.
+# Builds are intentionally serial: the RCT and CDM lectures in section 6 both
+# write the shared _images/nested_loop_plot_rct.pdf during knit, so `make -j`
+# can race.
 # Knitting a lecture also regenerates its companion .R script (purl hook).
 
 RSCRIPT := Rscript
@@ -44,10 +45,6 @@ lectures/06_Section6_SimulationInPractice/section6_simulation.pdf: _images/trian
 lectures/06_Section6_SimulationInPractice/section6_simulation_RCT.pdf: _images/rct_dag.pdf
 lectures/06_Section6_SimulationInPractice/section6_simulation_mediation.pdf: _images/mediation_dag.pdf
 lectures/06_Section6_SimulationInPractice/section6_simulation_CDM.pdf: _images/mediation_dag.pdf
-lectures/07_Section7_Computing/section7_computing.pdf: _images/par_ser.pdf
-lectures/08_Section8_ComputingCluster/1_section8_ComputingCluster.pdf: _images/rct_dag.pdf
-lectures/08_Section8_ComputingCluster/2_section8_SLURM.pdf: _images/rct_dag.pdf
-lectures/08_Section8_ComputingCluster/3_section8_AdvancedTopics.pdf: _images/rct_dag.pdf
 
 # DAG figures compile from their tex sources
 figures: _images/mediation_dag.pdf _images/rct_dag.pdf
@@ -56,7 +53,7 @@ _images/%.pdf: _images/%.tex
 	cd _images && xelatex -interaction=batchmode $(notdir $<) && rm -f $(notdir $(basename $<)).aux $(notdir $(basename $<)).log
 
 # these ship with the course but have no generating source in the repo (see README)
-_images/triangle_dag.pdf _images/par_ser.pdf _images/pareto_comparison.pdf:
+_images/triangle_dag.pdf _images/pareto_comparison.pdf:
 	$(error $@ is a static figure input with no generating source in this repo; see the README)
 
 deps:

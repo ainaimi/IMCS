@@ -20,8 +20,6 @@ lectures/                      the canonical course, one folder per section
   04_Section4_PerformanceMeasures/ bias, MSE, coverage, and friends
   05_Section5_PresentingResults/ nested loop plots, zip plots
   06_Section6_SimulationInPractice/ worked studies: observational, RCT, mediation, CDM
-  07_Section7_Computing/         parallel computing
-  08_Section8_ComputingCluster/  cluster computing and SLURM
   appendix/                      simulation reading list
   misc/                          shared preamble.tex, style.css, and ref.bib used by every lecture
 _images/                       figures used by the lectures (aRtsy.R generates the art)
@@ -70,9 +68,8 @@ knit-time *inputs* that the lectures cannot regenerate themselves:
 
 | figure | used by | how to obtain |
 |---|---|---|
-| `mediation_dag.pdf`, `rct_dag.pdf` | sections 3, 6, 8 | compile the `.tex` sources in `_images/` (xelatex, then pdfcrop) |
+| `mediation_dag.pdf`, `rct_dag.pdf` | sections 3, 6 | compile the `.tex` sources in `_images/` (xelatex, then pdfcrop) |
 | `triangle_dag.pdf` | sections 3, 6 | no source in repo — contact the author |
-| `par_ser.pdf` | section 7 | no source in repo — contact the author |
 | `pareto_comparison.pdf` | section 2 (distributions) | no source in repo — contact the author |
 
 Six other figure PDFs (`nested_loop_plot*`, `zip_plot_*`,
