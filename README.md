@@ -63,13 +63,12 @@ simulations (the generating code is in the Rmd chunks).
 ## A note on PDFs
 
 This repository tracks **source files only** — no compiled PDFs. Knitting
-regenerates everything, with one caveat: five figure PDFs in `_images/` are
+regenerates everything, with one caveat: four figure PDFs in `_images/` are
 knit-time *inputs* that the lectures cannot regenerate themselves:
 
 | figure | used by | how to obtain |
 |---|---|---|
-| `mediation_dag.pdf`, `rct_dag.pdf` | sections 3, 6 | compile the `.tex` sources in `_images/` (xelatex, then pdfcrop) |
-| `triangle_dag.pdf` | sections 3, 6 | no source in repo — contact the author |
+| `mediation_dag.pdf`, `rct_dag.pdf`, `triangle_dag.pdf` | sections 3, 6 | compile the `.tex` sources in `_images/` (`make figures`) |
 | `pareto_comparison.pdf` | section 2 (distributions) | no source in repo — contact the author |
 
 Six other figure PDFs (`nested_loop_plot*`, `zip_plot_*`,

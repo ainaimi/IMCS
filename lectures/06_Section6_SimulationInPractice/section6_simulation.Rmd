@@ -78,14 +78,14 @@ We'll begin with these aims, but as we write our functions, it will be useful to
 
 In terms of generating our data, we will rely on a simple triangle DAG, with a set of confounding variables, a single exposure, and a single outcome:
 
-```{r, out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $A$, confounder $C$, and outcome $Y$.",echo=F}
+```{r, out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F}
 knitr::include_graphics(here("_images","triangle_dag.pdf"))
 ```
 
 This gives us a relatively straightforward causal ordering, as follows:
 
 - The variable $C$ is most exogenous to this system
-- The variable $A$ is second most exogenous
+- The variable $X$ is second most exogenous
 - The variable $Y$ is the most endogenous
 
 Importantly, even though we may have a large number of variables $C$, because they are all exogenous and independent, we can treat them as a single node on the DAG, and simulate them simultaneously (and independently) in the code we write. 
@@ -102,19 +102,19 @@ where $odds(\bullet) = P(\bullet)/[1 - P(\bullet)]$. Note that, for a binary out
 
 ## Inverse Probability Weighting
 
-We're interested in comparing IP weighting to marginal standardization. To implement IP weighting, we need to first construct stabilized inverse probability weights, defined as:
+We're interested in comparing IP weighting to marginal standardization. Both of these estimators were introduced in Section 2, where we walked through their implementation step by step; here we restate only the essentials, and focus on what this example adds. To implement IP weighting, we need to first construct stabilized inverse probability weights, defined as:
 
 \[
-sw = 
+sw =
 \begin{dcases}
 \frac{P(X = 1)}{P(X = 1 \mid C)} & \text{if $X = 1$} \\
 \frac{P(X = 0)}{P(X = 0 \mid C)} & \text{if $X = 0$}
 \end{dcases}
 \]
 
-In this above equation, the $P(X = 1)$ used in the numerator of the top equation can be obtained by simply taking the mean of $X$ when $X \in [0,1]$. Similarly, the $P(X = 0)$ can be obtained by taking one minus the mean of $X$. 
+These are the same weights we constructed in Section 2. The only difference is notational: there, a single confounder $Z$ appeared in the denominator's conditioning set, while here we condition on the full set of confounders $C$. As before, the numerator can be estimated by taking the sample mean of $X$, and the denominator by taking fitted values from a logistic regression of the exposure against the confounders (i.e., the propensity score).
 
-The denominator of this equation can be obtained using, e.g., predictions from a logistic regression model that regresses the exposure against all confounders. We can fit a model like this in R using code that looks something like:
+What is new in this example is the number of confounding variables. With 10 or 25 variables in $C$, writing out the propensity score model formula by hand is tedious, and complicates the evaluation of our methods when we change the number of confounders:
 
 ```{r, eval = F}
 
@@ -122,23 +122,7 @@ p_model <- glm(x ~ c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + c9 + c10, data = the_
 
 ```
 
-From the above model fit, we can extract the fitted values with:
-
-```{r, eval = F}
-
-p_model$fitted.values
-
-```
-
-These fitted values will correspond to $P(X = 1 \mid C)$, which we can use directly in our equation to obtain the stabilized weights. To obtain an estimate of $P(X = 0 \mid C)$, we can simply take $1 - P(X = 1 \mid C)$, or:
-
-```{r, eval = F}
-
-1 - p_model$fitted.values
-
-```
-
-One problem with the above code is that, for a large number of $C$ variables, we will have to write out each in the regression model which can complicate the evaluation of our methods when we change the number of confounding variables. To deal with this problem, we can use a coding trick in R that looks like this:
+To deal with this problem, we can use a coding trick in R that looks like this:
 
 ```{r, eval = F}
 
@@ -165,7 +149,7 @@ sw_trim <- ifelse(sw > quantile(sw, .975),
 
 ## Marginal Standardization
 
-To implement marginal standardization with a large number of confounding variables, we can use the same coding trick above to fit an outcome regression model as follows:
+Marginal standardization proceeds exactly as it did in Section 2: fit an outcome regression, generate predicted outcomes for everyone in the sample under the "exposed" and "unexposed" scenarios, and average each set of predictions. To implement this with a large number of confounding variables, we can use the same coding trick above to fit the outcome regression model as follows:
 
 ```{r, eval = F}
 
@@ -183,7 +167,7 @@ muhat1 <- mean(predict(mu_model, newdata = transform(the_data, x=1), type="respo
 
 ```
 
-Note the use of the `transform` function here, which will set the exposure for each individual in our dataset to 1. Additionally, we've included as an argument to this predict function `type="response"`. When fitting a logistic regression model such as the one above, we can generate predictions on different scales. For instance, we could use `mu_model` to predict the log-odds of the outcome we'd observe if everyone was exposed. If we wanted predictions on the log-odds scale, we could use `type = "link"` as an argument to the predict function. However, using `type="response"` provides us with predictions on the probability scale. 
+As in Section 2, `transform(the_data, x=1)` sets the exposure to 1 for every individual in the dataset, and `type="response"` returns the predictions on the probability scale rather than the log-odds scale. The same call with `x=0` gives us the unexposed counterpart, and averaging each set of predictions gives us the two marginal probabilities that make up our estimand.
 
 # Performance Measures
 
