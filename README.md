@@ -46,6 +46,12 @@ cd lectures/04_Section4_PerformanceMeasures
 Rscript -e "rmarkdown::render('section4_PerformanceMeasures.Rmd')"
 ```
 
+Or use the Makefile from the repo root: `make` rebuilds every lecture PDF plus
+the syllabus (serially on purpose — see the Makefile header for why `-j` is
+unsafe here), `make <path/to/lecture.pdf>` rebuilds one lecture, `make figures`
+recompiles the DAG figures from their `.tex` sources, and `make deps` runs
+`install.R`.
+
 Lectures use the tint (Tufte-style) PDF format. The shared preamble is
 referenced relative to the lecture folder (`../misc/preamble.tex`), and figure
 paths resolve from the repo root via `here()` (anchored by `IMCS.Rproj`).
