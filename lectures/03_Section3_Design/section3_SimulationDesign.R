@@ -16,8 +16,6 @@ for (package in packages) {
   library(package, character.only=T)
 }
 
-remotes::install_github("rstudio/fontawesome")
-
 library(fontawesome)
 
 thm <- theme_classic() +
