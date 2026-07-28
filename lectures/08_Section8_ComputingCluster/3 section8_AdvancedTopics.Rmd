@@ -11,14 +11,14 @@ output:
       toc: true
       number_sections: true
       includes:
-        in_header: ../../misc/preamble.tex
+        in_header: ../misc/preamble.tex
       latex_engine: xelatex
     html_document:
       theme: readable
       toc: true
       toc_float: true
       number_sections: true
-      css: ../../misc/style.css
+      css: ../misc/style.css
 ---
 
 ```{r setup, include=FALSE}
