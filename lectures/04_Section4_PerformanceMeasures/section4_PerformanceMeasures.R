@@ -16,8 +16,6 @@ for (package in packages) {
   library(package, character.only=T)
 }
 
-remotes::install_github("rstudio/fontawesome")
-
 library(fontawesome)
 
 thm <- theme_classic() +
@@ -43,7 +41,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #     C <- rnorm(n,0,1)
 # 
 #     theta <- c(0,log(2))
-#     pi <- expit(theta[1]+theta[1]*C)
+#     pi <- expit(theta[1]+theta[2]*C)
 # 
 #     A <- exposure
 # 
@@ -79,7 +77,7 @@ collapsibility_function <- function(index, intercept, true_m, true_c){
     C <- rnorm(n,0,1)
   
     theta <- c(0,log(2))
-    pi <- expit(theta[1]+theta[1]*C)
+    pi <- expit(theta[1]+theta[2]*C)
     
     A <- rbinom(n,1,pi)
   

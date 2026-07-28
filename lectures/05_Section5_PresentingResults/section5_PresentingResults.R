@@ -16,8 +16,6 @@ for (package in packages) {
   library(package, character.only=T)
 }
 
-remotes::install_github("rstudio/fontawesome")
-
 library(fontawesome)
 
 thm <- theme_classic() +
@@ -164,7 +162,7 @@ head(relhaz)
 
 ## ----tidy = F, warning = F, message = F---------------------------------------
 relhaz <- relhaz %>% 
-  mutate(include_flag = if_else(lcl<-.5 & ucl>-.5, "Include", "Exclude"))
+  mutate(include_flag = if_else(lcl < -.5 & ucl > -.5, "Include", "Exclude"))
 
 ## ----tidy = F, warning = F, message = F---------------------------------------
 

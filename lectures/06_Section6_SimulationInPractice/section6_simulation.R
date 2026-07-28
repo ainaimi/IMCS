@@ -16,8 +16,6 @@ for (package in packages) {
   library(package, character.only=T)
 }
 
-remotes::install_github("rstudio/fontawesome")
-
 library(fontawesome)
 
 thm <- theme_classic() +
@@ -342,8 +340,14 @@ head(a)
 
 # to make things easier, let's create objects with our true values:
 
-true_log_or1 <- 0.4132932
-true_log_or2 <- 0.289803
+true_log_or1 <- 0.4132932 # true log OR when c_number = 10
+true_log_or2 <- 0.289803  # true log OR when c_number = 25
+
+# the true value depends on the scenario (number of confounders),
+# not on the estimator, so we attach the appropriate truth to each row:
+
+a <- a %>%
+  mutate(true_log_or = ifelse(c_number == 10, true_log_or1, true_log_or2))
 
 
 ## ----tidy = F, warning = F, message = F---------------------------------------
@@ -364,10 +368,10 @@ a %>%
 #
 # the true log OR marg2 (c_number = 25) is: 0.289803
 
-a %>% 
-  group_by(c_number) %>% 
-  summarize(biasMS = mean(marginal_standardization_estimate - true_log_or1),
-            biasIPW = mean(ip_weighting_estimate - true_log_or2))
+a %>%
+  group_by(c_number) %>%
+  summarize(biasMS = mean(marginal_standardization_estimate - true_log_or),
+            biasIPW = mean(ip_weighting_estimate - true_log_or))
 
 
 ## ----tidy = F, warning = F, message = F---------------------------------------
@@ -375,13 +379,13 @@ mc_se_bias <- function(x, n){
   sqrt(sum((x - mean(x))^2)/(n*(n-1)))
 }
 
-bias_results <- a %>% 
-  group_by(c_number) %>% 
-  summarize(biasMS = mean(marginal_standardization_estimate - true_log_or1),
-            biasIPW = mean(ip_weighting_estimate - true_log_or2),
-            
-            biasMS_se = mc_se_bias(marginal_standardization_estimate - true_log_or1, n = 200),
-            biasIPW_se = mean(ip_weighting_estimate - true_log_or2, n = 200),
+bias_results <- a %>%
+  group_by(c_number) %>%
+  summarize(biasMS = mean(marginal_standardization_estimate - true_log_or),
+            biasIPW = mean(ip_weighting_estimate - true_log_or),
+
+            biasMS_se = mc_se_bias(marginal_standardization_estimate - true_log_or, n = 200),
+            biasIPW_se = mc_se_bias(ip_weighting_estimate - true_log_or, n = 200),
             
             biasMS_p.value = round(2*(1 - pnorm(abs(biasMS/biasMS_se))),4),
             biasIPW_p.value = round(2*(1 - pnorm(abs(biasIPW/biasIPW_se))),4))
@@ -392,7 +396,7 @@ bias_results
 ## ----tidy = F, warning = F, message = F---------------------------------------
 
 ggplot(a) +
-  geom_histogram(aes(marginal_standardization_estimate - true_log_or1)) +
+  geom_histogram(aes(marginal_standardization_estimate - true_log_or)) +
   geom_vline(xintercept = 0, color = "red") +
   facet_wrap(~c_number)
 
@@ -400,7 +404,7 @@ ggplot(a) +
 ## ----tidy = F, warning = F, message = F---------------------------------------
 
 ggplot(a) +
-  geom_histogram(aes(ip_weighting_estimate - true_log_or2)) +
+  geom_histogram(aes(ip_weighting_estimate - true_log_or)) +
   geom_vline(xintercept = 0, color = "red") +
   facet_wrap(~c_number)
 
