@@ -3,7 +3,7 @@ title: "Welcome to IMCS"
 author: "Ashley I Naimi"
 date: "Summer `r format(Sys.Date(), '%Y')`"
 urlcolor: blue
-bibliography: ref.bib
+bibliography: ../misc/ref.bib
 link-citations: yes
 output: 
     bookdown::pdf_book:

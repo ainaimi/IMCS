@@ -3,7 +3,7 @@ title: "Designing Simulation Studies"
 author: "Ashley I Naimi"
 date: "`r paste0('Summer ', 2025)`" #format(Sys.Date(), '%Y')
 urlcolor: blue
-bibliography: ref.bib
+bibliography: ../misc/ref.bib
 link-citations: yes
 output: 
     bookdown::pdf_book:

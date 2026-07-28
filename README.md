@@ -23,7 +23,7 @@ lectures/                      the canonical course, one folder per section
   07_Section7_Computing/         parallel computing
   08_Section8_ComputingCluster/  cluster computing and SLURM
   appendix/                      simulation reading list
-  misc/                          shared preamble.tex and style.css used by every lecture
+  misc/                          shared preamble.tex, style.css, and ref.bib used by every lecture
 _images/                       figures used by the lectures (aRtsy.R generates the art)
 syllabus.md                    course syllabus (Emory semester version)
 install.R                      one-shot installer for the R packages the lectures use
