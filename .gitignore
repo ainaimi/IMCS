@@ -13,7 +13,7 @@ tmp-pdfcrop-*.tex
 *.pdf
 
 # local scratch areas and archives, not part of the course repo
-/misc*
-/sandbox*
+/admin/
 /offerings/
+/sandbox*
 _images/aRtsy.R
