@@ -1,12 +1,18 @@
-CourseRationale.docx
-new-course-proposal-form_MCS.pdf
-_images/aRtsy.R
+# OS / editor state
+.DS_Store
 .Rproj.user
-/misc*
-/sandbox*
-bfg.jar
+
+# LaTeX / knitr build byproducts
 *.log
-*.pdf
 *.aux
 *.toc
-*.tex
+*.synctex.gz
+tmp-pdfcrop-*.tex
+
+# compiled output: this repo tracks source files only
+*.pdf
+
+# local scratch areas, not part of the course repo
+/misc*
+/sandbox*
+_images/aRtsy.R
