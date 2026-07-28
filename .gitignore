@@ -12,7 +12,8 @@ tmp-pdfcrop-*.tex
 # compiled output: this repo tracks source files only
 *.pdf
 
-# local scratch areas, not part of the course repo
+# local scratch areas and archives, not part of the course repo
 /misc*
 /sandbox*
+/offerings/
 _images/aRtsy.R
