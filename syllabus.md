@@ -1,7 +1,5 @@
 ---
-layout: page
 title: "Introduction to Monte Carlo Simulation Using R"
-permalink: /syllabus/
 header-includes:
   - \usepackage{hyperref}
   - \hypersetup{colorlinks=true,urlcolor=blue}
