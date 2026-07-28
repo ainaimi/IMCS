@@ -90,9 +90,9 @@ microbenchmark(
 
 
 ## ----eval = F-----------------------------------------------------------------
-#  lapply(1:100, function(x) simulation_function(nsim = x,
-#                                                sample_size = 500,
-#                                                parameter = 2))
+# lapply(1:100, function(x) simulation_function(nsim = x,
+#                                               sample_size = 500,
+#                                               parameter = 2))
 
 ## ----out.width = "10cm",fig.cap="Simple illustration of serial versus parallel computing.",echo=F----
 knitr::include_graphics(here("_images","par_ser.pdf"))
@@ -275,13 +275,13 @@ head(sim_res, 3)
 
 
 ## ----eval = F-----------------------------------------------------------------
-#  
-#  parallel::clusterEvalQ(cluster, {
-#    .libPaths("~/R/R_LIBS_USER")
-#    library(SuperLearner)
-#    library(ranger)
-#    library(xgboost)
-#    library(glmnet)
-#  })
-#  
+# 
+# parallel::clusterEvalQ(cluster, {
+#   .libPaths("~/R/R_LIBS_USER")
+#   library(SuperLearner)
+#   library(ranger)
+#   library(xgboost)
+#   library(glmnet)
+# })
+# 
 
