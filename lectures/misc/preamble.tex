@@ -167,3 +167,7 @@
   \end{cip}
   \end{itemize}
   }
+
+% pandoc >= 3.x wraps caption-less tables in "\def\LTcaptype{none}"; the tint
+% caption machinery then steps a counter named "none", which must exist.
+\newcounter{none}
