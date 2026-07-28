@@ -78,7 +78,7 @@ Suppose we conduct a simulation study evaluating the performance of three differ
 pacman::p_load(
   tidyverse,     
   dplyr, 
-  purr,
+  purrr,
   magrittr
   )
 

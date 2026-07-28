@@ -37,7 +37,7 @@ knitr::opts_chunk$set(echo = TRUE)
 pacman::p_load(
   tidyverse,     
   dplyr, 
-  purr,
+  purrr,
   magrittr
   )
 
