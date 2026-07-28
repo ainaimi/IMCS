@@ -247,7 +247,7 @@ t(simulation_results)
 
 ```
 
-In my experience, `sapply` is sometimes a slower function, possibly because it builds a set of results along columns as opposed to a list. However, we will later do a test to evaluate the performance speed of `sapply` and `lapply` (we will do this in the section on computing and profiling functions).
+In my experience, `sapply` is sometimes a slower function, possibly because it builds a set of results along columns as opposed to a list.
 
 ##  `mapply`
 

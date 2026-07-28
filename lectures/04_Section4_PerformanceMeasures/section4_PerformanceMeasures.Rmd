@@ -87,7 +87,7 @@ collapsibility_function <- function(intercept, exposure){
     C <- rnorm(n,0,1)
   
     theta <- c(0,log(2))
-    pi <- expit(theta[1]+theta[1]*C)
+    pi <- expit(theta[1]+theta[2]*C)
     
     A <- exposure
   
@@ -125,7 +125,7 @@ collapsibility_function <- function(index, intercept, true_m, true_c){
     C <- rnorm(n,0,1)
   
     theta <- c(0,log(2))
-    pi <- expit(theta[1]+theta[1]*C)
+    pi <- expit(theta[1]+theta[2]*C)
     
     A <- rbinom(n,1,pi)
   
@@ -379,7 +379,7 @@ mean(sim_res$mPower)
 
 ```
 
-This is telling us that, under the conditions of the simulation (single confounder, true conditional / marginal effect of ~ 2, etc), using a conditionally adjusted or marginally adjusted approach gives us a power of roughly 95% to detect the true odds ratios.
+This is telling us that, under the conditions of the simulation (single confounder, true conditional / marginal effect of ~ 2, etc), using a conditionally adjusted or marginally adjusted approach gives us a power of roughly 93% to detect the true odds ratios.
 
 \newpage
 

@@ -17,7 +17,7 @@ cran_packages <- c(
   "rsimsum",
   # estimation and inference
   "lmtest", "sandwich", "coin", "boot", "MASS", "Publish",
-  "glmnet", "ranger", "xgboost", "SuperLearner", "microbenchmark",
+  "glmnet", "ranger", "xgboost", "SuperLearner",
   # tooling
   "remotes", "devtools"
 )

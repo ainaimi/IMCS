@@ -1,11 +1,11 @@
 ---
 title: "Simulation Study: Example 3 - Causal Mediation Analysis"
 author: "Ashley I Naimi"
-date: "`r paste0('Spring ', 2025)`" #format(Sys.Date(), '%Y')
+date: "Summer `r format(Sys.Date(), '%Y')`"
 urlcolor: blue
 bibliography: ../misc/ref.bib
 link-citations: yes
-output: 
+output:
     bookdown::pdf_book:
       base_format: tint::tintPdf
       toc: true
@@ -22,25 +22,18 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-library(knitr)
-library(formatR)
-opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
-
-packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
-               "gridExtra","skimr","here","RColorBrewer","survival")
-
-for (package in packages) {
-  if (!require(package, character.only=T, quietly=T)) {
-    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
-  }
+# Load pacman (install if necessary)
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman", repos = "https://cloud.r-project.org")
 }
 
-for (package in packages) {
-  library(package, character.only=T)
-}
+# Use pacman to load (and install if missing) all required packages
+pacman::p_load(
+  tidyverse, ggplot2, formatR, gridExtra, here,
+  lmtest, sandwich, knitr
+)
 
-library(fontawesome)
-
+# Set ggplot2 theme
 thm <- theme_classic() +
   theme(
     legend.position = "top",
@@ -49,9 +42,15 @@ thm <- theme_classic() +
   )
 theme_set(thm)
 
-knitr::knit_hooks$set(purl = knitr::hook_purl)
-knitr::opts_chunk$set(echo = TRUE)
+# Set global chunk options
+opts_chunk$set(
+  tidy.opts = list(width.cutoff = 60),
+  tidy = TRUE,
+  echo = TRUE
+)
 
+# Set knit hook for purling
+knit_hooks$set(purl = hook_purl)
 ```
 
 \newpage
@@ -59,22 +58,31 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Estimating the Controlled Direct Effect
 
-Our final example of using simulation will involve causal mediation analysis. We are going to use the data generating mechanism we used that was based on the following DAG:
+Our final example of using simulation will involve causal mediation analysis. Recall the question we posed at the beginning of the course:
+
+*If we don't use methods that account for mediator-outcome confounders affected by the exposure, how misleading can the results of a mediation analysis be?*
+
+To answer this question, we are going to use the data generating mechanism we constructed in the section on simulation design, which was based on the following DAG:
 
 ```{r, out.width = "10cm",fig.cap="Causal diagram representing exposure induced mediator outcome confounding.",echo=F}
 knitr::include_graphics(here("_images","mediation_dag.pdf"))
 ```
 
-Data generated from this mechanism can be used to quantify the controlled direct effect, defined as:
+In this diagram, $X$ is the exposure, $Z$ is the mediator, and $Y$ is the outcome. The variable $C$ is a baseline confounder of the exposure-outcome relation, and $U$ is an *unmeasured* common cause of $L$ and $Y$. The variable $L$ plays the starring role in this example: it confounds the mediator-outcome ($Z-Y$) relation, and it is itself affected by the exposure. Variables like $L$ are referred to as *exposure-induced mediator-outcome confounders*, and they create serious problems for standard regression-based mediation analysis [@VanderWeele2014].
 
-$$E(Y^{x = 1, z} - Y^{x = 0, z})$$
+Data generated from this mechanism can be used to quantify the controlled direct effect (CDE), defined as:
+
+$$CDE(z) = E(Y^{x = 1, z} - Y^{x = 0, z})$$
+
+In words, this is the effect of the exposure on the outcome that we would observe if we intervened to hold the mediator fixed at the value $z$ for everyone in the population [@Robins1992e]. The word "controlled" refers to this intervention on the mediator. If the exposure affects the outcome *only* through the mediator, then fixing the mediator should shut the effect down entirely, and the CDE will be zero. A non-null CDE tells us that some of the exposure's effect on the outcome does not pass through the mediator. Controlled direct effects have been used in this way in a number of applied settings [see, e.g., @Mendola2015].
 
 # Aims
 
-In terms of aims, let's evaluate what happens when we improperly adjust for the confounder of the mediator outcome association that is downstream to the exposure. There are a few ways in which we can improperly adjust for this confounder, and we'll explore two:
+In terms of aims, let's evaluate what happens when we improperly handle the confounder of the mediator-outcome association that is downstream to the exposure. There are a few ways in which we can improperly handle this confounder, and we'll explore two, comparing both to a method that is designed to handle variables like $L$ correctly:
 
-- Evaluate the bias of a CDE estimator when we include the exposure induced mediator outcome confounder ($L$) in a simple regression model
-- Evaluate the bias of a CDE estimator when we fail to adjust for the exposure induced mediator outcome confounder
+- Evaluate the bias of a CDE estimator when we include the exposure-induced mediator-outcome confounder ($L$) in a standard regression model
+- Evaluate the bias of a CDE estimator when we fail to adjust for the exposure-induced mediator-outcome confounder entirely
+- Compare both of these strategies to an inverse probability weighted marginal structural model, which adjusts for $L$ without conditioning on it [@Robins2000]
 
 As we saw previously, the DAG above suggests the following causal ordering:
 
@@ -87,9 +95,9 @@ As we saw previously, the DAG above suggests the following causal ordering:
 | $Z$  |  2 |
 | $Y$  |  5 |
 
-# Monte Carlo Integration for the True Value
+# Data Generating Mechanism
 
-In order to evaluate the bias, we're going to need to compute the true value. We can do this here using Monte Carlo integration. Let's write a program that adapts our data generating mechanism so that we can compute the true CDM in the setting we'd like to explore:
+Using this causal ordering, we can generate data exactly as we did in the section on simulation design: first the exogenous variables $U$ and $C$, then $X$, then $L$ (which depends on $X$ and $U$), then $Z$ (which depends on $X$ and $L$), and finally $Y$:
 
 ```{r tidy = F, warning = F, message = F}
 
@@ -97,32 +105,282 @@ expit <- function(x){1/(1 + exp(-x))}
 
 set.seed(123)
 
-true_CDM <- function(sample_size, exposure, mediator){
-  
+n = 500
+
+U <- rnorm(n)
+
+C <- rnorm(n)
+
+X <- rbinom(n, size = 1, p = expit(-1 + log(2)*C ))
+
+L <- rnorm(n, mean = 0 + 1.5*X + 1.5*U)
+
+Z <- rbinom(n, size = 1, expit(-1.5 + log(2)*X + log(2)*L ))
+
+Y <- rnorm(n, mean = 10 + 5*X + 5*C + 5*Z + 4*L + 4*U, sd = 5)
+
+med_data <- data.frame(Y, Z, L, X, C)
+
+head(med_data)
+
+```
+
+# Estimands
+
+We will focus our attention on the controlled direct effect defined above. Because the outcome model in our data generating mechanism contains no product term between $X$ and $Z$, the controlled direct effect here is the same at every level of the mediator: $CDE(0) = CDE(1)$. In general, this need not be true. If the outcome model included an $X \times Z$ interaction, the CDE would differ depending on the value $z$ at which we fix the mediator, and we would need to report it separately for each mediator level.
+
+# The True Value
+
+In the section on simulation design, we looked at this DAG and asked: the effect of $X$ on $Y$ is carried by several paths, and we know the magnitude of each arrow, but how do we combine them? For the controlled direct effect, the answer is simpler than it first appears. When we intervene to hold $Z$ fixed, every path that passes *through* $Z$ is shut down. The only paths from $X$ to $Y$ that remain are:
+
+|  Path | Magnitude |
+|-----|-----|
+| $X \rightarrow Y$ | $5$ |
+| $X \rightarrow L \rightarrow Y$ | $1.5 \times 4 = 6$ |
+
+Because our data generating mechanism is linear in $X$, $L$, and $Z$ (with no product terms), we can simply add these path-specific contributions to get the true CDE:
+
+$$CDE = 5 + (1.5 \times 4) = 11$$
+
+Note that the path $X \rightarrow L \rightarrow Y$ is *part of* the controlled direct effect. It does not pass through the mediator $Z$, and so it remains intact when we fix the mediator. This is worth dwelling on: $L$ transmits part of the direct effect, confounds the mediator-outcome relation, and is a collider on the path $X \rightarrow L \leftarrow U \rightarrow Y$. All three roles at once.^[This triple role is exactly why exposure-induced confounders are so troublesome, and why they cannot be handled by simply putting them in (or leaving them out of) a regression model.]
+
+In more realistic settings (nonlinear models, product terms), we won't be able to combine path magnitudes by hand. So let's confirm this value using Monte Carlo integration, exactly as we did for the marginally adjusted odds ratio. We adapt the data generating mechanism so that the exposure and the mediator are set to fixed values, we crank the sample size up, and we return the mean of the outcome:
+
+```{r tidy = F, warning = F, message = F}
+
+set.seed(123)
+
+true_CDE <- function(sample_size, exposure, mediator){
+
   n <- sample_size
 
   U <- rnorm(n)
-  
+
   C <- rnorm(n)
-  
-  X <- exposure # rbinom(n, size = 1, p = expit(-1 + log(2)*C ))
-  
+
+  X <- exposure # set the exposure to a specific value
+
   L <- rnorm(n, mean = 0 + 1.5*X + 1.5*U)
-  
-  Z <- mediator # rbinom(n, size = 1, expit(-1.5 + log(2)*X + log(2)*L ))
-  
+
+  Z <- mediator # set the mediator to a specific value
+
   return(mean(10 + 5*X + 5*C + 5*Z + 4*L + 4*U))
 
 }
 
+# CDE with the mediator fixed at z = 0
+CDE_0 <- true_CDE(sample_size = 5e6, exposure = 1, mediator = 0) -
+  true_CDE(sample_size = 5e6, exposure = 0, mediator = 0)
+
+CDE_0
+
+# CDE with the mediator fixed at z = 1
+CDE_1 <- true_CDE(sample_size = 5e6, exposure = 1, mediator = 1) -
+  true_CDE(sample_size = 5e6, exposure = 0, mediator = 1)
+
+CDE_1
 
 ```
 
+Both values agree with the path-tracing answer of 11, up to Monte Carlo error. For the performance evaluation below, we will use the exact value:
 
-# Estimands
+```{r}
 
+true_cde <- 11
 
+```
 
+# Methods
+
+## Standard Regression, Adjusting for L
+
+The first strategy we'll evaluate is the one that probably looks the most sensible: since $L$ confounds the mediator-outcome relation, put it in the outcome regression model along with everything else:
+
+$$E(Y \mid X, Z, C, L) = \beta_0 + \beta_1 X + \beta_2 Z + \beta_3 C + \beta_4 L$$
+
+with $\beta_1$ taken as the estimate of the CDE. The logic seems airtight: to interpret the coefficient for $X$ with $Z$ held constant, we need the $Z-Y$ relation to be unconfounded, and $L$ is a $Z-Y$ confounder.
+
+:::{.rmdnote data-latex="{dive}"}
+
+__Deeper Dive__: Why Conditioning on $L$ Fails
+
+|               Conditioning on $L$ does two bad things at once. First, it *blocks* the path $X \rightarrow L \rightarrow Y$, which is part of the controlled direct effect we are trying to estimate. Second, $L$ is a collider on the path $X \rightarrow L \leftarrow U \rightarrow Y$; conditioning on a collider *opens* this path, inducing a spurious association between $X$ and the unmeasured variable $U$, which in turn affects $Y$. So adjustment for $L$ removes part of the effect we want, and adds a bias we didn't have. There is no value of the $X$ coefficient in this model that corresponds to the CDE [@Robins1992e; @VanderWeele2014].
+
+:::
+
+## Standard Regression, Ignoring L
+
+If putting $L$ in the model causes problems, what if we simply leave it out?
+
+$$E(Y \mid X, Z, C) = \beta_0 + \beta_1 X + \beta_2 Z + \beta_3 C$$
+
+again taking $\beta_1$ as the CDE estimate. This avoids blocking the $X \rightarrow L \rightarrow Y$ path and avoids the collider problem. But now the mediator-outcome relation is confounded by $L$: the model conditions on $Z$, and $Z$ is a collider on the path $X \rightarrow Z \leftarrow L \rightarrow Y$. Conditioning on $Z$ links $X$ with $L$, and $L$ affects $Y$. We have traded one bias for another.
+
+## Inverse Probability Weighted Marginal Structural Model
+
+The problem with both strategies above is that any approach that handles $L$ by conditioning (or refusing to condition) in the outcome model is caught between the two biases. What we need is a way to adjust for $L$ as a mediator-outcome confounder *without* conditioning on it in the outcome model. This is exactly what inverse probability weighting gives us [@Robins2000; @Naimi2016b].
+
+We construct two sets of stabilized weights: one for the exposure, using the baseline confounder $C$; and one for the mediator, using its confounders $X$, $C$, and $L$:
+
+$$sw_X = \frac{P(X = x_i)}{P(X = x_i \mid C_i)}, \quad\quad sw_Z = \frac{P(Z = z_i)}{P(Z = z_i \mid X_i, C_i, L_i)}$$
+
+The overall weight for each individual is the product $sw = sw_X \times sw_Z$. In the weighted pseudo-population, the exposure is unconfounded, and the mediator is unconfounded, so we can fit a *marginal structural model* for the joint effects of $X$ and $Z$:
+
+$$E(Y^{x,z}) = \theta_0 + \theta_1 x + \theta_2 z + \theta_3 xz$$
+
+Because $X$ and $Z$ are both binary, this model is saturated. The coefficient $\theta_1$ is the controlled direct effect with the mediator fixed at $z = 0$, and $\theta_1 + \theta_3$ is the CDE with the mediator fixed at $z = 1$. Note that $L$ appears in the weight model for the mediator, but nowhere in the outcome model. That is the trick: weighting removes the confounding by $L$ without ever conditioning on it.
+
+As we saw when we introduced IP weighting, the model-based standard errors from a weighted regression are no longer valid. We will use the robust (sandwich) variance estimator for the weighted model.^[The other option, as always, is to bootstrap the entire procedure: both weight models and the weighted outcome model would need to be re-fit in every resample. We use the robust variance here to keep the run time of these notes manageable.]
+
+# Performance Measures
+
+Once we obtain our simulation data, we will use the following performance measures to compare the three approaches:
+
+- bias of the point estimate (with its Monte Carlo standard error)
+- bias of the standard error (comparing the average estimated standard error to the empirical standard deviation of the estimates)
+- 95% confidence interval coverage
+
+# Running the Simulation
+
+We can now put the pieces together into a single simulation function. Each run generates a dataset of 500 observations from the mechanism above, and analyzes it with all three estimators. The function returns one row per estimator, with the point estimate and its standard error — the same "long" layout we saw when we first discussed performance measures:
+
+```{r tidy = F, warning = F, message = F}
+
+set.seed(123)
+
+simulation_function <- function(index, sample_size = 500){
+
+  # DATA GENERATION
+  n <- sample_size
+
+  U <- rnorm(n)
+  C <- rnorm(n)
+  X <- rbinom(n, size = 1, p = expit(-1 + log(2)*C ))
+  L <- rnorm(n, mean = 0 + 1.5*X + 1.5*U)
+  Z <- rbinom(n, size = 1, expit(-1.5 + log(2)*X + log(2)*L ))
+  Y <- rnorm(n, mean = 10 + 5*X + 5*C + 5*Z + 4*L + 4*U, sd = 5)
+
+  med_data <- data.frame(Y, Z, L, X, C)
+
+  # ANALYSIS 1: standard regression, adjusting for L
+  model1 <- glm(Y ~ X + Z + C + L, data = med_data,
+                family = gaussian("identity"))
+  adjL <- summary(model1)$coefficients["X", 1:2]
+
+  # ANALYSIS 2: standard regression, ignoring L
+  model2 <- glm(Y ~ X + Z + C, data = med_data,
+                family = gaussian("identity"))
+  noL <- summary(model2)$coefficients["X", 1:2]
+
+  # ANALYSIS 3: IP weighted marginal structural model
+  ## stabilized weights for the exposure
+  psX <- glm(X ~ C, data = med_data,
+             family = binomial("logit"))$fitted.values
+  swX <- (mean(med_data$X)/psX)*med_data$X +
+    ((1 - mean(med_data$X))/(1 - psX))*(1 - med_data$X)
+
+  ## stabilized weights for the mediator
+  psZ <- glm(Z ~ X + C + L, data = med_data,
+             family = binomial("logit"))$fitted.values
+  swZ <- (mean(med_data$Z)/psZ)*med_data$Z +
+    ((1 - mean(med_data$Z))/(1 - psZ))*(1 - med_data$Z)
+
+  med_data$sw <- swX*swZ
+
+  ## weighted (saturated) marginal structural model
+  model3 <- glm(Y ~ X + Z + X:Z, data = med_data, weights = sw,
+                family = gaussian("identity"))
+  ipw <- coeftest(model3,
+                  vcov. = vcovHC(model3, type = "HC3"))["X", 1:2]
+
+  # SIMULATION FUNCTION OUTPUT: one row per estimator
+  res <- data.frame(
+    index = index,
+    sample_size = sample_size,
+    estimator = c("Regression with L",
+                  "Regression without L",
+                  "IP Weighted MSM"),
+    estimate = c(adjL[1], noL[1], ipw[1]),
+    se = c(adjL[2], noL[2], ipw[2]),
+    row.names = NULL
+  )
+
+  return(res)
+}
+
+```
+
+With the function defined, we can run the simulation. Note that, unlike our first two examples, this simulation is cheap enough that we simply run it when these notes are compiled, rather than saving results to a file.^[Roughly 2,000 runs each fitting five regression models to 500 observations; this takes on the order of a minute. Running the simulation at compile time has a side benefit worth noticing: the code shown and the results shown cannot drift apart.]
+
+```{r tidy = F, warning = F, message = F}
+
+nsim <- 2000
+
+sim_res <- lapply(1:nsim, function(x) simulation_function(index = x))
+
+sim_res <- do.call(rbind, sim_res)
+
+head(sim_res)
+
+```
+
+# Performance Evaluation
+
+Let's compute all of our performance measures at once, using the Monte Carlo standard error function for the bias that we constructed in the section on performance measures:
+
+```{r tidy = F, warning = F, message = F}
+
+mc_se_bias <- function(x){
+  n <- length(x)
+  sqrt(sum((x - mean(x))^2)/(n*(n-1)))
+}
+
+perf <- sim_res %>%
+  mutate(lcl = estimate - 1.96*se,
+         ucl = estimate + 1.96*se) %>%
+  group_by(estimator) %>%
+  summarize(mean_estimate = mean(estimate),
+            bias = mean(estimate - true_cde),
+            bias_mcse = mc_se_bias(estimate - true_cde),
+            emp_sd = sd(estimate),
+            mean_se = mean(se),
+            coverage = mean(lcl < true_cde & true_cde < ucl)) %>%
+  arrange(desc(abs(bias)))
+
+knitr::kable(perf, digits = 2,
+             col.names = c("Estimator", "Mean Est.", "Bias",
+                           "Bias MCSE", "Emp. SD", "Mean SE",
+                           "Coverage"))
+
+```
+
+```{r medhist, tidy = F, warning = F, message = F, out.width="10cm", fig.align='center', fig.cap="Distribution of controlled direct effect estimates across all Monte Carlo runs for each of the three estimators. The dashed red line marks the true CDE of 11."}
+
+ggplot(sim_res) +
+  geom_histogram(aes(estimate), bins = 60) +
+  geom_vline(xintercept = true_cde, color = "red", linetype = 2) +
+  facet_wrap(~estimator, ncol = 1) +
+  scale_y_continuous(expand = c(0,0)) +
+  xlab("Estimated CDE") + ylab("Count")
+
+```
+
+```{r, include = F}
+# convenience objects for the inline numbers quoted below
+p_adjL <- perf %>% filter(estimator == "Regression with L")
+p_noL  <- perf %>% filter(estimator == "Regression without L")
+p_ipw  <- perf %>% filter(estimator == "IP Weighted MSM")
+```
+
+These results answer the question we started the course with, and the answer is dramatic. The true controlled direct effect is 11. The standard regression model that adjusts for $L$ gives an average estimate of `r round(p_adjL$mean_estimate, 1)` — a bias of `r round(p_adjL$bias, 1)`, meaning this analysis misses roughly `r round(100*abs(p_adjL$bias)/true_cde)`% of the effect. Its confidence intervals, which are narrow and confidently centered in the wrong place, cover the truth `r round(100*p_adjL$coverage, 1)`% of the time. A researcher running this (very standard-looking) analysis would conclude that the direct effect is small, and would be badly wrong.
+
+Leaving $L$ out of the model does not solve the problem: the average estimate is `r round(p_noL$mean_estimate, 1)`, for a bias of `r round(p_noL$bias, 1)`, with confidence interval coverage of `r round(100*p_noL$coverage, 1)`%. Better, but still misleading.
+
+The IP weighted marginal structural model, by contrast, gives an average estimate of `r round(p_ipw$mean_estimate, 1)` — essentially unbiased — with coverage of `r round(100*p_ipw$coverage, 1)`%, close to the nominal 95%. For all three estimators, the average estimated standard error tracks the empirical standard deviation of the estimates reasonably well (compare the "Emp. SD" and "Mean SE" columns), which tells us the problem with the two regression approaches is not their standard errors. It is bias, pure and simple: their intervals are honest about their variance and silent about being centered in the wrong place.
+
+It is worth noticing the price of the weighted approach: its empirical standard deviation (`r round(p_ipw$emp_sd, 1)`) is several times larger than that of the regression estimators. Weighting buys validity at the cost of efficiency. In this example the trade is obviously worth making — an efficient estimate of the wrong quantity is not a bargain — but the trade-off is real, and it is one reason methodologists continue to develop more efficient estimators for these settings [@VanderWeele2015].
+
+Finally, some limitations of this simulation study. We evaluated a single sample size, a single set of parameter values, and a linear outcome model with no product terms; the magnitude (though not the existence) of the biases we documented will vary with all of these. We also gave the weighted estimator correctly specified weight models — in practice, weight model misspecification is an additional source of bias that a fuller study would explore. Each of these would make a natural extension: the simulation function is already written so that sample size can be varied, and additional scenarios could be added exactly the way we did in the first example of this section.
 
 \newpage
 

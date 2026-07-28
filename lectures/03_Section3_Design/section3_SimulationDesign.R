@@ -259,7 +259,7 @@ knitr::include_graphics(here("_images","triangle_dag.pdf"))
 #       C <- rnorm(n,0,1) ## FIRST!!!
 # 
 #       theta<- c(0,log(2))
-#       pi <- expit(theta[1]+theta[1]*C)
+#       pi <- expit(theta[1]+theta[2]*C)
 # 
 #       A <- rbinom(n,1,pi) ## SECOND!!
 # 
@@ -323,7 +323,7 @@ collapsibility_function <- function(intercept, exposure){
       C <- rnorm(n,0,1)
     
       theta <- c(0,log(2))
-      pi <- expit(theta[1]+theta[1]*C)
+      pi <- expit(theta[1]+theta[2]*C)
       
       A <- exposure # set the exposure to a specific value
     

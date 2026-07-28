@@ -244,7 +244,7 @@ We can also add an indicator of whether the bounds just created include the true
 
 ```{r tidy = F, warning = F, message = F}
 relhaz <- relhaz %>% 
-  mutate(include_flag = if_else(lcl<-.5 & ucl>-.5, "Include", "Exclude"))
+  mutate(include_flag = if_else(lcl < -.5 & ucl > -.5, "Include", "Exclude"))
 ```
 
 With these upper and lower bounds, we can now create a zipper plot for a subset of these results:

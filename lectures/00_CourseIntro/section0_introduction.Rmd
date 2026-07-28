@@ -113,11 +113,6 @@ In this course, we will cover the following topics:
 - Example 1: How does IP-weighting compare to marginal standardization?
 - Example 2: Simple Regression in an RCT
 - Example 3: Causal Mediation Estimators
- 
-## Section 7: Computing Efficiency
-- Computation: when do small differences become big?
-- Benchmarking Tools
-- Parallel Processing
 
 # Some Logistics
 
