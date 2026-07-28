@@ -217,7 +217,7 @@ The next example will look at the impact of non-collapsiblility of the odds rati
 
 In simple terms, non-collapsibility of the OR will be apparent when estimating an adjusted exposure-outcome association using a conditional and marginal approach (using standard logistic regression for the conditional approach, and IP-weighting or marginal standardization for the marginal approach). For example, in Figure 2, 
 
-```{r, out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $A$, confounder $C$, and outcome $Y$.",echo=F}
+```{r, out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F}
 knitr::include_graphics(here("_images","triangle_dag.pdf"))
 ```
 
@@ -388,12 +388,12 @@ If any of these properties is not met in a particular graphical model, it is not
 
 With respect to a particular DAG, a variable is exogenous if it has no arrows pointing into it. On the other hand, the most endogenous variable in a DAG is the one that has the most arrows pointing into it. If we re-visit Figure 2, we can note the following:
 
-```{r, out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $A$, confounder $C$, and outcome $Y$.",echo=F}
+```{r, out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F}
 knitr::include_graphics(here("_images","triangle_dag.pdf"))
 ```
 
 - The variable $C$ is most exogenous to this system
-- The variable $A$ is second most exogenous
+- The variable $X$ is second most exogenous
 - The variable $Y$ is the most endogenous
 
 Note how this aligns with how we simulated our data:

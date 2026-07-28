@@ -118,7 +118,7 @@ sum(rr_permuted$estimate <= log(risk_ratio))/permutations
 ## -----------------------------------------------------------------------------
 sum(abs(rr_permuted$estimate) >= abs(log(risk_ratio)))/permutations
 
-## ----out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $A$, confounder $C$, and outcome $Y$.",echo=F----
+## ----out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F----
 knitr::include_graphics(here("_images","triangle_dag.pdf"))
 
 ## ----echo=T,fig.star=T,tidy=F,highlight=T-------------------------------------
@@ -247,7 +247,7 @@ tail(data.frame(Y,A,C=round(C,2)),3)
   mean(sim_res$marginalOR)
 
 
-## ----out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $A$, confounder $C$, and outcome $Y$.",echo=F----
+## ----out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F----
 knitr::include_graphics(here("_images","triangle_dag.pdf"))
 
 ## ----eval=F-------------------------------------------------------------------

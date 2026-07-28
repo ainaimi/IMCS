@@ -47,13 +47,13 @@ lectures/06_Section6_SimulationInPractice/section6_simulation_RCT.pdf: _images/r
 lectures/06_Section6_SimulationInPractice/section6_simulation_mediation.pdf: _images/mediation_dag.pdf
 
 # DAG figures compile from their tex sources
-figures: _images/mediation_dag.pdf _images/rct_dag.pdf
+figures: _images/mediation_dag.pdf _images/rct_dag.pdf _images/triangle_dag.pdf
 
 _images/%.pdf: _images/%.tex
 	cd _images && xelatex -interaction=batchmode $(notdir $<) && rm -f $(notdir $(basename $<)).aux $(notdir $(basename $<)).log
 
 # these ship with the course but have no generating source in the repo (see README)
-_images/triangle_dag.pdf _images/pareto_comparison.pdf:
+_images/pareto_comparison.pdf:
 	$(error $@ is a static figure input with no generating source in this repo; see the README)
 
 deps:

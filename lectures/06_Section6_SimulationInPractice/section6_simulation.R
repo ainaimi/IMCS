@@ -30,22 +30,12 @@ knitr::knit_hooks$set(purl = knitr::hook_purl)
 knitr::opts_chunk$set(echo = TRUE)
 
 
-## ----out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $A$, confounder $C$, and outcome $Y$.",echo=F----
+## ----out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F----
 knitr::include_graphics(here("_images","triangle_dag.pdf"))
 
 ## ----eval = F-----------------------------------------------------------------
 # 
 # p_model <- glm(x ~ c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + c9 + c10, data = the_data, family = binomial(link = "logit"))
-# 
-
-## ----eval = F-----------------------------------------------------------------
-# 
-# p_model$fitted.values
-# 
-
-## ----eval = F-----------------------------------------------------------------
-# 
-# 1 - p_model$fitted.values
 # 
 
 ## ----eval = F-----------------------------------------------------------------

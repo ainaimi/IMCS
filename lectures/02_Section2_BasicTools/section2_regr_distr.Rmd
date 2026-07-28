@@ -305,6 +305,8 @@ Again, this model demonstrates that we can recover the true values, which we use
 
 # Marginal Standardization
 
+The last two topics in this lecture are marginal standardization and inverse probability weighting — the two estimators whose performance we will formally evaluate in a full simulation study in Section 6 (Example 1). Our goal here is simply to understand how each one is implemented; keep them both in mind, as they will return throughout the course.
+
 Marginal standardization is equivalent to g computation (aka the parametric g formula) when the exposure is measured at a single time point [@Naimi2016b]. This process can be implemented by fitting a single regression model, regressing the outcome against the exposure and all confounding variables. But instead of reading the coefficients the model, one can obtain parameter estimates of interest by using this model to generate predicted risks for each individual under “exposed” and “unexposed” scenarios in the dataset. To obtain standard errors, the entire procedure must be bootstrapped.
 
 Here is some code to implement this marginal standardization in the above dataset:
@@ -348,6 +350,8 @@ marg_stand_MD
 boot_MD
 
 ```
+
+Two details of the `predict()` calls above are worth flagging, since we will rely on them repeatedly. First, `transform(a, x=1)` hands `predict()` a copy of the dataset in which *everyone's* exposure is set to 1 (and, likewise, `x=0` sets everyone's exposure to 0). This is what makes the predictions counterfactual rather than observed. Second, `type="response"` requests predictions on the scale of the outcome itself. With the identity link used here it makes no difference, but when the outcome model is a logistic regression, `type="link"` would return predictions on the log-odds scale, while `type="response"` returns them on the probability scale — and it is the probability-scale predictions we need to average.
 
 # Inverse Probability Weighting
 
