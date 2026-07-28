@@ -9,9 +9,10 @@
 #   make clean      remove LaTeX debris (aux/log/toc/synctex)
 #   make clean-pdfs remove all generated PDFs (never the static figure inputs)
 #
-# Builds are intentionally serial: the RCT and CDM lectures in section 6 both
-# write the shared _images/nested_loop_plot_rct.pdf during knit, so `make -j`
-# can race.
+# Builds run serially. The old reason `make -j` was unsafe -- two section 6
+# lectures racing to write the shared _images/nested_loop_plot_rct.pdf -- is
+# gone now that only the RCT lecture writes it, but parallel builds remain
+# untested.
 # Knitting a lecture also regenerates its companion .R script (purl hook).
 
 RSCRIPT := Rscript
@@ -44,7 +45,6 @@ lectures/03_Section3_Design/section3_SimulationDesign.pdf: _images/triangle_dag.
 lectures/06_Section6_SimulationInPractice/section6_simulation.pdf: _images/triangle_dag.pdf
 lectures/06_Section6_SimulationInPractice/section6_simulation_RCT.pdf: _images/rct_dag.pdf
 lectures/06_Section6_SimulationInPractice/section6_simulation_mediation.pdf: _images/mediation_dag.pdf
-lectures/06_Section6_SimulationInPractice/section6_simulation_CDM.pdf: _images/mediation_dag.pdf
 
 # DAG figures compile from their tex sources
 figures: _images/mediation_dag.pdf _images/rct_dag.pdf

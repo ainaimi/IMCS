@@ -19,7 +19,7 @@ lectures/                      the canonical course, one folder per section
   03_Section3_Design/            simulation design; Monte Carlo integration (ATT, CDE)
   04_Section4_PerformanceMeasures/ bias, MSE, coverage, and friends
   05_Section5_PresentingResults/ nested loop plots, zip plots
-  06_Section6_SimulationInPractice/ worked studies: observational, RCT, mediation, CDM
+  06_Section6_SimulationInPractice/ worked studies: observational, RCT, mediation
   appendix/                      simulation reading list
   misc/                          shared preamble.tex, style.css, and ref.bib used by every lecture
 _images/                       figures used by the lectures (aRtsy.R generates the art)
