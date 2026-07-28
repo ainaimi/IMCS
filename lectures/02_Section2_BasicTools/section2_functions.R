@@ -281,3 +281,44 @@ ggplot(plot_dat, aes(x = uniform, y = poisson)) +
   geom_smooth(method='lm', se = F)
 
 
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+# Reset the seed and explore the .RNGSeed object
+set.seed(NULL)
+
+length(.Random.seed)
+ 
+head(.Random.seed)
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+set.seed(123)
+head(.Random.seed)
+
+runif(1)
+
+head(.Random.seed)
+
+seed_state <- .Random.seed
+
+runif(1)
+
+head(.Random.seed)
+
+runif(1)
+
+head(.Random.seed)
+
+runif(1)
+
+head(.Random.seed)
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+.Random.seed <- seed_state
+
+runif(1)
+
+

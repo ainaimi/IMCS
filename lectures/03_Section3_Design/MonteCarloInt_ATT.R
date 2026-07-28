@@ -1,44 +1,79 @@
-pacman::p_load(
-  rio,          
-  here,         
-  skimr,        
-  tidyverse,     
-  lmtest,
-  sandwich,
-  broom
-)
+## ----setup, include=FALSE---------------------------------------------------------------
+
+pacman::p_load(tidyverse, 
+               ggplot2, 
+               here, 
+               VIM, 
+               ggExtra, 
+               Publish, 
+               coin)
+
+# install.packages("coin",repos="http://lib.stat.cmu.edu/R/CRAN/")
+# library(coin)
 
 thm <- theme_classic() +
   theme(
     legend.position = "top",
+    legend.title=element_blank(),
     legend.background = element_rect(fill = "transparent", colour = NA),
-    legend.key = element_rect(fill = "transparent", colour = NA)
+    legend.key = element_rect(fill = "transparent", colour = NA) 
   )
 theme_set(thm)
+options(width = 90)
 
+knitr::knit_hooks$set(purl = knitr::hook_purl)
+knitr::opts_chunk$set(echo = TRUE)
+
+
+## ----tidy = F, warning = F, message = F-------------------------------------------------
+
+## define the expit function, whihc is 
+## equivalient to plogis in base R
 expit<-function(a){1/(1+exp(-a))}
 
+# set a single seed for reproducibility
 set.seed(123)
 
+# initialize the function. In this case, we're calling it 
+# the collapsibiliity function, due to copy-paste
+# a different name would have been more suitable
 collapsibility_function <- function(sample_size, intercept){
+  
+  #define the sample size, large enough to minimize
+  #monte carlo error
   n = sample_size
   
-  C <- rbinom(n,size = 1,p = .5)
+  #simulate a single binary confounder
+  C <- rbinom(n, size = 1,p = .5)
   
+  # simulate the propensity score
   theta <- c(0,log(2))
-  pi_a <- expit(theta[1]+theta[2]*C) ## note the correction!
+  pi_a <- expit(theta[1]+theta[2]*C) 
   
+  # simulate the observed exposure
   A_obs <- rbinom(n, size = 1, p = pi_a)
   
+  # define the outcome model
   beta <- c(intercept, log(1.5), log(.5), log(3))
   mu <- expit(beta[1] + beta[2]*A_obs + beta[3]*C + beta[4]*A_obs*C)
   
+  # compute the expected values from the outcome model defined above, 
+  # but only among those who were exposed
+  # Note that for the mean unexposed outcome among the exposed, we need to 
+  # change the `A_obs` value in the model to 0, and subset the `C` values to be among 
+  # those with A_obs = 1
   mu1_A1 <- mean(mu[A_obs==1])
   mu0_A1 <- mean(expit(beta[1] + beta[2]*0 + beta[3]*C[A_obs==1] + beta[4]*0*C[A_obs==1]))
   
+  # compute the expected values from the outcome model defined above, 
+  # but only among those who were UNexposed
+  # Note that for the mean exposed outcome among the unexposed, we need to 
+  # change the `A_obs` value in the model to 1, and subset the `C` values to be among 
+  # those with A_obs = 0
   mu1_A0 <- mean(expit(beta[1] + beta[2]*1 + beta[3]*C[A_obs==0] + beta[4]*1*C[A_obs==0]))
   mu0_A0 <- mean(mu[A_obs==0])
   
+  # construct means needed for ATE
   mu1 <- mean(expit(beta[1] + beta[2]*1 + beta[3]*C + beta[4]*1*C))
   mu0 <- mean(expit(beta[1] + beta[2]*0 + beta[3]*C + beta[4]*0*C))
   
@@ -56,3 +91,5 @@ collapsibility_function(sample_size = 1e6, intercept = -2.5)
 collapsibility_function(sample_size = 5e6, intercept = -2.5)
 collapsibility_function(sample_size = 1e7, intercept = -2.5)
 collapsibility_function(sample_size = 1e8, intercept = -2.5)
+
+

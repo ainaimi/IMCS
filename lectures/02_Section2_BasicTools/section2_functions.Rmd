@@ -329,6 +329,8 @@ Importantly, we are using the `lapply` function, but instead of indexing over th
 
 # Understanding Seeds
 
+## Random Number Generation with $\pi$
+
 One essential component of successfully deploying a simulation study is the appropriate use of seeds to fix the random number generator that R relies on to generate pseudo-randomness so that we might be able to reproduce the results. In this section, we'll cover how seeds work in R, how to use them, and common mistakes that should be avoided. 
 
 <!-- :::{.rmdnote data-latex="{dive}"} -->
@@ -339,23 +341,20 @@ One essential component of successfully deploying a simulation study is the appr
 
 <!-- ::: -->
 
-To understand seeds, it is important to understand the idea of a pseudo random number generator. A very basic (but perhaps slightly misleading) way to explain the idea behind pseudo-random number generation is to find a sequence of digits with no apparent pattern or regularities to them. For example, if we can establish that the sequence of digits in the constant $\pi$ doesn't have any regular patterns to it, we can use it as our base to generate randomness:
+To understand seeds, it is important to understand the idea of a pseudo random number generator. A very basic (though somewhat misleading) way to explain the idea behind pseudo-random number generation is to find a sequence of digits with no apparent pattern or regularities to them. For example, if we can establish that the sequence of digits in the constant $\pi$ doesn't have any regular patterns to it, we can use it as our base to generate randomness:
 
 $$3.14159265358979 \cdots$$
-Here, the so-called "pseudo-randomness" occurs in the transition from one number in the sequence to the next. For example, if we start the random number sequence at the third digit (4), the next numbers in the sequence will be 1, then 5, then 9, and so on. 
-
-Since there is no obvious predictability or regularity in this sequence, we can use these digits as the base to initialize a range of complex functions that mimic random behavior. 
+Here, the so-called "pseudo-randomness" occurs in the transition from one number in the sequence to the next. For example, if we start the random number sequence at the third digit (4), the next numbers in the sequence will be 1, then 5, then 9, and so on. Since there is no obvious predictability or regularity in this sequence, we can use these digits as the base to initialize a range of complex functions that mimic random behavior. 
 
 However, because $\pi$ is a fixed constant, the numbers in the sequence don't change. So, if we want to initialize functions that mimic randomness, but want to be able to reproduce this randomness, we can use a seed value to start the random sequence at the same point every time. 
-
-To make the illustration a bit more concrete, consider a scenario where we'd like to generate a set of probabilities (i.e., numbers bounded between 0 and 1) that are "random" using the sequence of digits in $\pi$. We can construct an algorithm such as:
+Consider a scenario where we'd like to generate a set of probabilities (i.e., numbers bounded between 0 and 1) that are "random" using the sequence of digits in $\pi$. We can construct an algorithm such as:
 
 - Pick a seed value, which corresponds to a digit in the sequence of numbers of $\pi$
-- Select the three consecutive digits of $\pi$ after seed, and divide these three digits by 1000
+- Select the three consecutive digits of $\pi$ after the seed, and divide these three digits by 1000
 - Return the value as output
 - Move the seed forward by one digit position in $\pi$, and repeat the procedure
 
-If we did this, we'd get a sequence of "random" probabilities that look like this:
+If we did this, we'd get a sequence of "random" probabilities that are completely reproducible, and that look like this:
 
 | Iteration | Seed | Digits Used | Output (Random Number) |
 | ------: | :--: | :---------- | :--------------------- |
@@ -365,9 +364,20 @@ If we did this, we'd get a sequence of "random" probabilities that look like thi
 |       4 |   6  | 2 6 5       | 0.265                  |
 |       5 |   7  | 6 5 3       | 0.653                  |
 
-However, this procedure is entirely reproducible.
+This example represents the core idea of a seed, and sets the stage for understanding some of the negative consequences that we can encounter using seed values. However, this is not how pseudo random number generators work in reality. 
 
-The above description of seeds and random number generators is obviously way simplified. However, this example represents the core idea of a seed, and sets the stage for understanding some of the negative consequences that we can encounter using seed values. 
+  <!-- ## A Simple Linear Congruential Generator -->
+  
+  <!-- ## The Mersenne Twister -->
+  
+  <!-- ```{r tidy = F, warning = F, message = F} -->
+  <!-- set.seed(NULL) -->
+  <!-- set.seed(123) -->
+  <!-- print(.Random.seed[1:10]) -->
+  <!-- runif(1)         # advances the PRNG -->
+  <!-- print(.Random.seed[1:10])  # state changed -->
+  <!-- ``` -->
+
 
 # Using Seeds in R
 
@@ -450,7 +460,7 @@ ggplot(plot_dat, aes(x = uniform, y = poisson)) +
 
 The plot above demonstrates a clear problem: higher/lower values of the uniform distribution are associated with higher/lower values of the Poisson distribution, even though these two variables should be independent^[Importantly, note that no information in the uniform distribution is used to define the Poisson distribution, and vice versa.]
 
-Why is this occurring? It turns out that in R (as in many other statistical software platforms) the way the Poisson random variable is generated is based on a procedure known as the inverse transformation method [@Roberts2010; p44]. This approach starts with a uniform distribution to generate the Poisson random variable. So the problem that arises is that the exact same uniform random variable that is generated in `a` is used to generate the Poisson random variable defined in `b`. 
+Why is this occurring? It turns out that in R (as in many other statistical software platforms) the way the Poisson random variable is generated is based on the inverse transformation method [@Roberts2010; p44]. This approach starts with a uniform distribution to generate the Poisson random variable. So the problem that arises is that the exact same uniform random variable that is generated in `a` is used to generate the Poisson random variable defined in `b`. 
 
 What should this plot look like if we want to construct two **truly independent** random variables from a uniform and Poisson distribution? We can see this with the use of only a single seed initiated in the code chunk:
 
@@ -476,6 +486,71 @@ ggplot(plot_dat, aes(x = uniform, y = poisson)) +
 ```
 
 This example serves to illustrate the danger of setting the seed multiple times in a given session. Notably, if you construct a simulation to evaluate the property of an estimator that assumes some form of independence between random variables, and you generate these variables with a strong dependence between them, the underlying assumptions of the simulation study will be violated, and the conclusions drawn from the study may be misleading.
+
+## Using the .RNGSeed State Object
+
+Using the `set.seed()` function properly is an important tool to enable reproducibilty of simulation results. However, supposed you run a complicated simulation study with several tens or hundreds of thousands of iterations, and weeks to run. You may want to enable yourself and the research community to generate exactly any one of the tens or hundreds of thousands of sets of results. For example, suppose you run a simulation with 100,000 Monte Carlo runs, and you are interested in reproducing the exact set of results that came from simulation number 99,673. This situation might arise if you find that there are outliers or anomalous results in this particular Monte Carlo run, and that you need to investigate further why this may be the case. 
+
+If you only rely on the `set.seed()` function initialized once at the beginning of the simulation, you'd have to wait, possibly weeks, to get the this particular Monte Carlo number before you were able to reproduve your results, and then you would have to know beforehand what code you'd need to write to explore and potentially debug the problem. This is not a tenable way to solve this problem. 
+
+Instead, you can rely on the `.RNGSeed` object, which represents the state of the pseudo-random number generator at every particular instance during the simulation. Here's how this object works in R:
+
+```{r tidy = F, warning = F, message = F}
+
+# Reset the seed and explore the .RNGSeed object
+set.seed(NULL)
+
+length(.Random.seed)
+ 
+head(.Random.seed)
+
+```
+
+The `.Random.seed` object contains information on three important things. The first element in the list contains information on the type of seed being used. There are several to choose from, but the default in R is an updated version of the Mersenne-Twister known as the "Inversion" method. The number 10403 is referring to this. 
+
+Let's skip the second element in the list for now which, in this instance, is 624. The string of numbers from the third to the 626th number represent the state of the pseudo random number generator, in this case, the Mersenne-Twister. The Mersenne-Twister is a complex algorithm that can be used to generate pseudo-random numbers. If we lean on our $\pi$ analogy, the string of numbers from the third to the 626th numbers can be thought of as the sequence of digits of $pi$, and these are what are used to generate pseudo-randomness. These numbers come from a mathematical operation (the "Twister" part) performed on a particular number that is one of the Mersenne primes (the number is $2^{19937} - 1$).
+
+The value of the seed used in the `set.seed()` function initializes the first number in the set of 624 numbers. All subsequent numbers are then obtained deterministically using the complex Mersenne-Twister equation.
+
+Notice how this works:
+
+```{r tidy = F, warning = F, message = F}
+
+set.seed(123)
+head(.Random.seed)
+
+runif(1)
+
+head(.Random.seed)
+
+seed_state <- .Random.seed
+
+runif(1)
+
+head(.Random.seed)
+
+runif(1)
+
+head(.Random.seed)
+
+runif(1)
+
+head(.Random.seed)
+
+```
+
+Effectively, with every call to the random number generator in R (in this case, `runif()`), a new seed state is initialized with the Mersenne-Twister. 
+
+Thus, if we want to recreate exactly the random number generated by R, we have to save the seed state for the iteration that we wish to replicate:
+
+```{r tidy = F, warning = F, message = F}
+
+.Random.seed <- seed_state
+
+runif(1)
+
+```
+
 
 \newpage
 

@@ -1,7 +1,7 @@
 ---
 title: "Designing Simulation Studies"
 author: "Ashley I Naimi"
-date: "`r paste0('Spring ', 2024)`" #format(Sys.Date(), '%Y')
+date: "`r paste0('Summer ', 2025)`" #format(Sys.Date(), '%Y')
 urlcolor: blue
 bibliography: ref.bib
 link-citations: yes
@@ -249,7 +249,7 @@ Noncollapsibility is less of an issue when the outcome is rare. Often, the thres
   ## theta[1] is the intercept and theta[2] is the log-OR for the confounder-exposure relation
   ## pi is the probability that the exposure is 1
   theta <- c(0,log(2))
-  pi <- expit(theta[1]+theta[1]*C)
+  pi <- expit(theta[1]+theta[2]*C)
   
   # simulate exposure from binomial distribution
   ## second argument is number of trials
@@ -332,7 +332,7 @@ Let's fix this briefly to see if it changes anything:
       C <- rnorm(n,0,1)
     
       theta <- c(0,log(2))
-      pi <- expit(theta[1]+theta[1]*C)
+      pi <- expit(theta[1]+theta[2]*C)
       
       A <- rbinom(n,1,pi)
     

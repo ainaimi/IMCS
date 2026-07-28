@@ -141,7 +141,7 @@ knitr::include_graphics(here("_images","triangle_dag.pdf"))
   ## theta[1] is the intercept and theta[2] is the log-OR for the confounder-exposure relation
   ## pi is the probability that the exposure is 1
   theta <- c(0,log(2))
-  pi <- expit(theta[1]+theta[1]*C)
+  pi <- expit(theta[1]+theta[2]*C)
   
   # simulate exposure from binomial distribution
   ## second argument is number of trials
@@ -208,7 +208,7 @@ tail(data.frame(Y,A,C=round(C,2)),3)
       C <- rnorm(n,0,1)
     
       theta <- c(0,log(2))
-      pi <- expit(theta[1]+theta[1]*C)
+      pi <- expit(theta[1]+theta[2]*C)
       
       A <- rbinom(n,1,pi)
     
@@ -253,26 +253,26 @@ tail(data.frame(Y,A,C=round(C,2)),3)
 knitr::include_graphics(here("_images","triangle_dag.pdf"))
 
 ## ----eval=F-------------------------------------------------------------------
-#  
-#  collapsibility_function <- function(index, intercept){
-#  
-#        n=500
-#  
-#        C <- rnorm(n,0,1) ## FIRST!!!
-#  
-#        theta<- c(0,log(2))
-#        pi <- expit(theta[1]+theta[1]*C)
-#  
-#        A <- rbinom(n,1,pi) ## SECOND!!
-#  
-#        beta <- c(intercept,log(2),log(2))
-#        mu <- expit(beta[1] + beta[2]*A + beta[3]*C)
-#        Y <- rbinom(n,1,mu) ## THIRD!
-#  
-#        ...
-#  
-#  }
-#  
+# 
+# collapsibility_function <- function(index, intercept){
+# 
+#       n=500
+# 
+#       C <- rnorm(n,0,1) ## FIRST!!!
+# 
+#       theta<- c(0,log(2))
+#       pi <- expit(theta[1]+theta[1]*C)
+# 
+#       A <- rbinom(n,1,pi) ## SECOND!!
+# 
+#       beta <- c(intercept,log(2),log(2))
+#       mu <- expit(beta[1] + beta[2]*A + beta[3]*C)
+#       Y <- rbinom(n,1,mu) ## THIRD!
+# 
+#       ...
+# 
+# }
+# 
 
 ## ----out.width = "10cm",fig.cap="Complex mediation diagram with unmeasured confounder $U$, baseline confounders $C$, mediator-outcome confounder affected by the exposure $L$, mediator $Z$, exposure $X$, and outcome $Y$.",echo=F----
 knitr::include_graphics(here("_images","mediation_dag.pdf"))
@@ -303,15 +303,15 @@ head(med_data)
 
 
 ## ----eval = F-----------------------------------------------------------------
-#  
-#    # outcome model
-#    ## beta is a 3-dimensional vector (list) of parameters for the outcome model
-#    ## beta[1] is the intercept, beta[2] is the exp(OR) for the exposure-outcome relation
-#    ## beta[3] is the log-OR for the confounder-outcome relation
-#    beta <- c(-2.75,log(2),log(2))
-#    mu <- expit(beta[1] + beta[2]*A + beta[3]*C)
-#    Y <- rbinom(n,1,mu)
-#  
+# 
+#   # outcome model
+#   ## beta is a 3-dimensional vector (list) of parameters for the outcome model
+#   ## beta[1] is the intercept, beta[2] is the exp(OR) for the exposure-outcome relation
+#   ## beta[3] is the log-OR for the confounder-outcome relation
+#   beta <- c(-2.75,log(2),log(2))
+#   mu <- expit(beta[1] + beta[2]*A + beta[3]*C)
+#   Y <- rbinom(n,1,mu)
+# 
 
 ## -----------------------------------------------------------------------------
 

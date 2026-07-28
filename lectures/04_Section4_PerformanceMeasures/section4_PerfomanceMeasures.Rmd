@@ -1,7 +1,7 @@
 ---
 title: "Performance Measures: Analyzing and Interpreting Simulation Results"
 author: "Ashley I Naimi"
-date: "`r paste0('Spring ', 2024)`" #format(Sys.Date(), '%Y')
+date: "`r paste0('Summer ', 2025)`" #format(Sys.Date(), '%Y')
 urlcolor: blue
 bibliography: ref.bib
 link-citations: yes
@@ -83,8 +83,8 @@ First, we'll need to estimate the true marginally adjusted odds ratio using Mont
 expit <- function(a){1/(1+exp(-a))}
 
 set.seed(123)
-collapsibility_function <- function(index, intercept, exposure){
-    n = 500000000
+collapsibility_function <- function(intercept, exposure){
+    n = 5000000
     
     C <- rnorm(n,0,1)
   
@@ -95,21 +95,20 @@ collapsibility_function <- function(index, intercept, exposure){
   
     beta <- c(intercept,log(2),log(2))
     mu <- expit(beta[1] + beta[2]*A + beta[3]*C)
-    Y <- rbinom(n,1,mu)
   
-    res <- mean(Y)/(1 - mean(Y))
+    res <- mean(mu)/(1 - mean(mu))
   
     return(res)
 }
 
-odds1 <- collapsibility_function(index=1, intercept = 0, exposure = 1)
-odds0 <- collapsibility_function(index=1, intercept = 0, exposure = 0)
+odds1 <- collapsibility_function(intercept = 0, exposure = 1)
+odds0 <- collapsibility_function(intercept = 0, exposure = 0)
 
 or_marg <- odds1/odds0
 
 # true marginal OR for intercept = 0
-# 1.871259
-
+or_marg
+log(or_marg)
 ```
 
 
@@ -167,7 +166,7 @@ collapsibility_function <- function(index, intercept, true_m, true_c){
       odds1_ <- muhat1_/(1-muhat1_)
       odds0_ <- muhat0_/(1-muhat0_)
       
-      return(odds1_/odds0_)
+      return(log(odds1_/odds0_))
     }
     
     boot_obj <- boot(data = c_data,
@@ -192,9 +191,6 @@ collapsibility_function <- function(index, intercept, true_m, true_c){
 # how many cores?
 # num_cores
 
-# special mclapply seed ... 
-# RNGkind("L'Ecuyer-CMRG")
-
 # set the seed
 set.seed(123)
 
@@ -202,7 +198,7 @@ set.seed(123)
 sim_res <- lapply(1:500, 
                   function(x) collapsibility_function(index = x, 
                                                       intercept = 0,
-                                                      true_m = 1.871259,
+                                                      true_m = 1.871235,
                                                       true_c = 2))#, 
                     #mc.cores = num_cores)
 
@@ -312,7 +308,7 @@ sd(sim_res$mEstimate)/mean(sim_res$mSE)
 
 ```
 
-This is telling us that the estimated standard errors for the marginally adjusted odds ratio is much larger than it should be. However, this is an inevitable consequence of the fact that we only used 200 resamples for the bootstrap. But we did this to avoid waiting too long for these notes to compile. In practice, we should use no less than 1,000 resamples to get more accurate standard error estimates from the bootstrap.
+This is telling us that the estimated standard errors for both approaches are capturing the intended variability. This is true even though we only used 200 resamples for the bootstrap, which we did to avoid waiting too long for these notes to compile. Nevertheless, in practice, we should use no less than 1,000 resamples to get more accurate standard error estimates from the bootstrap.
 
 ## Confidence Interval Coverage and Length
 
@@ -352,7 +348,7 @@ mean(sim_res$mCoverage)
 
 ```
 
-Notice that the marginally adjusted confidence intervals have a greater than nominal coverage rate. This is likely due to the aforementioned bias in the standard error estimator (we need to use more bootstrap resamples!). But we can further explore this using confidence interval length:
+We can further explore confidence interval length:
 
 ```{r tidy=FALSE}
 
@@ -367,7 +363,6 @@ mean(sim_res$mCI_length)
 
 ```
 
-And we can see that the confidence interval length is much longer for the marginally adjusted OR compared to the conditional one. 
 
 ## Power
 
@@ -386,7 +381,7 @@ mean(sim_res$mPower)
 
 ```
 
-This is telling us that, under the conditions of the simulation (single confounder, true conditional / marginal effect of ~ 2, etc), using a conditionally adjusted model gives us a power of `r mean(sim_res$cPower)*100` % to detect an odds ratio of 2. However, the marginally adjusted approach gives us a much lower power. Again, this poor performance is largely due to the limited bootstrap resample number.
+This is telling us that, under the conditions of the simulation (single confounder, true conditional / marginal effect of ~ 2, etc), using a conditionally adjusted or marginally adjusted approach gives us a power of roughly 95% to detect the true odds ratios.
 
 \newpage
 

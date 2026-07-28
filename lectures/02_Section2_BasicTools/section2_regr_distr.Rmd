@@ -463,12 +463,23 @@ ip_weighted_boot <- c(summary(mod_MD_weighted)$coefficients[2,1],
 ```
 
 ```{r tidy = F, message = F, warning = F, echo = F}
-kable(
-  rbind(marg_stand_res,
-      ip_weighted_res,
-      ip_weighted_boot),
-      col.names = c("Estimate", "LCL", "UCL")
-)
+# kable(
+#  rbind(as.numeric(marg_stand_res),
+#        as.numeric(ip_weighted_res),
+#        as.numeric(ip_weighted_boot)),
+#        col.names = c("Estimate", "LCL", "UCL")
+# )
+
+ rbind(as.numeric(marg_stand_res),
+       as.numeric(ip_weighted_res),
+       as.numeric(ip_weighted_boot))
+
+ 
+
+
+
+
+
 ```
 
 

@@ -113,16 +113,16 @@ summary(mod1)$coefficients
 
 
 ## ----warning = F, message = F, eval = F---------------------------------------
-#  
-#  mod1 <- glm(y ~ x + z, data = a, family = gaussian(link = "identity"))
-#  
-#  summary(mod1)
-#  
+# 
+# mod1 <- glm(y ~ x + z, data = a, family = gaussian(link = "identity"))
+# 
+# summary(mod1)
+# 
 
 ## ----warning = F, message = F, eval = F---------------------------------------
-#  
-#  y <- 100 + 10*x + 3*z + rnorm(n, mean = 0, sd = 10)
-#  
+# 
+# y <- 100 + 10*x + 3*z + rnorm(n, mean = 0, sd = 10)
+# 
 
 ## ----tidy = F, warning = F, message = F---------------------------------------
 a$propensity_score <- glm(x ~ z, data = a, family = binomial("logit"))$fitted.values
@@ -287,10 +287,21 @@ ip_weighted_boot <- c(summary(mod_MD_weighted)$coefficients[2,1],
                       boot_IP_weight$normal[2:3])
 
 ## ----tidy = F, message = F, warning = F, echo = F-----------------------------
-kable(
-  rbind(marg_stand_res,
-      ip_weighted_res,
-      ip_weighted_boot),
-      col.names = c("Estimate", "LCL", "UCL")
-)
+# kable(
+#  rbind(as.numeric(marg_stand_res),
+#        as.numeric(ip_weighted_res),
+#        as.numeric(ip_weighted_boot)),
+#        col.names = c("Estimate", "LCL", "UCL")
+# )
+
+ rbind(as.numeric(marg_stand_res),
+       as.numeric(ip_weighted_res),
+       as.numeric(ip_weighted_boot))
+
+ 
+
+
+
+
+
 

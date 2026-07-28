@@ -7,20 +7,23 @@ header-includes:
    - \usepackage{setspace}
    - \usepackage{booktabs}
 output: #pdf_document
-  tufte::tufte_handout: default
+      bookdown::pdf_book:
+      base_format: tint::tintPdf
   #tufte::tufte_html: default
 ---
 
 ```{r setup, include=FALSE}
-library(tidyverse)
-library(ggplot2)
-library(here)
-library(VIM)
-library(ggExtra)
-library(Publish)
 
-install.packages("coin",repos="http://lib.stat.cmu.edu/R/CRAN/")
-library(coin)
+pacman::p_load(tidyverse, 
+               ggplot2, 
+               here, 
+               VIM, 
+               ggExtra, 
+               Publish, 
+               coin)
+
+# install.packages("coin",repos="http://lib.stat.cmu.edu/R/CRAN/")
+# library(coin)
 
 thm <- theme_classic() +
   theme(
@@ -31,6 +34,10 @@ thm <- theme_classic() +
   )
 theme_set(thm)
 options(width = 90)
+
+knitr::knit_hooks$set(purl = knitr::hook_purl)
+knitr::opts_chunk$set(echo = TRUE)
+
 ```
 
 This function can be used to implement Monte Carlo integration for computing the true value of the average treatment effect, the effect of treatment on the treated, and the effect of treatment on the untreated, all on the odds ratio scale. 
@@ -58,7 +65,7 @@ collapsibility_function <- function(sample_size, intercept){
   
   # simulate the propensity score
   theta <- c(0,log(2))
-  pi_a <- expit(theta[1]+theta[2]*C) ## note the correction!
+  pi_a <- expit(theta[1]+theta[2]*C) 
   
   # simulate the observed exposure
   A_obs <- rbinom(n, size = 1, p = pi_a)

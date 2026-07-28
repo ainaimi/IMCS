@@ -33,37 +33,36 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ## ----tidy = F, warning = F, message = F, eval = F-----------------------------
-#  
-#  expit <- function(a){1/(1+exp(-a))}
-#  
-#  set.seed(123)
-#  collapsibility_function <- function(index, intercept, exposure){
-#      n = 500000000
-#  
-#      C <- rnorm(n,0,1)
-#  
-#      theta <- c(0,log(2))
-#      pi <- expit(theta[1]+theta[1]*C)
-#  
-#      A <- exposure
-#  
-#      beta <- c(intercept,log(2),log(2))
-#      mu <- expit(beta[1] + beta[2]*A + beta[3]*C)
-#      Y <- rbinom(n,1,mu)
-#  
-#      res <- mean(Y)/(1 - mean(Y))
-#  
-#      return(res)
-#  }
-#  
-#  odds1 <- collapsibility_function(index=1, intercept = 0, exposure = 1)
-#  odds0 <- collapsibility_function(index=1, intercept = 0, exposure = 0)
-#  
-#  or_marg <- odds1/odds0
-#  
-#  # true marginal OR for intercept = 0
-#  # 1.871259
-#  
+# 
+# expit <- function(a){1/(1+exp(-a))}
+# 
+# set.seed(123)
+# collapsibility_function <- function(intercept, exposure){
+#     n = 5000000
+# 
+#     C <- rnorm(n,0,1)
+# 
+#     theta <- c(0,log(2))
+#     pi <- expit(theta[1]+theta[1]*C)
+# 
+#     A <- exposure
+# 
+#     beta <- c(intercept,log(2),log(2))
+#     mu <- expit(beta[1] + beta[2]*A + beta[3]*C)
+# 
+#     res <- mean(mu)/(1 - mean(mu))
+# 
+#     return(res)
+# }
+# 
+# odds1 <- collapsibility_function(intercept = 0, exposure = 1)
+# odds0 <- collapsibility_function(intercept = 0, exposure = 0)
+# 
+# or_marg <- odds1/odds0
+# 
+# # true marginal OR for intercept = 0
+# or_marg
+# log(or_marg)
 
 ## -----------------------------------------------------------------------------
 
@@ -119,7 +118,7 @@ collapsibility_function <- function(index, intercept, true_m, true_c){
       odds1_ <- muhat1_/(1-muhat1_)
       odds0_ <- muhat0_/(1-muhat0_)
       
-      return(odds1_/odds0_)
+      return(log(odds1_/odds0_))
     }
     
     boot_obj <- boot(data = c_data,
@@ -144,9 +143,6 @@ collapsibility_function <- function(index, intercept, true_m, true_c){
 # how many cores?
 # num_cores
 
-# special mclapply seed ... 
-# RNGkind("L'Ecuyer-CMRG")
-
 # set the seed
 set.seed(123)
 
@@ -154,7 +150,7 @@ set.seed(123)
 sim_res <- lapply(1:500, 
                   function(x) collapsibility_function(index = x, 
                                                       intercept = 0,
-                                                      true_m = 1.871259,
+                                                      true_m = 1.871235,
                                                       true_c = 2))#, 
                     #mc.cores = num_cores)
 
