@@ -172,7 +172,7 @@ Sometimes, there is a need to install packages that are not located on the CRAN 
 
 ```{r, warning = F, message=F, eval=F}
 
-install.packages("remotes", warning = F, message=F, eval=F)
+install.packages("remotes")
 library(remotes)
 
 remotes::install_github("yqzhong7/AIPW")
