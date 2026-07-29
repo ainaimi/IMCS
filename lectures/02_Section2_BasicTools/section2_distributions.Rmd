@@ -284,7 +284,7 @@ ggplot() +
 
 ```
 
-The binomial distribution is defined by two parameters: the probability of a success in a given "trial" and the number of trial conducted. When the number of "trials" is one, the binomial distribution is equivalent to the Bernoulli distribution, which generates a $[0,1]$ indicator of whether an event occurred or not. In settings where logistic regression is used, the dependent variable is usually from a Bernoulli distribution with a probability depending on variables that will be included in the model. There are no default values for probability of success and the trial size, so these must be specified as follows. 
+The binomial distribution is defined by two parameters: the probability of a success in a given "trial" and the number of trials conducted. When the number of "trials" is one, the binomial distribution is equivalent to the Bernoulli distribution, which generates a $[0,1]$ indicator of whether an event occurred or not. In settings where logistic regression is used, the dependent variable is usually from a Bernoulli distribution with a probability depending on variables that will be included in the model. There are no default values for probability of success and the trial size, so these must be specified as follows. 
 
 ```{r}
 
@@ -340,20 +340,21 @@ It would help us if we could see that the relationship between $C$ and $Y$ here 
 
 ```{r multinomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Barplot for the Multinomial Distribution with Three Levels and p = {0.2, 0.1, 0.7} for 5000 Simulated Observations."}
 
+set.seed(123)
+
 mn_vars <- t(rmultinom(n = 5000, size = 1, p = c(.2, .1, .7)))
-mn_vars <- do.call(rbind, 
+mn_vars <- do.call(rbind,
   lapply(1:nrow(mn_vars), function(x) which(mn_vars[x,]==1))
 )
 
-set.seed(123)
-ggplot() + 
+ggplot() +
   geom_bar(aes(x = mn_vars)) +
   scale_x_continuous(expand = c(0,0)) +
   scale_y_continuous(expand = c(0,0))
 
 ```
 
-The multinomial distribution is a generalization of the binomial distribution that can be used to generate categorical variables where the probability of each level is governed by a (possibly) unique probability value. The multinomial distribution is defined by two parameters: the set of values defining the probabilities of realizing a specific category. and the number of trial conducted. Similar to the binomial distribution, when the number of "trials" is one, the multinomial distribution is equivalent to the categorical distribution, which generates a $[0,1]$ indicator of whether an event occurred or not. In the multinomial (categorical) case, the "event" can take on more than 2 levels. There are no default values for probabilities of success and the trial size, so these must be specified. 
+The multinomial distribution is a generalization of the binomial distribution that can be used to generate categorical variables where the probability of each level is governed by a (possibly) unique probability value. The multinomial distribution is defined by two parameters: the set of values defining the probabilities of realizing a specific category, and the number of trials conducted. Similar to the binomial distribution, when the number of "trials" is one, the multinomial distribution is equivalent to the categorical distribution, which generates a $[0,1]$ indicator of whether an event occurred or not. In the multinomial (categorical) case, the "event" can take on more than 2 levels. There are no default values for probabilities of success and the trial size, so these must be specified. 
 
 We can start by using the multinomial distribution in R to model the physical mechanism by which we roll a single (size = 1), six sided die. The "six-sidedness" comes from the fact we are repeating the "1/6" value six times (using the `rep()` function). Here, we roll a six-sided dice 5 times:
 
@@ -489,7 +490,7 @@ In this case, we would say that the outcome is "overdispersed". One solution to 
 $$V(Y) = \phi \mu,$$
 where $\phi$ is a scale parameter that multiplies this variance accordingly. In a regression modeling context, we can set the scale parameter $\phi$ to 1 if there is no overdispersion. Or we can estimate it, and scale the standard errors from the regression model, thus accounting for overdispersion in the outcome.
 
-Other distributions can be affected by overdispersion (e.g., binomial distribution with $N>1$). However, the Gaussian distribution and Binomial distribution with $N = 1$ (i.e., a Bernoulli random variable) are not typically affected by overdispersion. In these cases, it is common to set the scale parameter to 1 instead of estimate it. Other techniques are also available to handle overdispersion (e.g., using the Negative Binomal distribution instead, which allows the variance to exceed the mean for count outcome data).
+Other distributions can be affected by overdispersion (e.g., binomial distribution with $N>1$). However, the Gaussian distribution and Binomial distribution with $N = 1$ (i.e., a Bernoulli random variable) are not typically affected by overdispersion. In these cases, it is common to set the scale parameter to 1 instead of estimate it. Other techniques are also available to handle overdispersion (e.g., using the Negative Binomial distribution instead, which allows the variance to exceed the mean for count outcome data).
 
 :::
 
@@ -739,7 +740,7 @@ Thus far, we've demonstrated a range of packages that can be used to simulate ra
 
 But what happens if we want to simulate a random variable from a distribution, and there is no associated R package or function that would allow us to do this? Or what happens if we don't immediately trust the package that's available to us? For example, supposed I wanted to simulate from a Pareto distribution to generate a heavy-tailed random variable. I could use the corresponding suite of function from the `EnvStats` package, including the `rpareto()` functions, but let's say I don't trust the function because it is no longer being maintained, or that I suspect there might be an error in the function. Is there a way I can generate a random variable from a Pareto (or other) distribution that I can guarantee? 
 
-It turns out, there is a generic mathematical tool we can use to do this. This tool is called the inverse transformation method, or inverse transform sampling. The approach allows us to derive an equation that we can write up in R, and then use a uniform random variable to draw random realizations from the distribution fo interest. 
+It turns out, there is a generic mathematical tool we can use to do this. This tool is called the inverse transformation method, or inverse transform sampling. The approach allows us to derive an equation that we can write up in R, and then use a uniform random variable to draw random realizations from the distribution of interest. 
 
 Here's an example use of the inverse transform sampling method to generate data from a Pareto distribution with an 80:20 property. This distribution is useful to model some heavy tailed distributions. For example, consider the distribution of wealth in the United States. There are several lines of evidence suggesting that the distribution of wealth in the US is "heavy tailed." Some estimates demonstrate that the top 10% of individuals in the US possess 70% of the wealth, which is close to what we'd expect if wealth was distributed according to a Pareto random variable.
 
@@ -786,7 +787,7 @@ x_prime <- rpareto(n = 1000,
 
 ```
 
-We can compare the `x` and `x_prime` variables to see if our function worked. But because we generated from a Pareto distribution with a scale parameter of roughly $1.16 \approx \log_4(5)$, standard comparisons won't work very well. Figure \@ref(fig:paretocomparison) shows a log-log complementary CDF curve, that can be used to better understand how a heavy tailed random variable is behaving [@Clauset2009]. This Figure shows that both methods generate a random variables that have roughly the same tail distribution properties.
+We can compare the `x` and `x_prime` variables to see if our function worked. But because we generated from a Pareto distribution with a shape parameter of roughly $1.16 \approx \log_4(5)$, standard comparisons won't work very well. Figure \@ref(fig:paretocomparison) shows a log-log complementary CDF curve, that can be used to better understand how a heavy tailed random variable is behaving [@Clauset2009]. This Figure shows that both methods generate a random variables that have roughly the same tail distribution properties.
 
 ```{r paretocomparison, out.width="5cm", fig.align='center', fig.margin=TRUE, fig.cap="Log of the complement of the CDF against the log of X for the random variable generated using the inverse transform method (red lines) and the rpareto function in the EnvStats package (blue lines).", echo=F}
 knitr::include_graphics(here("_images", "pareto_comparison.pdf"))

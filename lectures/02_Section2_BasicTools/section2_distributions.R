@@ -223,13 +223,14 @@ data
 
 ## ----multinomplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Barplot for the Multinomial Distribution with Three Levels and p = {0.2, 0.1, 0.7} for 5000 Simulated Observations."----
 
+set.seed(123)
+
 mn_vars <- t(rmultinom(n = 5000, size = 1, p = c(.2, .1, .7)))
-mn_vars <- do.call(rbind, 
+mn_vars <- do.call(rbind,
   lapply(1:nrow(mn_vars), function(x) which(mn_vars[x,]==1))
 )
 
-set.seed(123)
-ggplot() + 
+ggplot() +
   geom_bar(aes(x = mn_vars)) +
   scale_x_continuous(expand = c(0,0)) +
   scale_y_continuous(expand = c(0,0))
