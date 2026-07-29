@@ -68,13 +68,13 @@ knitr::kable(pi_data, "simple",
 # write a function that computes the statistical 
 # mode. modified from: https://stackoverflow.com/a/8189441
 mode_func <- function(x) {
-  ux <- unique(y)
-  ix <- which.max(tabulate(match(y, ux)))
-  if(ix==1){
+  ux <- unique(x)
+  tab <- tabulate(match(x, ux))
+  if(max(tab)==1){
     warning("no duplicates in data, mode does not exist")
     res <- sample(ux, size = 1)
   } else{
-    res <- ux[ix]
+    res <- ux[which.max(tab)]
   }
   return(res)
 }
