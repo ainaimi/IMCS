@@ -2,7 +2,7 @@
 
 # Load pacman (install if necessary)
 if (!requireNamespace("pacman", quietly = TRUE)) {
-  install.packages("pacman", repos = 'http://lib.stat.cmu.edu/R/CRAN')
+  install.packages("pacman", repos = 'https://cloud.r-project.org')
 }
 
 # Use pacman to load (and install if missing) all required packages

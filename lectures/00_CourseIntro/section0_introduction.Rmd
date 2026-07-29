@@ -30,7 +30,7 @@ packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
 
 for (package in packages) {
   if (!require(package, character.only=T, quietly=T)) {
-    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN',dependencies=T)
+    install.packages(package, repos='https://cloud.r-project.org',dependencies=T)
   }
 }
 
@@ -127,7 +127,7 @@ The easiest way to install these packages would be to paste the following code i
 ```{r, warning = F, message=F}
 
 ## first, if not installed, then install pacman
-install.packages("pacman", repos='http://lib.stat.cmu.edu/R/CRAN')
+install.packages("pacman", repos='https://cloud.r-project.org')
 ```
 
 Once `pacman` is installed, you can use it to install and load the packages we'll need in the short course. 
@@ -154,14 +154,14 @@ If the above code does not work for you, consider installing each package separa
 
 ```{r, warning = F, message=F, eval=F}
 
-install.packages("tidyverse", repos='http://lib.stat.cmu.edu/R/CRAN')
+install.packages("tidyverse", repos='https://cloud.r-project.org')
 library(tidyverse)
-install.packages("here", repos='http://lib.stat.cmu.edu/R/CRAN')
+install.packages("here", repos='https://cloud.r-project.org')
 library(here)
-install.packages("sandwich", repos='http://lib.stat.cmu.edu/R/CRAN')
+install.packages("sandwich", repos='https://cloud.r-project.org')
 library(sandwich)
 ...
-install.packages("mvtnorm", repos='http://lib.stat.cmu.edu/R/CRAN')
+install.packages("mvtnorm", repos='https://cloud.r-project.org')
 library(mvtnorm)
 
 ```
