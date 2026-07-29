@@ -1,5 +1,5 @@
 ---
-title: "Simulation Study: Example 2 - Covariate Adjustment in an RCT"
+title: "Simulation Study: Example 1 - Covariate Adjustment in an RCT"
 author: "Ashley I Naimi"
 date: "`r paste0('Spring ', 2025)`" #format(Sys.Date(), '%Y')
 urlcolor: blue
