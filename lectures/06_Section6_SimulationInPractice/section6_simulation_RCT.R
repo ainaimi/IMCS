@@ -102,18 +102,30 @@ knitr::include_graphics(here("_images","rct_dag.pdf"))
 #                     cov_mat  = cov_mat,
 #                     diag_cov = diag_cov,
 #                     true_value = true_value,
-#                     unadjusted_effect,
-#                     adjusted_effect)
+#                     unadjusted_estimate = unadjusted_effect[1],
+#                     unadjusted_estimate_se = unadjusted_effect[2],
+#                     adjusted_estimate = adjusted_effect[1],
+#                     adjusted_estimate_se = adjusted_effect[2])
+# 
+#   row.names(res) <- NULL
 # 
 #   return(res)
 # }
 # 
-# simulation_results <- mclapply(1:5000,
-#                                function(x) simulation_function(index = x,
-#                                                                sample_size = 500,
+# # every combination of sample size, covariate count, and correlation
+# parms_data <- expand.grid(
+#   mc_number = 1:10000,
+#   sample_size = c(250,500,1000),
+#   c_number = c(5,10,15),
+#   cov_mat = c(0,.5)
+# )
+# 
+# simulation_results <- mclapply(1:nrow(parms_data),
+#                                function(x) simulation_function(index = parms_data[x,]$mc_number,
+#                                                                sample_size = parms_data[x,]$sample_size,
 #                                                                true_value = 2,
-#                                                                c_number = 10,
-#                                                                cov_mat = 0,
+#                                                                c_number = parms_data[x,]$c_number,
+#                                                                cov_mat = parms_data[x,]$cov_mat,
 #                                                                diag_cov = 1),
 #                                mc.cores = detectCores() - 2)
 # 
