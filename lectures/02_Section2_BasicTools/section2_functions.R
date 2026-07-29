@@ -283,7 +283,7 @@ ggplot(plot_dat, aes(x = uniform, y = poisson)) +
 
 ## ----tidy = F, warning = F, message = F---------------------------------------
 
-# Reset the seed and explore the .RNGSeed object
+# Reset the seed and explore the .Random.seed object
 set.seed(NULL)
 
 length(.Random.seed)
