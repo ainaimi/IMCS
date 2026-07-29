@@ -184,7 +184,7 @@ p = nested_loop_plot(resdf = plot_res,
                        ))
 )
 
-ggsave(here("_images", "nested_loop_plot_rct.pdf"), width = 8, height = 6)
+ggsave(here("_images", "nested_loop_plot_rct.pdf"), plot = p, width = 8, height = 6)
 
 
 ## ----nested_loop_rct, out.width="10cm", fig.align='center', echo=F------------

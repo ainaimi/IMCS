@@ -421,7 +421,7 @@ p1 <- ggplot(hist_df, aes(x = bin_mid, y = count, fill = distribution)) +
   ) +
   scale_fill_manual(values = c("Exponential" = "steelblue", "Weibull" = "darkorange"))
 
-ggsave(here("_images", "weibull_exponential_comparison.pdf"), width = 8, height = 8, units = "cm")
+ggsave(here("_images", "weibull_exponential_comparison.pdf"), plot = p1, width = 8, height = 8, units = "cm")
 
 
 ## ----expweib, out.width="8cm", fig.align='center', fig.cap="Comparison of the Distribution of a Random Variable Generated from the rexp() function with a rate parameter = 2, and the rweibull() function with shape = 1 and scale = 1 / rate.", echo=F----
