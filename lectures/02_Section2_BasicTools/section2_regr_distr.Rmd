@@ -131,7 +131,7 @@ n = 5000
 
 z <- rnorm(n, mean = 0, sd = 1)
 
-x <- rbinom(n, size = 1, p = expit(-1 + log(2)*z))
+x <- rbinom(n, size = 1, prob = expit(-1 + log(2)*z))
 
 y <- 100 + 10*x + 3*z + rnorm(n, mean = 0, sd = 10)
 
@@ -222,10 +222,10 @@ a$propensity_score <- glm(x ~ z, data = a, family = binomial("logit"))$fitted.va
 While this is harder to see, it is aligned with the code we used to simulate the exposure. Specifically:
 
 ```{r tidy = F, warning = F, message = F}
-x <- rbinom(n, size = 1, p = expit(-1 + log(2)*z))
+x <- rbinom(n, size = 1, prob = expit(-1 + log(2)*z))
 ```
 
-Note that this code simulates a random variable $X$ from the Bernoulli distribution (`rbinom` with `size = 1`), where `p` is defined as the inverse of the logit of the regression model. We can write this as:
+Note that this code simulates a random variable $X$ from the Bernoulli distribution (`rbinom` with `size = 1`), where `prob` is defined as the inverse of the logit of the regression model. We can write this as:
 
 $$\log \left [ \frac{P(X = 1 \mid Z)}{1 - P(X = 1 \mid Z)} \right ] = -1 + \log(2)\times Z $$
 
@@ -233,7 +233,7 @@ Or, we can also write this as:
 
 $$P(X = 1 \mid Z) = \frac{1}{\left [ 1 + \exp(-[-1 + \log(2)\times Z]) \right ] }$$
 
-This $P(X = 1 \mid Z)$ is the propensity score. It's what we used in the `p = ` argument of the `rbinom` function, and it's what we estimated when we fit a `glm` regressing our exposure against $Z$, appended with the `$fitted.values` operator.
+This $P(X = 1 \mid Z)$ is the propensity score. It's what we used in the `prob = ` argument of the `rbinom` function, and it's what we estimated when we fit a `glm` regressing our exposure against $Z$, appended with the `$fitted.values` operator.
 
 :::{.rmdnote data-latex="{dive}"}
 
@@ -269,7 +269,7 @@ n = 5000
 
 z <- rnorm(n, mean = 0, sd = 1)
 
-x <- rbinom(n, size = 1, p = expit(-1 + log(2)*z))
+x <- rbinom(n, size = 1, prob = expit(-1 + log(2)*z))
 
 y <- rpois(n, lambda = exp(2 + log(2)*x + log(1.5)*z))
 

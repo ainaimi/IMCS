@@ -135,7 +135,8 @@ res %>%
 ## ----tidy = F, warning = F, message = F---------------------------------------
 
 res %>% 
-  summarize_all(list(mean = mean, 
-                     std_dev = sd))
+  summarize(across(everything(),
+                   list(mean = mean, 
+                        std_dev = sd)))
 
 

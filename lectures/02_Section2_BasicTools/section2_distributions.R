@@ -177,7 +177,7 @@ y
 
 set.seed(123)
 ggplot() + 
-  geom_bar(aes(x = rbinom(n = 5000, size = 1, p = .25))) +
+  geom_bar(aes(x = rbinom(n = 5000, size = 1, prob = .25))) +
   scale_x_continuous(expand = c(0,0)) +
   scale_y_continuous(expand = c(0,0))
 
@@ -188,7 +188,7 @@ set.seed(123)
 
 n <- 5
 
-y <- rbinom(n, size = 1, p = .5)
+y <- rbinom(n, size = 1, prob = .5)
 
 y
 
@@ -199,7 +199,7 @@ set.seed(123)
 
 n <- 5
 
-y <- rbinom(n, size = 8, p = .5)
+y <- rbinom(n, size = 8, prob = .5)
 
 y
 
@@ -214,7 +214,7 @@ c <- rnorm(n)
 
 expit <- function(x){1/(1+exp(-x))}
 
-y <- rbinom(n, size = 1, p = expit(-2 + log(2)*c))
+y <- rbinom(n, size = 1, prob = expit(-2 + log(2)*c))
 
 data <- data.frame(y, c)
 
@@ -225,7 +225,7 @@ data
 
 set.seed(123)
 
-mn_vars <- t(rmultinom(n = 5000, size = 1, p = c(.2, .1, .7)))
+mn_vars <- t(rmultinom(n = 5000, size = 1, prob = c(.2, .1, .7)))
 mn_vars <- do.call(rbind,
   lapply(1:nrow(mn_vars), function(x) which(mn_vars[x,]==1))
 )
@@ -242,7 +242,7 @@ set.seed(123)
 
 n <- 5
 
-y <- rmultinom(n, size = 1, p = rep(1/6, 6))
+y <- rmultinom(n, size = 1, prob = rep(1/6, 6))
 
 y
 
