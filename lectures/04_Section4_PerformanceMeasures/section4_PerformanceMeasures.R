@@ -245,6 +245,17 @@ mean(sim_res$cCoverage)
 mean(sim_res$mCoverage)
 
 
+## -----------------------------------------------------------------------------
+
+mc_se_prop <- function(p, n){
+  sqrt(p*(1 - p)/n)
+}
+
+mc_se_prop(mean(sim_res$cCoverage), n = 500)
+
+mc_se_prop(mean(sim_res$mCoverage), n = 500)
+
+
 ## ----tidy=FALSE---------------------------------------------------------------
 
 sim_res <- sim_res %>% mutate(
@@ -267,5 +278,12 @@ sim_res <- sim_res %>% mutate(
 mean(sim_res$cPower)
 
 mean(sim_res$mPower)
+
+
+## -----------------------------------------------------------------------------
+
+mc_se_prop(mean(sim_res$cPower), n = 500)
+
+mc_se_prop(mean(sim_res$mPower), n = 500)
 
 
