@@ -127,7 +127,9 @@ The easiest way to install these packages would be to paste the following code i
 ```{r, warning = F, message=F}
 
 ## first, if not installed, then install pacman
-install.packages("pacman", repos='http://lib.stat.cmu.edu/R/CRAN')
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman", repos='http://lib.stat.cmu.edu/R/CRAN')
+}
 ```
 
 Once `pacman` is installed, you can use it to install and load the packages we'll need in this course.
