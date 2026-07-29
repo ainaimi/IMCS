@@ -4,7 +4,7 @@ library(formatR)
 opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 
 packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
-               "gridExtra","skimr","here","RColorBrewer","survival")
+               "gridExtra","skimr","here","RColorBrewer")
 
 for (package in packages) {
   if (!require(package, character.only=T, quietly=T)) {

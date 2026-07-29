@@ -111,10 +111,10 @@ You really should bring your laptop to class. There will be several class opport
 Students will be expected to have [R](https://cran.r-project.org/) and [Posit](https://posit.co/) [(formerly RStudio)](https://posit.co/blog/rstudio-is-becoming-posit/) installed and working on their computers. In addition, the following packages should be installed and in working order:
 
 ```
-"tidyverse", "here", "sandwich", "lmtest", "boot", "ggplot2", "broom"
+"tidyverse", "here", "skimr", "boot", "lmtest", "sandwich", "MASS", "gridExtra", "mvtnorm"
 ```
 
-Other packages will have to be installed during the course of the semester. Students should be familiar with how to install packages in R from CRAN.
+This is the same set of packages the course introduction lecture installs and loads (the `parallel` package, which we also use, ships with R itself and needs no installation). Other packages will have to be installed during the course of the semester (the lectures install them as needed). Students should be familiar with how to install packages in R from CRAN.
 
 Depending on the analytic scenario, you may have to install a development package from, e.g., GitHub. The best way to do this is to use the `install_github()` function in the `remotes` package (the `remotes` package can be installed from CRAN). However, you will have to address the potential GitHub API limits, which can lead to installation errors. To deal with this problem, you will need your own GitHub account. 
 

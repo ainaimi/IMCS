@@ -26,7 +26,7 @@ library(knitr)
 opts_chunk$set(tidy.opts=list(width.cutoff=40),tidy=TRUE)
 
 packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
-               "gridExtra","skimr","here","Hmisc","RColorBrewer")
+               "gridExtra","skimr","here","RColorBrewer")
 
 for (package in packages) {
   if (!require(package, character.only=T, quietly=T)) {
@@ -136,19 +136,17 @@ Once `pacman` is installed, you can use it to install and load the packages we'l
 
 ```{r, warning = F, message=F}
 pacman::p_load(
-  here,         
-  skimr,        
-  tidyverse,     
+  here,
+  skimr,
+  tidyverse,
   parallel,
+  boot,
   lmtest,
   sandwich,
   MASS,
   gridExtra,
-  broom,
-  extraDistr,
-  ExtDist,
   mvtnorm
-) 
+)
 
 ```
 
