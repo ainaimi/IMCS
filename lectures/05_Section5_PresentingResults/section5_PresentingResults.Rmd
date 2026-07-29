@@ -63,7 +63,7 @@ Once a simulation study is complete, the outcome of the study often consists of 
 
 Several different forms of presentation can be used, including tables and figures. Besides the common repertoire of figures that can be used to present results (histograms, density plots, scatter plots, heat maps and other), there are a few types of figures that can be tailored to a simulation study, and that can potentially reveal useful information about the performance of a set of methods under a particular set of circumstances. 
 
-Here, we will briefly introduce nested loop plots, and zipper (or "zip")^[Sometimes zipper plots are referred to as zip plots [e.g., @Morris2019]. However, searching the term "zip plot" online will yield many plot structures tailored to plotting geographical regions using zip codes.] plots, and demonstrate how they can be used to convey results from a simulation study.
+Here, we will briefly introduce nested loop plots, and zipper (or "zip")^[Sometimes zipper plots are referred to as zip plots [e.g., @Morris2019]. However, searching the term "zip plot" online will yield many plot structures tailored to plotting geographical regions using zip codes.] plots, and demonstrate how they can be used to convey results from a simulation study. We will then revisit the common repertoire — lollipop plots, histograms, density plots, and scatter plots — and show how each one, though not specific to simulation studies, answers a distinct question about simulation results.
 
 # Nested Loop Plot
 
@@ -318,7 +318,161 @@ Which gives us the following modified figure:
 knitr::include_graphics(here("_images", "zip_plot_version2.pdf"))
 ```
 
-Alternative rankings for the y-axis can be considered, such as the magnitude of the standard error, or the centile rank of the test statistic. 
+Alternative rankings for the y-axis can be considered, such as the magnitude of the standard error, or the centile rank of the test statistic.
+
+# Lollipop Plots
+
+Nested loop plots and zipper plots are tailored to simulation studies, but the common repertoire of figures is just as useful, and each type answers a different question about our results. We'll demonstrate with the `relhaz` data we've already prepared.
+
+A lollipop plot displays one summarized number per category as a point at the end of a thin segment. It is a cleaner alternative to a bar chart when the quantity of interest is measured against a reference line rather than against zero area: the eye compares point positions instead of bar lengths, and values close to the reference remain legible. This makes lollipop plots a natural choice for summarized performance measures — one bias, coverage, or MSE value per method and scenario.
+
+We can compute bias and confidence interval coverage for each combination of method, sample size, and baseline hazard, using the true log hazard ratio of $-0.5$:
+
+```{r tidy = F, warning = F, message = F}
+
+perf <- relhaz %>%
+  group_by(n, baseline, model) %>%
+  summarize(bias = mean(theta - (-0.5)),
+            coverage = mean(include_flag == "Include"),
+            .groups = "drop")
+
+perf
+
+```
+
+To construct the lollipop plot, we draw a segment from the reference value (zero, for bias) to the estimated performance measure with `geom_segment`, and cap it with a point:
+
+```{r tidy = F, warning = F, message = F}
+
+p <- perf %>%
+  ggplot(.) +
+  geom_hline(yintercept = 0, lty = 2) +
+  geom_segment(aes(x = model, xend = model, y = 0, yend = bias)) +
+  geom_point(aes(x = model, y = bias), size = 2) +
+  ylab("Bias in the log Hazard Ratio") +
+  xlab("Method") +
+  coord_flip() +
+  facet_grid(n ~ baseline)
+
+ggsave(here("_images", "lollipop_plot_bias.pdf"), p, width = 8, height = 5)
+
+```
+
+```{r lollipop1, out.width="10cm", fig.align='center', fig.cap="Lollipop plot of the bias in the log hazard ratio for each method, by sample size (rows) and true baseline hazard (columns).", echo=F}
+knitr::include_graphics(here("_images", "lollipop_plot_bias.pdf"))
+```
+
+The same construction works for coverage, with the reference line now drawn at the nominal level of 0.95 rather than at zero:
+
+```{r tidy = F, warning = F, message = F}
+
+p <- perf %>%
+  ggplot(.) +
+  geom_hline(yintercept = 0.95, lty = 2) +
+  geom_segment(aes(x = model, xend = model, y = 0.95, yend = coverage)) +
+  geom_point(aes(x = model, y = coverage), size = 2) +
+  ylab("95% Confidence Interval Coverage") +
+  xlab("Method") +
+  coord_flip() +
+  facet_grid(n ~ baseline)
+
+ggsave(here("_images", "lollipop_plot_coverage.pdf"), p, width = 8, height = 5)
+
+```
+
+```{r lollipop2, out.width="10cm", fig.align='center', fig.cap="Lollipop plot of 95\\% confidence interval coverage for each method, by sample size (rows) and true baseline hazard (columns). The dashed line marks the nominal 0.95 level.", echo=F}
+knitr::include_graphics(here("_images", "lollipop_plot_coverage.pdf"))
+```
+
+When reading a coverage plot like this one, keep Monte Carlo error in mind. With only 100 simulated datasets per scenario, the Monte Carlo standard error of an estimated coverage near 0.95 is roughly $\sqrt{0.95 \times 0.05/100} \approx 0.022$, so departures from the dashed line within about $\pm 0.04$ are compatible with nominal coverage. A refinement of the plots above would add an interval of $\pm 1.96$ Monte Carlo standard errors around each point, turning the lollipop plot into a point-range plot.
+
+# Histograms and Density Plots
+
+The performance measures summarized above are averages over the simulated datasets. Before trusting those averages, it is worth looking at the full distribution of the estimates across simulation iterations: a histogram will reveal skewness, outlying estimates, or (in more extreme settings) non-convergence of an estimator, any of which can make a mean-based summary misleading.
+
+Here is the distribution of the estimated log hazard ratios for each method, in the scenario with 50 observations per dataset and an exponential baseline hazard:
+
+```{r tidy = F, warning = F, message = F}
+
+p <- relhaz %>%
+  filter(n == 50, baseline == "Exponential") %>%
+  ggplot(.) +
+  geom_histogram(aes(x = theta), bins = 20,
+                 color = "black", fill = "grey") +
+  geom_vline(xintercept = -.5, lty = 2, color = "red") +
+  xlab("Estimated log Hazard Ratio") +
+  ylab("Count") +
+  facet_wrap(~model)
+
+ggsave(here("_images", "estimate_histogram.pdf"), p, width = 8, height = 4)
+
+```
+
+```{r histogram1, out.width="12cm", fig.align='center', fig.cap="Histograms of the estimated log hazard ratio across 100 simulated datasets with $n = 50$ and an exponential baseline hazard. The dashed red line marks the true value of $-0.5$.", echo=F}
+knitr::include_graphics(here("_images", "estimate_histogram.pdf"))
+```
+
+With 100 iterations per scenario, histograms are somewhat coarse. A kernel density plot smooths the same information, and because densities are drawn as lines rather than filled bars, several distributions can be overlaid in a single panel. This makes density plots well suited to comparing methods directly, or to showing how the sampling distribution changes across scenarios:
+
+```{r tidy = F, warning = F, message = F}
+
+p <- relhaz %>%
+  filter(baseline == "Exponential") %>%
+  ggplot(.) +
+  geom_density(aes(x = theta, color = model)) +
+  geom_vline(xintercept = -.5, lty = 2) +
+  scale_color_brewer(palette = "Set1") +
+  xlab("Estimated log Hazard Ratio") +
+  ylab("Density") +
+  facet_wrap(~n, labeller = label_both)
+
+ggsave(here("_images", "estimate_density.pdf"), p, width = 8, height = 4)
+
+```
+
+```{r density1, out.width="12cm", fig.align='center', fig.cap="Kernel density estimates of the estimated log hazard ratio for each method under an exponential baseline hazard, with 50 (left) and 250 (right) observations per dataset. The dashed line marks the true value of $-0.5$.", echo=F}
+knitr::include_graphics(here("_images", "estimate_density.pdf"))
+```
+
+The comparison across panels shows exactly what we would expect from the material on performance measures: all three methods center near the true value, and the spread of the sampling distribution shrinks as the sample size grows from 50 to 250.
+
+# Scatter Plots
+
+The figures above compare methods in the aggregate. But because every method was applied to the *same* simulated datasets, we can also compare methods dataset-by-dataset. A scatter plot of the estimates from one method against the estimates from another, with one point per simulated dataset, shows whether two methods merely perform similarly on average or actually produce nearly identical answers on each dataset [@Morris2019].
+
+To build this plot, we need to reshape the data so that each method's estimates occupy a separate column:
+
+```{r tidy = F, warning = F, message = F}
+
+relhaz_wide <- relhaz %>%
+  select(dataset, n, baseline, model, theta) %>%
+  pivot_wider(names_from = model, values_from = theta)
+
+head(relhaz_wide)
+
+```
+
+We can then plot, say, the Cox model estimates against the flexible parametric (Royston-Parmar) estimates, with a diagonal reference line indicating perfect agreement:
+
+```{r tidy = F, warning = F, message = F}
+
+p <- relhaz_wide %>%
+  ggplot(.) +
+  geom_abline(intercept = 0, slope = 1, lty = 2) +
+  geom_point(aes(x = Cox, y = `RP(2)`), alpha = .5) +
+  xlab("Estimated log Hazard Ratio: Cox") +
+  ylab("Estimated log Hazard Ratio: Royston-Parmar") +
+  facet_grid(n ~ baseline)
+
+ggsave(here("_images", "estimate_scatter.pdf"), p, width = 8, height = 6)
+
+```
+
+```{r scatter1, out.width="10cm", fig.align='center', fig.cap="Estimated log hazard ratios from the Cox model plotted against those from the Royston-Parmar flexible parametric model, one point per simulated dataset. The dashed line indicates perfect agreement.", echo=F}
+knitr::include_graphics(here("_images", "estimate_scatter.pdf"))
+```
+
+Points hugging the diagonal indicate that the two methods return essentially the same estimate on every dataset, so any difference in their summarized performance is small relative to the variation between datasets. Points scattered widely around the diagonal would indicate that the methods genuinely disagree, even if their average performance looks similar — a distinction that no aggregate performance measure can reveal.
 
 \newpage
 
