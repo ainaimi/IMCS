@@ -15,7 +15,7 @@ __COURSE TITLE__: Introduction to Monte Carlo Simulation Using R
 
 __CREDIT HOURS__: 2
 
-__SEMESTER__: Fall 2024
+__SEMESTER__: TBD
 
 __CLASS HOURS AND LOCATION__: TBD
 
@@ -29,7 +29,7 @@ __INSTRUCTOR CONTACT INFORMATION__
 
 ## COURSE DESCRIPTION
 
-This course will focus on how to use experimental principles to appropriately the design and analyze Monte Carlo simulation studies. Simulation studies are an invaluable tool in any analyst’s kit. They can facilitate developing a firm understanding of basic and advanced statistical concepts, and provide a flexible means of evaluating whether analytical techniques will work as expected under specific conditions. 
+This course will focus on how to use experimental principles to appropriately design and analyze Monte Carlo simulation studies. Simulation studies are an invaluable tool in any analyst’s kit. They can facilitate developing a firm understanding of basic and advanced statistical concepts, and provide a flexible means of evaluating whether analytical techniques will work as expected under specific conditions. 
 
 Simulation methods are extremely flexible, and can be used to understand and evaluate methodology in a number of different ways.
 
@@ -49,7 +49,7 @@ This is an applied course. By the end of the course, students will be able to im
 
 This course will build on basic and intermediate analytic methods covered in [EPI 538](https://sph.emory.edu/academics/courses/epi-courses/index.html), [EPI 545](https://sph.emory.edu/academics/courses/epi-courses/index.html), and [EPI 550](https://sph.emory.edu/academics/courses/epi-courses/index.html).
 
-Prerequesite skills and concepts include: basic epidemiological measures, confounding, misclassification, selection bias, estimation of epidemiological parameters, issues related to causality, interpretation of basic inferential statistics such as p values and confidence intervals, as well as concepts, methods, and application of key regression concepts related to linear, log-linear and logistic regression.
+Prerequisite skills and concepts include: basic epidemiological measures, confounding, misclassification, selection bias, estimation of epidemiological parameters, issues related to causality, interpretation of basic inferential statistics such as p values and confidence intervals, as well as concepts, methods, and application of key regression concepts related to linear, log-linear and logistic regression.
 
 ## DIVERSITY, EQUITY, AND INCLUSION CONSIDERATIONS
 
@@ -57,7 +57,7 @@ This course will focus on the theory and application of quantitative and statist
 
 It is impossible to understand these perspectives without acknowledging the role that early 20th century views on race, ethnicity, sex, gender, and other related socio-political constructs played in shaping quantitative methods that we still use today. For example, the "founding fathers" of statistics (Francis Galton, Karl Pearson, and Ronald Fisher) were also founders of 20th century Eugenics, and they used the new math they derived to characterize many of the egregious and scientifically unjustifiable eugenic acts (forced sterilization, marriage prohibitions, or the supposed moral superiority of "Nordics" or "Aryans") with the patina of "objectivity."
 
-The literature on this topic is expansive, complex, and rapidly growing, and we will not be able to cover many of the problems with how statistical and quantitative methods were and are used inappropriately for iniquitous ends. However, the recommended reading list for the course contains references to key books and papers on this topic which are (some highly) recommended. Additionally, a deep understanding of the connection between data, statistics, and substantive theory can go a long way in both dismantling unsubstantiated claims (both eugenic, and more generally), as well as design studies that can generate a more nuanced understanding of the complexity of health. My hope is that EPI 560 will serve this end. 
+The literature on this topic is expansive, complex, and rapidly growing, and we will not be able to cover many of the problems with how statistical and quantitative methods were and are used inappropriately for iniquitous ends. However, the recommended reading list for the course contains references to key books and papers on this topic which are (some highly) recommended. Additionally, a deep understanding of the connection between data, statistics, and substantive theory can go a long way in both dismantling unsubstantiated claims (both eugenic, and more generally), as well as design studies that can generate a more nuanced understanding of the complexity of health. My hope is that this course will serve this end. 
 
 ## COURSE LEARNING OBJECTIVES
 
@@ -115,7 +115,7 @@ You really should bring your laptop to class. There will be several class opport
 Students will be expected to have [R](https://cran.r-project.org/) and [Posit](https://posit.co/) [(formerly RStudio)](https://posit.co/blog/rstudio-is-becoming-posit/) installed and working on their computers. In addition, the following packages should be installed and in working order:
 
 ```
-"tidyverse", "here", "sandwich", "lmtest", "boot", "ggplot2", "broom", "rio"
+"tidyverse", "here", "sandwich", "lmtest", "boot", "ggplot2", "broom"
 ```
 
 Other packages will have to be installed during the course of the semester. Students should be familiar with how to install packages in R from CRAN.
@@ -152,7 +152,7 @@ You are expected to uphold and cooperate in maintaining academic integrity as a 
 
 The course notes will be posted on CANVAS and are the only required readings for this course.
 
-### Recommened Optional Reading
+### Recommended Optional Reading
 
 1) Rudolph et al (2021) Simulation as a Tool for Teaching and Learning Epidemiologic Methods. *Am J Epidemiol*. 190(5):900-907.
 
