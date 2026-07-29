@@ -409,3 +409,58 @@ ggplot(a) +
   facet_wrap(~c_number)
 
 
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+se_results <- a %>%
+  group_by(c_number) %>%
+  summarize(empSE_MS = sd(marginal_standardization_estimate),
+            meanSE_MS = mean(marginal_standardization_SE),
+
+            empSE_IPW = sd(ip_weighting_estimate),
+            meanSE_IPW_robust = mean(ip_weighting_robust_SE),
+            meanSE_IPW_boot = mean(ip_weighting_boot_SE),
+
+            ratio_MS = empSE_MS/meanSE_MS,
+            ratio_IPW_robust = empSE_IPW/meanSE_IPW_robust,
+            ratio_IPW_boot = empSE_IPW/meanSE_IPW_boot)
+
+se_results
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+a <- a %>%
+  mutate(MS_LCL = marginal_standardization_estimate - 1.96*marginal_standardization_SE,
+         MS_UCL = marginal_standardization_estimate + 1.96*marginal_standardization_SE,
+
+         IPW_robust_LCL = ip_weighting_estimate - 1.96*ip_weighting_robust_SE,
+         IPW_robust_UCL = ip_weighting_estimate + 1.96*ip_weighting_robust_SE,
+
+         IPW_boot_LCL = ip_weighting_estimate - 1.96*ip_weighting_boot_SE,
+         IPW_boot_UCL = ip_weighting_estimate + 1.96*ip_weighting_boot_SE)
+
+coverage_results <- a %>%
+  group_by(c_number) %>%
+  summarize(coverageMS = mean(MS_LCL < true_log_or & true_log_or < MS_UCL),
+            coverageIPW_robust = mean(IPW_robust_LCL < true_log_or & true_log_or < IPW_robust_UCL),
+            coverageIPW_boot = mean(IPW_boot_LCL < true_log_or & true_log_or < IPW_boot_UCL))
+
+coverage_results
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+sqrt(.95*(1 - .95)/200)
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+length_results <- a %>%
+  group_by(c_number) %>%
+  summarize(lengthMS = mean(MS_UCL - MS_LCL),
+            lengthIPW_robust = mean(IPW_robust_UCL - IPW_robust_LCL),
+            lengthIPW_boot = mean(IPW_boot_UCL - IPW_boot_LCL))
+
+length_results
+
+
