@@ -110,8 +110,8 @@ In this course, we will cover the following topics:
 - Zipper Plots
   
 ## Section 6: Simulation in Practice
-- Example 1: How does IP-weighting compare to marginal standardization?
-- Example 2: Simple Regression in an RCT
+- Example 1: Simple Regression in an RCT
+- Example 2: How does IP-weighting compare to marginal standardization?
 - Example 3: Causal Mediation Estimators
 
 # Some Logistics

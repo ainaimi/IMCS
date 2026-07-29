@@ -314,7 +314,7 @@ Again, this model demonstrates that we can recover the true values, which we use
 
 # Marginal Standardization
 
-The last two topics in this lecture are marginal standardization and inverse probability weighting — the two estimators whose performance we will formally evaluate in a full simulation study in Section 6 (Example 1). Our goal here is simply to understand how each one is implemented; keep them both in mind, as they will return throughout the course.
+The last two topics in this lecture are marginal standardization and inverse probability weighting — the two estimators whose performance we will formally evaluate in a full simulation study in Section 6 (Example 2). Our goal here is simply to understand how each one is implemented; keep them both in mind, as they will return throughout the course.
 
 Marginal standardization is equivalent to g computation (aka the parametric g formula) when the exposure is measured at a single time point [@Naimi2016b]. This process can be implemented by fitting a single regression model, regressing the outcome against the exposure and all confounding variables. But instead of reading the coefficients the model, one can obtain parameter estimates of interest by using this model to generate predicted risks for each individual under “exposed” and “unexposed” scenarios in the dataset. To obtain standard errors, the entire procedure must be bootstrapped.
 
