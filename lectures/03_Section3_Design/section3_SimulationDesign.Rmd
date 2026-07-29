@@ -31,7 +31,7 @@ packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
 
 for (package in packages) {
   if (!require(package, character.only=T, quietly=T)) {
-    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
+    install.packages(package, repos='https://cloud.r-project.org')
   }
 }
 

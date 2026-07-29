@@ -22,7 +22,7 @@ pacman::p_load(tidyverse,
                Publish, 
                coin)
 
-# install.packages("coin",repos="http://lib.stat.cmu.edu/R/CRAN/")
+# install.packages("coin",repos="https://cloud.r-project.org/")
 # library(coin)
 
 thm <- theme_classic() +
