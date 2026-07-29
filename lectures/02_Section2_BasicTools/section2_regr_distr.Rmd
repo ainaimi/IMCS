@@ -22,25 +22,27 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-library(knitr)
-library(formatR)
-opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 
-packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
-               "gridExtra","skimr","here","RColorBrewer","survival")
-
-for (package in packages) {
-  if (!require(package, character.only=T, quietly=T)) {
-    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
-  }
+# Load pacman (install if necessary)
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman", repos = 'http://lib.stat.cmu.edu/R/CRAN')
 }
 
-for (package in packages) {
-  library(package, character.only=T)
-}
+# Use pacman to load (and install if missing) all required packages
+pacman::p_load(
+  data.table, tidyverse, ggplot2, ggExtra, formatR,
+  gridExtra, skimr, here, RColorBrewer, survival,
+  GGally, boot, lmtest, sandwich,
+  knitr, remotes
+)
 
+# Ensure fontawesome is installed from GitHub if not available
+if (!requireNamespace("fontawesome", quietly = TRUE)) {
+  remotes::install_github("rstudio/fontawesome")
+}
 library(fontawesome)
 
+# Set ggplot2 theme
 thm <- theme_classic() +
   theme(
     legend.position = "top",
@@ -49,8 +51,15 @@ thm <- theme_classic() +
   )
 theme_set(thm)
 
-knitr::knit_hooks$set(purl = knitr::hook_purl)
-knitr::opts_chunk$set(echo = TRUE)
+# Set global chunk options
+opts_chunk$set(
+  tidy.opts = list(width.cutoff = 60),
+  tidy = TRUE,
+  echo = TRUE
+)
+
+# Set knit hook for purling
+knit_hooks$set(purl = hook_purl)
 
 ```
 
@@ -197,7 +206,7 @@ which is equivalent to:
 $$ P(X = 1 \mid Z = 1) = \expit \{ \alpha_0 + \alpha_1 Z \}$$
 In our code, the values of $\alpha_0, \alpha_1$ were set to -1 and $\log(2)$, respectively. Importantly, the "logit" and "expit" functions are defined as:
 
-$$\logit P(\bullet) = \frac{P(\bullet)}{1 - P(\bullet)}$$
+$$\logit P(\bullet) = \log \left [ \frac{P(\bullet)}{1 - P(\bullet)} \right ]$$
 
 $$\expit (\bullet) = \frac{1}{[1 + \exp(-\bullet)]}$$
 These functions are inversely related, meaning:
@@ -305,7 +314,7 @@ Again, this model demonstrates that we can recover the true values, which we use
 
 # Marginal Standardization
 
-The last two topics in this lecture are marginal standardization and inverse probability weighting — the two estimators whose performance we will formally evaluate in a full simulation study in Section 6 (Example 1). Our goal here is simply to understand how each one is implemented; keep them both in mind, as they will return throughout the course.
+The last two topics in this lecture are marginal standardization and inverse probability weighting — the two estimators whose performance we will formally evaluate in a full simulation study in Section 6 (Example 2). Our goal here is simply to understand how each one is implemented; keep them both in mind, as they will return throughout the course.
 
 Marginal standardization is equivalent to g computation (aka the parametric g formula) when the exposure is measured at a single time point [@Naimi2016b]. This process can be implemented by fitting a single regression model, regressing the outcome against the exposure and all confounding variables. But instead of reading the coefficients the model, one can obtain parameter estimates of interest by using this model to generate predicted risks for each individual under “exposed” and “unexposed” scenarios in the dataset. To obtain standard errors, the entire procedure must be bootstrapped.
 
