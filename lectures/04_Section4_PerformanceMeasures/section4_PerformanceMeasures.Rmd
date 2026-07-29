@@ -347,6 +347,20 @@ mean(sim_res$mCoverage)
 
 ```
 
+Because coverage is a simple proportion of Monte Carlo samples whose intervals include the truth, its Monte Carlo standard error follows from the binomial variance [@Morris2019, Table 6]:
+
+```{r}
+
+mc_se_prop <- function(p, n){
+  sqrt(p*(1 - p)/n)
+}
+
+mc_se_prop(mean(sim_res$cCoverage), n = 500)
+
+mc_se_prop(mean(sim_res$mCoverage), n = 500)
+
+```
+
 We can further explore confidence interval length:
 
 ```{r tidy=FALSE}
@@ -380,7 +394,17 @@ mean(sim_res$mPower)
 
 ```
 
-This is telling us that, under the conditions of the simulation (single confounder, true conditional / marginal effect of ~ 2, etc), using a conditionally adjusted or marginally adjusted approach gives us a power of roughly 93% to detect the true odds ratios.
+Power is also a proportion — the share of Monte Carlo samples in which the interval excludes the null — so the same binomial formula gives its Monte Carlo standard error [@Morris2019, Table 6]:
+
+```{r}
+
+mc_se_prop(mean(sim_res$cPower), n = 500)
+
+mc_se_prop(mean(sim_res$mPower), n = 500)
+
+```
+
+This is telling us that, under the conditions of the simulation (single confounder, true conditional / marginal effect of ~ 2, etc), using a conditionally adjusted or marginally adjusted approach gives us a power of roughly 93% to detect the true odds ratios, with a Monte Carlo standard error of about one percentage point.
 
 \newpage
 
