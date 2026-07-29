@@ -426,7 +426,7 @@ ggsave(here("_images", "weibull_exponential_comparison.pdf"), width = 8, height 
 ## ----expweib, out.width="8cm", fig.align='center', fig.cap="Comparison of the Distribution of a Random Variable Generated from the rexp() function with a rate parameter = 2, and the rweibull() function with shape = 1 and scale = 1 / rate.", echo=F----
 knitr::include_graphics(here("_images", "weibull_exponential_comparison.pdf"))
 
-## ----gengammaplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Generalized Gamma Distribution with a location parameter = log(2), a sigma parameter = 1, and a  Q parameter = 0.5 for 5000 Simulated Observations."----
+## ----gengammaplot, out.width="5cm", fig.align='center', fig.margin=TRUE, warning = F, message = F, echo=F, fig.cap="Histogram for the Generalized Gamma Distribution with a location parameter = 0, a sigma parameter = 0.5, and a Q parameter = 0.5 for 5000 Simulated Observations."----
 
 pacman::p_load(flexsurv)
 shape <- 2
@@ -449,7 +449,7 @@ shape <- 2
 scale <- 1
 q <- 0.5
 
-y <- rgengamma(n, mu = log(scale), sigma = 1/shape, Q = k)
+y <- rgengamma(n, mu = log(scale), sigma = 1/shape, Q = q)
 
 y
 
