@@ -1,7 +1,7 @@
 ---
 title: "Performance Measures: Analyzing and Interpreting Simulation Results"
 author: "Ashley I Naimi"
-date: "`r paste0('Summer ', 2025)`" #format(Sys.Date(), '%Y')
+date: "Summer `r format(Sys.Date(), '%Y')`"
 urlcolor: blue
 bibliography: ../misc/ref.bib
 link-citations: yes
@@ -68,7 +68,7 @@ Often, a Monte Carlo simulation function will return data on the estimator or es
 |CATE_m0_grf | 0.021007357	| 0.032284058	| 1     | 1200  |
 |CATE_m1_grf | -0.60965855	| 0.034149359	| 1     | 1200  |
 
-This table is an excerpt from an actual simulation study we are conducting in our group. In this Table, each row represents a particular estimator or version of the estimator under study. The first column identifies the estimator or version of the estimator, the "Estimate" and "Standard Error" columns represent, the "index" represents the Monte Carlo number, and N is the sample size. 
+This table is an excerpt from an actual simulation study we are conducting in our group. In this Table, each row represents a particular estimator or version of the estimator under study. The first column identifies the estimator or version of the estimator, the "Estimate" and "SE" columns contain the point estimate and its estimated standard error, the "index" represents the Monte Carlo iteration number, and N is the sample size.
 
 For the most part in this short course, we have covered tools and techniques that we can use to generate data such as these. Once we have the dataset, we have to determine what we want to use to measure the performance of each estimator. We discuss those tools here. They include bias, mean squared error, a measure of standard error bias (we sometimes refer to as efficiency), confidence interval coverage and length, and power.
 
@@ -259,7 +259,7 @@ If interested, one can construct standard inferential statistics, such as p-valu
 
 Mean squared error is defined as the average (over all Monte Carlo samples) of the squared difference between the estimate and the truth for a given sample size:
 
-$$\widehat{mse} = E(\hat{\theta}- \theta)^2$$
+$$\widehat{mse} = E[(\hat{\theta}- \theta)^2]$$
 
 We can compute the mean squared error as follows:
 
@@ -274,13 +274,14 @@ We can also construct a Monte Carlo standard error function for the MSE [@Morris
 
 ```{r}
 
-mc_se_mse <- function(x, n){
-  sqrt(sum(((x - mean(x))^2 - mean((x - mean(x))^2))^2)/(n*(n-1)))
+mc_se_mse <- function(x, truth, n){
+  sq_err <- (x - truth)^2
+  sqrt(sum((sq_err - mean(sq_err))^2)/(n*(n-1)))
 }
 
-mc_se_mse(sim_res$cEstimate, n = 500)
+mc_se_mse(sim_res$cEstimate, truth = log(sim_res$true_c), n = 500)
 
-mc_se_mse(sim_res$mEstimate, n = 500)
+mc_se_mse(sim_res$mEstimate, truth = log(sim_res$true_m), n = 500)
 
 ```
 
@@ -346,6 +347,20 @@ mean(sim_res$mCoverage)
 
 ```
 
+Because coverage is a simple proportion of Monte Carlo samples whose intervals include the truth, its Monte Carlo standard error follows from the binomial variance [@Morris2019, Table 6]:
+
+```{r}
+
+mc_se_prop <- function(p, n){
+  sqrt(p*(1 - p)/n)
+}
+
+mc_se_prop(mean(sim_res$cCoverage), n = 500)
+
+mc_se_prop(mean(sim_res$mCoverage), n = 500)
+
+```
+
 We can further explore confidence interval length:
 
 ```{r tidy=FALSE}
@@ -379,7 +394,59 @@ mean(sim_res$mPower)
 
 ```
 
-This is telling us that, under the conditions of the simulation (single confounder, true conditional / marginal effect of ~ 2, etc), using a conditionally adjusted or marginally adjusted approach gives us a power of roughly 93% to detect the true odds ratios.
+Power is also a proportion — the share of Monte Carlo samples in which the interval excludes the null — so the same binomial formula gives its Monte Carlo standard error [@Morris2019, Table 6]:
+
+```{r}
+
+mc_se_prop(mean(sim_res$cPower), n = 500)
+
+mc_se_prop(mean(sim_res$mPower), n = 500)
+
+```
+
+This is telling us that, under the conditions of the simulation (single confounder, true conditional / marginal effect of ~ 2, etc), using a conditionally adjusted or marginally adjusted approach gives us a power of roughly 93% to detect the true odds ratios, with a Monte Carlo standard error of about one percentage point.
+
+## Choosing the Monte Carlo Sample Size
+
+Throughout this section, we used 500 Monte Carlo samples, a choice made mainly to keep these notes compiling quickly. In an actual simulation study, the Monte Carlo sample size should be chosen deliberately: with too few samples, the Monte Carlo error in our performance measures can be large enough to change the study's conclusions; with too many, we waste computing time, which is a real constraint when each simulated dataset requires fitting several models or (as here) bootstrapping.
+
+The Monte Carlo standard error formulas we have been using can guide this choice. Before running the study, we can invert them to obtain the number of samples needed for a desired degree of precision [@Morris2019]. For bias, the Monte Carlo standard error is the standard deviation of the estimates across simulated datasets divided by the square root of the Monte Carlo sample size:
+
+$$MCSE_{bias} = \frac{SD(\hat{\theta})}{\sqrt{n_{sim}}}$$
+
+If we specify the largest Monte Carlo standard error we are willing to tolerate, solving this equation for the Monte Carlo sample size gives:
+
+$$n_{sim} = \left(\frac{SD(\hat{\theta})}{MCSE_{target}}\right)^2$$
+
+The catch is that $SD(\hat{\theta})$ is not known before the simulation is run. In practice, we can obtain a rough value from a small pilot run of the simulation, or from the standard error of a similar estimator applied to a comparable dataset with the same sample size. Treating our 500 samples as such a pilot, the standard deviation of the marginally adjusted estimator is:
+
+```{r}
+
+sd(sim_res$mEstimate)
+
+```
+
+Suppose we wanted to estimate this estimator's bias with a Monte Carlo standard error no larger than 0.005 on the log odds ratio scale. We would then need:
+
+```{r tidy = FALSE}
+
+(sd(sim_res$mEstimate)/0.005)^2
+
+```
+
+or roughly `r format(round((sd(sim_res$mEstimate)/0.005)^2, -2), big.mark = ",")` simulated datasets — considerably more than the 500 we ran, whose Monte Carlo standard error for bias was about `r round(mc_se_bias(sim_res$mEstimate, n = 500), 3)`. The same logic applies to mean squared error and other mean-type performance measures, using their own Monte Carlo standard error formulas.
+
+For coverage and power, the calculation is even simpler. Both are proportions, so their Monte Carlo standard error is:
+
+$$MCSE_{coverage} = \sqrt{\frac{p(1-p)}{n_{sim}}}$$
+
+where $p$ is the true coverage (or power). Solving for the Monte Carlo sample size:
+
+$$n_{sim} = \frac{p(1-p)}{MCSE_{target}^2}$$
+
+This formula requires no pilot run, only an anticipated value for $p$. For example, if we anticipate that coverage will be near the nominal 95% level and want to estimate it with a Monte Carlo standard error of no more than half a percentage point, we would need $0.95 \times 0.05 / 0.005^2 = 1{,}900$ simulated datasets. If we are unwilling to guess at the coverage, setting $p = 0.5$ maximizes $p(1-p)$ and gives a conservative answer: $0.25/0.005^2 = 10{,}000$ samples guarantee the target precision no matter what the true coverage is.
+
+These calculations also put the results above in context. With only 500 samples, the Monte Carlo standard error for a coverage near 95% is $\sqrt{0.95 \times 0.05/500} \approx 0.01$, so the estimated coverage of the conditional and marginal estimators is only pinned down to within about one percentage point of the truth. That is fine for a teaching example, but a published simulation study evaluating whether an estimator's coverage is close to nominal should generally use a Monte Carlo sample size in the thousands.
 
 \newpage
 

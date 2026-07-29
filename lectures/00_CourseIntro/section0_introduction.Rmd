@@ -56,7 +56,7 @@ theme_set(thm)
 
 Welcome to IMCS! 
 
-In this short course, we will spend the next few days learning about the basics behind using Monte Carlo simulations in data science settings.
+In this course, we will learn about the basics behind using Monte Carlo simulations in data science settings.
 
 By the end of this course you should have a solid understanding of:
 
@@ -110,27 +110,29 @@ In this course, we will cover the following topics:
 - Zipper Plots
   
 ## Section 6: Simulation in Practice
-- Example 1: How does IP-weighting compare to marginal standardization?
-- Example 2: Simple Regression in an RCT
+- Example 1: Simple Regression in an RCT
+- Example 2: How does IP-weighting compare to marginal standardization?
 - Example 3: Causal Mediation Estimators
 
 # Some Logistics
 
-All the materials for this short course should have been provided to you via email. If you do not have them, please email [info@statisticalhorizons.com](info@statisticalhorizons.com).
+All the materials for this course (lecture notes, R code, and data) will be distributed by the course organizers; consult the syllabus for details on where to find them. If you are missing anything, please contact your instructor.
 
 # R Code Logistics
 
-In this short course, we will be using the R programming language throughout.^[For the beginner, I highly recommend using RStudio as your IDE of choice, particularly if you are less familiar with R and R programming. There are many excellent resources for installing and setting up R and the RStudio IDE. Here is a good getting started guide, provided by Garrett Grolemund: https://rstudio-education.github.io/hopr/starting.html] In order to run the code we will be using during the course of the workshop, it will be important to have a few packages pre-installed on your computer.
+In this course, we will be using the R programming language throughout.^[For the beginner, I highly recommend using RStudio as your IDE of choice, particularly if you are less familiar with R and R programming. There are many excellent resources for installing and setting up R and the RStudio IDE. Here is a good getting started guide, provided by Garrett Grolemund: https://rstudio-education.github.io/hopr/starting.html] In order to run the code we will be using throughout the course, it will be important to have a few packages pre-installed on your computer.
 
 The easiest way to install these packages would be to paste the following code in the R console and run it:
 
 ```{r, warning = F, message=F}
 
 ## first, if not installed, then install pacman
-install.packages("pacman", repos='https://cloud.r-project.org')
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman", repos='https://cloud.r-project.org')
+}
 ```
 
-Once `pacman` is installed, you can use it to install and load the packages we'll need in the short course. 
+Once `pacman` is installed, you can use it to install and load the packages we'll need in this course.
 
 ```{r, warning = F, message=F}
 pacman::p_load(
@@ -172,7 +174,7 @@ Sometimes, there is a need to install packages that are not located on the CRAN 
 
 ```{r, warning = F, message=F, eval=F}
 
-install.packages("remotes", warning = F, message=F, eval=F)
+install.packages("remotes")
 library(remotes)
 
 remotes::install_github("yqzhong7/AIPW")
