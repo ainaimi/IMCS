@@ -100,7 +100,7 @@ p = nested_loop_plot(resdf = design,
                      )
 
 
-ggsave(here("_images", "nested_loop_plot.pdf"), width = 8, height = 6)
+ggsave(here("_images", "nested_loop_plot.pdf"), plot = p, width = 8, height = 6)
 
 ## ----nestedloop1, out.width="12cm", fig.align='center', fig.cap="Example Nested Loop Plot of Hypothetical Simulation Results.", echo=F----
 knitr::include_graphics(here("_images", "nested_loop_plot.pdf"))
@@ -127,7 +127,7 @@ p = nested_loop_plot(resdf = design,
                      )
 
 
-ggsave(here("_images", "nested_loop_plot2.pdf"), width = 10, height = 6)
+ggsave(here("_images", "nested_loop_plot2.pdf"), plot = p, width = 10, height = 6)
 
 ## ----nestedloop2, out.width="12cm", fig.align='center', echo=F----------------
 knitr::include_graphics(here("_images", "nested_loop_plot2.pdf"))

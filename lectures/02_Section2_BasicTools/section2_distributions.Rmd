@@ -643,7 +643,7 @@ p1 <- ggplot(hist_df, aes(x = bin_mid, y = count, fill = distribution)) +
   ) +
   scale_fill_manual(values = c("Exponential" = "steelblue", "Weibull" = "darkorange"))
 
-ggsave(here("_images", "weibull_exponential_comparison.pdf"), width = 8, height = 8, units = "cm")
+ggsave(here("_images", "weibull_exponential_comparison.pdf"), plot = p1, width = 8, height = 8, units = "cm")
 
 ```
 
