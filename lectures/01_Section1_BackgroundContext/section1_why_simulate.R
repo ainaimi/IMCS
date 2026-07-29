@@ -49,7 +49,10 @@ pi_est <- function(simulation_n) {
 
 }
 
-n_list <- c(500, 1000, 5000, 50000, 500000, 100000, 10000000)
+# set the seed value
+set.seed(41)
+
+n_list <- c(500, 1000, 5000, 50000, 100000, 500000, 10000000)
 
 pi_data <- NULL
 for(i in n_list){
@@ -112,14 +115,19 @@ head(res)
 # convert results to data frame
 res <- data.frame(res)
 
-# plot results
-ggplot(res) + 
-  geom_histogram(aes(mode_estimator), 
-                 alpha = .2, fill = "blue") +
-  geom_histogram(aes(mean_estimator), 
-                 alpha = .2, fill = "red") +
-  geom_histogram(aes(median_estimator), 
-                 alpha = .2, fill = "green") +
+# plot results: one histogram per estimator, overlaid,
+# with a colorblind-friendly palette
+res %>%
+  pivot_longer(everything(),
+               names_to = "estimator",
+               values_to = "estimate") %>%
+  mutate(estimator = str_remove(estimator, "_estimator")) %>%
+  ggplot() +
+  geom_histogram(aes(estimate, fill = estimator),
+                 alpha = .5, position = "identity") +
+  scale_fill_manual(values = c(mean = "#56B4E9",
+                               median = "#E69F00",
+                               mode = "#009E73")) +
   scale_x_continuous(expand = c(0,0)) +
   scale_y_continuous(expand = c(0,0))
 
