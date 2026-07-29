@@ -153,7 +153,7 @@ The first thing we'll do with this dataset is based on the assumption that there
 
 Doing this randomly for each observation would give as a new dataset in which everyone's exposure value was switched, but there outcome remained the same.
 
-This is where the simulation can come in useful. We can construct a variety of different datasets . 
+This is where the simulation can come in useful. By repeating this random re-shuffling many times, we can construct a variety of different datasets, each one representing a version of the data we could have observed if the null hypothesis were true.
 
 If we did this re-shuffling and re-estimation multiple times, we'd get a distribution of risk ratios that looked like this:
 
@@ -181,7 +181,7 @@ rr_permuted <- data.frame(rr_permuted)
 names(rr_permuted) <- "estimates"
 ```
 
-```{r, warning=F, message=F, out.width = "5cm",fig.cap="Distribution of log risk ratios after 20,000 random permutations of the exposure variable in the 2x2 table data above. The solid blue density curve represents a nonparametric kernel density estimate of the distribution. The solid red density curve represents a normal density estimate of the distribution. The dashed red vertical line indicates the value of the log risk ratio estimated in the original unpermuted data.",echo=F}
+```{r permutationdist, warning=F, message=F, out.width = "5cm",fig.cap="Distribution of log risk ratios after 20,000 random permutations of the exposure variable in the 2x2 table data above. The solid blue density curve represents a nonparametric kernel density estimate of the distribution. The solid red density curve represents a normal density estimate of the distribution. The dashed red vertical line indicates the value of the log risk ratio estimated in the original unpermuted data.",echo=F}
 ggplot(rr_permuted) +  
   geom_histogram(aes(estimates,y=..density..),color="gray",fill="white") + 
   geom_density(aes(estimates),color="blue") + 
@@ -215,9 +215,9 @@ sum(abs(rr_permuted$estimates) >= abs(log(risk_ratio)))/permutations
 
 The next example will look at the impact of non-collapsiblility of the odds ratio [@Greenland1999; @Greenland2005b; @Pang2013]. The odds ratio is a non-collapsible measure of association, and for this reason its use in epidemiology is somewhat controversial [@Pang2013a; @Kaufman2010a]. Non-collapsibility is a mathematical property of the odds ratio that results from Jensen's inequality (the average of a non-linear function does not equal the function its average; see @Greenland2011), and has confused many a statistician and epidemiologist [@Greenland1999; @Hernan2011].
 
-In simple terms, non-collapsibility of the OR will be apparent when estimating an adjusted exposure-outcome association using a conditional and marginal approach (using standard logistic regression for the conditional approach, and IP-weighting or marginal standardization for the marginal approach). For example, in Figure 2, 
+In simple terms, non-collapsibility of the OR will be apparent when estimating an adjusted exposure-outcome association using a conditional and marginal approach (using standard logistic regression for the conditional approach, and IP-weighting or marginal standardization for the marginal approach). For example, in Figure \@ref(fig:triangledag),
 
-```{r, out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F}
+```{r triangledag, out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F}
 knitr::include_graphics(here("_images","triangle_dag.pdf"))
 ```
 
@@ -225,9 +225,9 @@ we can adjust for the confounding effects of $C$ conditionally using standard re
 
 $$ \logit P(Y = 1 \mid A, C) = \beta_0 + \beta_1 A + \beta_2 C, $$
 
-and interpreting $\beta_1$ as the conditionally adjusted effect. Or, we can output predicted probabilities from this model for each person in the sample under two conditions: $A = 1$ and $A = 0$. We can then average these two probabilities over the sample, and compare the odds for the $A = 1$ to the odds for the $A = 0$. To explore the impact of noncollapsibility, we can simulate data following the causal relation in Figure 2.
+and interpreting $\beta_1$ as the conditionally adjusted effect. Or, we can output predicted probabilities from this model for each person in the sample under two conditions: $A = 1$ and $A = 0$. We can then average these two probabilities over the sample, and compare the odds for the $A = 1$ to the odds for the $A = 0$. To explore the impact of noncollapsibility, we can simulate data following the causal relation in Figure \@ref(fig:triangledag).
 
-Noncollapsibility is less of an issue when the outcome is rare. Often, the threshold for defining "rarity" is taken to be $\lessapprox 10$%. But how valid is this $\lessapprox 10$\% cutoff? We can answer this using Monte Carlo simulation. To do this, let's simulate data following the causal relation in Figure 2.
+Noncollapsibility is less of an issue when the outcome is rare. Often, the threshold for defining "rarity" is taken to be $\lessapprox 10$%. But how valid is this $\lessapprox 10$\% cutoff? We can answer this using Monte Carlo simulation. To do this, let's simulate data following the causal relation in Figure \@ref(fig:triangledag).
 
 ```{r, echo=T,fig.star=T,tidy=F,highlight=T}
   
@@ -372,11 +372,59 @@ Let's fix this briefly to see if it changes anything:
 
 ```
 
-Once again, not a major difference. The next step would be to evaluate how the prevalence of the outcome affects the difference in the conditionally and marginally adjusted odds ratios, but we'll leave that for later if time permits.
+Once again, not a major difference. But everything we've done so far was carried out at a single outcome prevalence of roughly 9%, sitting right at the conventional rarity threshold. The question we posed at the outset thus remains unanswered: how does the prevalence of the outcome affect the difference between the conditionally and marginally adjusted odds ratios, and is the $\lessapprox 10$\% cutoff a reasonable rule of thumb? Because `collapsibility_function` takes the intercept of the outcome model as an argument, we can answer this by re-running the entire simulation over a range of intercept values, each one yielding a different outcome prevalence:
+
+```{r prevalencegrid, tidy = F, warning = F, message = F}
+
+  set.seed(123)
+
+  intercepts <- c(-3.5, -2.75, -2, -1.25, -0.5, 0)
+
+  prevalence_res <- lapply(intercepts, function(b0){
+
+    sim_res <- lapply(1:1000,
+                      function(x) collapsibility_function(index = x,
+                                                          intercept = b0))
+
+    sim_res <- do.call(rbind, sim_res)
+
+    data.frame(prevalence = mean(sim_res$prevalenceY),
+               conditionalOR = exp(mean(sim_res$conditionalOR)),
+               marginalOR = exp(mean(sim_res$marginalOR)))
+
+  })
+
+  prevalence_res <- do.call(rbind, prevalence_res)
+
+  round(prevalence_res, 3)
+
+```
+
+Figure \@ref(fig:prevalencegap) plots both odds ratios against the outcome prevalence.
+
+```{r prevalencegap, out.width = "10cm", fig.cap="Average conditionally and marginally adjusted odds ratios across 1,000 simulated datasets of 500 observations each, as a function of the outcome prevalence. The dashed horizontal line marks the true conditional odds ratio of 2; the dotted vertical line marks the conventional 10% rarity threshold.", echo=F, warning=F, message=F, tidy=F}
+plot_dat <- prevalence_res %>%
+  pivot_longer(cols = c(conditionalOR, marginalOR),
+               names_to = "Estimator",
+               values_to = "OR") %>%
+  mutate(Estimator = ifelse(Estimator == "conditionalOR",
+                            "Conditionally Adjusted",
+                            "Marginally Adjusted"))
+
+ggplot(plot_dat, aes(x = prevalence, y = OR, color = Estimator)) +
+  geom_hline(yintercept = 2, color = "gray", linetype = 2) +
+  geom_vline(xintercept = .1, color = "gray", linetype = 3) +
+  geom_line() +
+  geom_point() +
+  scale_color_brewer(palette = "Set1") +
+  labs(x = "Outcome Prevalence", y = "Odds Ratio")
+```
+
+The conditionally adjusted odds ratio hovers near its true value of 2 at every prevalence, while the marginally adjusted odds ratio moves steadily toward the null as the outcome becomes more common. At an outcome prevalence of roughly `r round(prevalence_res$prevalence[1]*100)`%, the two differ by about `r round(100*(prevalence_res$conditionalOR[1]/prevalence_res$marginalOR[1] - 1))`%; near the `r round(prevalence_res$prevalence[2]*100)`% threshold the gap is about `r round(100*(prevalence_res$conditionalOR[2]/prevalence_res$marginalOR[2] - 1))`%; and by a prevalence of `r round(prevalence_res$prevalence[6]*100)`% it has grown to roughly `r round(100*(prevalence_res$conditionalOR[6]/prevalence_res$marginalOR[6] - 1))`%. Notably, there is nothing special about the 10% mark: the divergence between the conditional and marginal odds ratios is a smooth continuum in the outcome prevalence, not a property that switches on once the outcome stops being "rare." The rule of thumb is defensible in the sense that below 10% the discrepancy stays within a few percent, which is often small relative to other sources of error, but whether a discrepancy of that size is ignorable depends on the substantive question, not on the threshold itself.
 
 # Defining your Data Generating Mechanism Using Directed Acyclic Graphs
 
-In designing a simulation study, it is important to understand how to generate random variables so that the relevant causal and statistical associations between them hold as expected. An important tool in accomplishing this goal is the use of causal diagrams, or directed acyclic graphs. Figures 2 is a directed acyclic graph, which must generally be drawn using rules that govern a DAG, sometimes referred to as the Markov properties of the model.
+In designing a simulation study, it is important to understand how to generate random variables so that the relevant causal and statistical associations between them hold as expected. An important tool in accomplishing this goal is the use of causal diagrams, or directed acyclic graphs. Figure \@ref(fig:triangledag) is a directed acyclic graph, which must generally be drawn using rules that govern a DAG, sometimes referred to as the Markov properties of the model.
 
 A directed acyclic graph is a graphical model with **three key properties**:
 
@@ -386,9 +434,9 @@ A directed acyclic graph is a graphical model with **three key properties**:
 
 If any of these properties is not met in a particular graphical model, it is not a DAG. There are several concepts and techniques relevant to the use of DAGs that we cannot cover here. However, for simulation studies, the most important concept related to DAGs is the concept of variable exogeneity and / or endogeneity. 
 
-With respect to a particular DAG, a variable is exogenous if it has no arrows pointing into it. On the other hand, the most endogenous variable in a DAG is the one that has the most arrows pointing into it. If we re-visit Figure 2, we can note the following:
+With respect to a particular DAG, a variable is exogenous if it has no arrows pointing into it. On the other hand, the most endogenous variable in a DAG is the one that has the most arrows pointing into it. If we re-visit the confounding triangle of Figure \@ref(fig:triangledag), shown again in Figure \@ref(fig:triangledagrev), we can note the following:
 
-```{r, out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F}
+```{r triangledagrev, out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F}
 knitr::include_graphics(here("_images","triangle_dag.pdf"))
 ```
 
@@ -423,7 +471,7 @@ collapsibility_function <- function(index, intercept){
 
 This highlights an important point about how we can construct a data-generating mechanism of interest. If we start with a DAG, we can use each variables relative exogeneity to determine how we can simulate a dataset of interest. As a more complicated example, consider the following mediation diagram:
 
-```{r, out.width = "10cm",fig.cap="Complex mediation diagram with unmeasured confounder $U$, baseline confounders $C$, mediator-outcome confounder affected by the exposure $L$, mediator $Z$, exposure $X$, and outcome $Y$.",echo=F}
+```{r mediationdag, out.width = "10cm",fig.cap="Complex mediation diagram with unmeasured confounder $U$, baseline confounders $C$, mediator-outcome confounder affected by the exposure $L$, mediator $Z$, exposure $X$, and outcome $Y$.",echo=F}
 knitr::include_graphics(here("_images","mediation_dag.pdf"))
 ```
 
@@ -476,7 +524,7 @@ This flexible procedure is a useful tool in generating data from potentially com
 
 # What is Your Estimand? 
 
-In a given study, the estimand is the target parameter we seek to quantify with the study data. In a simulation setting, the estimand can be identified as the true underlying relationship in the data that we are primarily interested in quantifying. For example, in the above Figure 2, there are two possible estimands that we can adopt as our target. The first is the conditionally adjusted odds-ratio, which in the context of our simulated data is 2. Here is that code again:
+In a given study, the estimand is the target parameter we seek to quantify with the study data. In a simulation setting, the estimand can be identified as the true underlying relationship in the data that we are primarily interested in quantifying. For example, in Figure \@ref(fig:triangledag) above, there are two possible estimands that we can adopt as our target. The first is the conditionally adjusted odds-ratio, which in the context of our simulated data is 2. Here is that code again:
 
 ```{r, eval = F}
 
@@ -501,7 +549,7 @@ The problem is that, even in this simple single $C$ setting, computing this inte
 
 # No, really, What is Your Estimand?
 
-As we will soon see, we need the true value of the estimand in any situation we are interested in quantifying bias, mean squared error, or most measures of estimator performance we usually want from a simulation study. But the challenge in solving for the true parameter value can be real. Take, for example, Figure 4 and suppose we are interesed in the effect defined as a contrast of the outcome that would be observed if everyone in the population were exposed versus unexposed. How can we determine this from the code we used to generate our data? This effect is actually represented in the DAG (Figure 4) by the combined arrows emanating from $X$ into $Y$. This includes:
+As we will soon see, we need the true value of the estimand in any situation we are interested in quantifying bias, mean squared error, or most measures of estimator performance we usually want from a simulation study. But the challenge in solving for the true parameter value can be real. Take, for example, Figure \@ref(fig:mediationdag) and suppose we are interesed in the effect defined as a contrast of the outcome that would be observed if everyone in the population were exposed versus unexposed. How can we determine this from the code we used to generate our data? This effect is actually represented in the DAG (Figure \@ref(fig:mediationdag)) by the combined arrows emanating from $X$ into $Y$. This includes:
 
 |  Path |
 |-----|

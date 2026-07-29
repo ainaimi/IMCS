@@ -171,3 +171,30 @@
 % pandoc >= 3.x wraps caption-less tables in "\def\LTcaptype{none}"; the tint
 % caption machinery then steps a counter named "none", which must exist.
 \newcounter{none}
+
+% amsmath adds "\let\label\ltx@label" to \@arrayparboxrestore, which fires in
+% the minipages tufte builds inside every float and undoes tufte's capture of
+% \label. The label then executes in the float body, before the caption has
+% stepped the figure/table counter, so \ref resolves to the section number.
+% Since pandoc always emits "\caption{...}\label{...}", absorb a \label that
+% immediately follows \caption into the stored caption text; it then executes
+% during caption typesetting, when the counter and hyperref anchor are correct.
+% The absorbed label is injected as a \protected wrapper, not a raw \label:
+% tufte's end-code compares the stored caption against {} with \equal, which
+% fully expands it, and the kernel \label's hook code breaks under \edef.
+\makeatletter
+\newcommand{\@tufte@absorbed@label}{}
+\protected\def\@tufte@do@label{\label{\@tufte@absorbed@label}}
+\long\def\@tufte@caption[#1][#2]#3{%
+  \ifthenelse{\isempty{#1}}%
+    {\gdef\@tufte@stored@shortcaption{#3}}%
+    {\gdef\@tufte@stored@shortcaption{#1}}%
+  \gsetlength{\@tufte@caption@vertical@offset}{-#2}%
+  \gdef\@tufte@stored@caption{#3}%
+  \@ifnextchar\label{\@tufte@absorb@label}{}%
+}
+\def\@tufte@absorb@label\label#1{%
+  \gdef\@tufte@absorbed@label{#1}%
+  \g@addto@macro\@tufte@stored@caption{\@tufte@do@label}%
+}
+\makeatother
