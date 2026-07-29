@@ -336,7 +336,7 @@ Now that we have our true values, we can go ahead and proceed with running the s
      # IP WEIGHTING
      # create the propensity score in the dataset
      analysis_data$propensity_score <- glm(x ~ .,
-                                           data = analysis_data[,-y],
+                                           data = analysis_data %>% select(-y),
                                            family = binomial("logit"))$fitted.values
 
      # stabilized inverse probability weights
@@ -381,7 +381,7 @@ Now that we have our true values, we can go ahead and proceed with running the s
        # IP WEIGHTING
        # create the propensity score in the dataset
        boot_dat$propensity_score <- glm(x ~ .,
-                                        data = boot_dat[,-y],
+                                        data = boot_dat %>% select(-y),
                                         family = binomial("logit"))$fitted.values
 
        # stabilized inverse probability weights

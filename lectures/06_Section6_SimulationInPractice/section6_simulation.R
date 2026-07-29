@@ -209,7 +209,7 @@ knitr::include_graphics(here("_images","triangle_dag.pdf"))
 #      # IP WEIGHTING
 #      # create the propensity score in the dataset
 #      analysis_data$propensity_score <- glm(x ~ .,
-#                                            data = analysis_data[,-y],
+#                                            data = analysis_data %>% select(-y),
 #                                            family = binomial("logit"))$fitted.values
 # 
 #      # stabilized inverse probability weights
@@ -254,7 +254,7 @@ knitr::include_graphics(here("_images","triangle_dag.pdf"))
 #        # IP WEIGHTING
 #        # create the propensity score in the dataset
 #        boot_dat$propensity_score <- glm(x ~ .,
-#                                         data = boot_dat[,-y],
+#                                         data = boot_dat %>% select(-y),
 #                                         family = binomial("logit"))$fitted.values
 # 
 #        # stabilized inverse probability weights
