@@ -8,7 +8,7 @@ if (!requireNamespace("pacman", quietly = TRUE)) {
 # Use pacman to load (and install if missing) all required packages
 pacman::p_load(
   data.table, tidyverse, ggplot2, ggExtra, formatR,
-  gridExtra, skimr, here, RColorBrewer, survival,
+  gridExtra, skimr, here, RColorBrewer,
   knitr, remotes
 )
 

@@ -10,14 +10,12 @@ cran_packages <- c(
   # document formats
   "rmarkdown", "knitr", "bookdown", "tint", "formatR", "fontawesome",
   # data handling and plotting
-  "tidyverse", "data.table", "here", "skimr", "broom", "magrittr",
+  "tidyverse", "data.table", "here", "skimr", "magrittr",
   "gridExtra", "ggExtra", "RColorBrewer", "VIM",
   # distributions and simulation
-  "mvtnorm", "EnvStats", "ExtDist", "extraDistr", "flexsurv", "survival",
-  "rsimsum",
+  "mvtnorm", "EnvStats", "flexsurv", "rsimsum",
   # estimation and inference
   "lmtest", "sandwich", "coin", "boot", "MASS", "Publish",
-  "glmnet", "ranger", "xgboost", "SuperLearner",
   # tooling
   "remotes", "devtools"
 )
@@ -26,6 +24,9 @@ new_packages <- setdiff(cran_packages, rownames(installed.packages()))
 if (length(new_packages) > 0) install.packages(new_packages)
 
 # GitHub-only packages
+# AIPW is not loaded by any lecture at knit time; it is the worked example in
+# the intro's GitHub-installation walkthrough, so pre-installing it here spares
+# students the API-limit errors that walkthrough describes.
 if (!requireNamespace("AIPW", quietly = TRUE)) {
   remotes::install_github("yqzhong7/AIPW")
 }
