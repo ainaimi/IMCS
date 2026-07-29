@@ -68,7 +68,7 @@ Often, a Monte Carlo simulation function will return data on the estimator or es
 |CATE_m0_grf | 0.021007357	| 0.032284058	| 1     | 1200  |
 |CATE_m1_grf | -0.60965855	| 0.034149359	| 1     | 1200  |
 
-This table is an excerpt from an actual simulation study we are conducting in our group. In this Table, each row represents a particular estimator or version of the estimator under study. The first column identifies the estimator or version of the estimator, the "Estimate" and "Standard Error" columns represent, the "index" represents the Monte Carlo number, and N is the sample size. 
+This table is an excerpt from an actual simulation study we are conducting in our group. In this Table, each row represents a particular estimator or version of the estimator under study. The first column identifies the estimator or version of the estimator, the "Estimate" and "SE" columns contain the point estimate and its estimated standard error, the "index" represents the Monte Carlo iteration number, and N is the sample size.
 
 For the most part in this short course, we have covered tools and techniques that we can use to generate data such as these. Once we have the dataset, we have to determine what we want to use to measure the performance of each estimator. We discuss those tools here. They include bias, mean squared error, a measure of standard error bias (we sometimes refer to as efficiency), confidence interval coverage and length, and power.
 
@@ -259,7 +259,7 @@ If interested, one can construct standard inferential statistics, such as p-valu
 
 Mean squared error is defined as the average (over all Monte Carlo samples) of the squared difference between the estimate and the truth for a given sample size:
 
-$$\widehat{mse} = E(\hat{\theta}- \theta)^2$$
+$$\widehat{mse} = E[(\hat{\theta}- \theta)^2]$$
 
 We can compute the mean squared error as follows:
 
