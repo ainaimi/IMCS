@@ -62,7 +62,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # or_marg
 # log(or_marg)
 
-## -----------------------------------------------------------------------------
+## ----simulation, tidy = F-----------------------------------------------------
 
 library(parallel)
 library(boot)
@@ -141,18 +141,34 @@ collapsibility_function <- function(index, intercept, true_m, true_c){
 # how many cores?
 # num_cores
 
-# set the seed
-set.seed(123)
+# reload saved results if we have them; delete the .rds file to
+# force a fresh run of the simulation
+sim_cache <- here("lectures",
+                  "04_Section4_PerformanceMeasures",
+                  "section4_sim_res.rds")
 
-# run the function
-sim_res <- lapply(1:500, 
-                  function(x) collapsibility_function(index = x, 
-                                                      intercept = 0,
-                                                      true_m = 1.871235,
-                                                      true_c = 2))#, 
-                    #mc.cores = num_cores)
+if (file.exists(sim_cache)) {
 
-sim_res <- do.call(rbind, sim_res)
+  sim_res <- readRDS(sim_cache)
+
+} else {
+
+  # set the seed
+  set.seed(123)
+
+  # run the function
+  sim_res <- lapply(1:500,
+                    function(x) collapsibility_function(index = x,
+                                                        intercept = 0,
+                                                        true_m = 1.871235,
+                                                        true_c = 2))#,
+                      #mc.cores = num_cores)
+
+  sim_res <- do.call(rbind, sim_res)
+
+  saveRDS(sim_res, sim_cache)
+
+}
 
 
 ## -----------------------------------------------------------------------------

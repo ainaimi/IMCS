@@ -9,6 +9,9 @@
 *.synctex.gz
 tmp-pdfcrop-*.tex
 
+# simulation results section 4 saves at knit time and reloads on later knits
+lectures/04_Section4_PerformanceMeasures/section4_sim_res.rds
+
 # compiled output: this repo tracks source files only
 *.pdf
 
