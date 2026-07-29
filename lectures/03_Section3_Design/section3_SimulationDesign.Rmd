@@ -213,7 +213,7 @@ sum(abs(rr_permuted$estimate) >= abs(log(risk_ratio)))/permutations
 
 ## Non-Collapsibility of the OR
 
-The next example will look at the impact of non-collapsiblility of the odds ratio [@Greenland1999,@Greenland2005b,@Pang2013]. The odds ratio is a non-collapsible measure of association, and for this reason its use in epidemiology is somewhat controversial [@Pang2013a,Kaufman2010a]. Non-collapsibility is a mathematical property of the odds ratio that results from Jensen's inequality (the average of a non-linear function does not equal the function its average; see @Greenland2011), and has confused many a statistician and epidemiologist [@Greenland1999; @Hernan2011].
+The next example will look at the impact of non-collapsiblility of the odds ratio [@Greenland1999; @Greenland2005b; @Pang2013]. The odds ratio is a non-collapsible measure of association, and for this reason its use in epidemiology is somewhat controversial [@Pang2013a; @Kaufman2010a]. Non-collapsibility is a mathematical property of the odds ratio that results from Jensen's inequality (the average of a non-linear function does not equal the function its average; see @Greenland2011), and has confused many a statistician and epidemiologist [@Greenland1999; @Hernan2011].
 
 In simple terms, non-collapsibility of the OR will be apparent when estimating an adjusted exposure-outcome association using a conditional and marginal approach (using standard logistic regression for the conditional approach, and IP-weighting or marginal standardization for the marginal approach). For example, in Figure 2, 
 

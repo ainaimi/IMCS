@@ -460,7 +460,7 @@ ggplot(plot_dat, aes(x = uniform, y = poisson)) +
 
 The plot above demonstrates a clear problem: higher/lower values of the uniform distribution are associated with higher/lower values of the Poisson distribution, even though these two variables should be independent^[Importantly, note that no information in the uniform distribution is used to define the Poisson distribution, and vice versa.]
 
-Why is this occurring? It turns out that in R (as in many other statistical software platforms) the way the Poisson random variable is generated is based on the inverse transformation method [@Roberts2010; p44]. This approach starts with a uniform distribution to generate the Poisson random variable. So the problem that arises is that the exact same uniform random variable that is generated in `a` is used to generate the Poisson random variable defined in `b`. 
+Why is this occurring? It turns out that in R (as in many other statistical software platforms) the way the Poisson random variable is generated is based on the inverse transformation method [@Roberts2010, p. 44]. This approach starts with a uniform distribution to generate the Poisson random variable. So the problem that arises is that the exact same uniform random variable that is generated in `a` is used to generate the Poisson random variable defined in `b`. 
 
 What should this plot look like if we want to construct two **truly independent** random variables from a uniform and Poisson distribution? We can see this with the use of only a single seed initiated in the code chunk:
 

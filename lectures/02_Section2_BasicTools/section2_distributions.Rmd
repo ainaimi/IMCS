@@ -446,7 +446,7 @@ y
 
 This tells us that we observed six failures before the first two successes, 16 failures before the next two successes, then eleven, then three, then seven. In other words, these represent the number of failures before we see two successes (since `size = 2`).
 
-However, there is another way to formulate the negative binomial distribution, as a mixture of the Poisson and the Gamma distribution [@Casella2002; p196, exercise 4.34]. This formulation allows us to think of the negative binomial distribution as a Poisson distribution, but without the assumption that the variance of this distribution is exactly equal to the mean. This is the most common formulation used in epidemiologic settings [see, e.g., @Lloyd-Smith2005]. In R, this formulation can be deployed as:
+However, there is another way to formulate the negative binomial distribution, as a mixture of the Poisson and the Gamma distribution [@Casella2002, p. 196, exercise 4.34]. This formulation allows us to think of the negative binomial distribution as a Poisson distribution, but without the assumption that the variance of this distribution is exactly equal to the mean. This is the most common formulation used in epidemiologic settings [see, e.g., @Lloyd-Smith2005]. In R, this formulation can be deployed as:
 
 ```{r tidy = F, warning = F, message = F}
 
@@ -460,7 +460,7 @@ y
 
 In this formulation, the variance of the negative binomial random variable is defined as:
 $$Var(Y) = \mu + \frac{\mu^2}{\text{size}},$$
-so for small values of `size`, we generate data that has a variance greater than the mean. As we increase the `size` parameter, we decrease the variance. In the limit as size $\rightarrow \infty$, this negative binomial distribution becomes a Poisson distribution [@Cameron2013; p85].
+so for small values of `size`, we generate data that has a variance greater than the mean. As we increase the `size` parameter, we decrease the variance. In the limit as size $\rightarrow \infty$, this negative binomial distribution becomes a Poisson distribution [@Cameron2013, p. 85].
 
 <!-- This code shows that as size gets very large, nbinom becomes poisson. Importantly, the lamba in pois is the mu in binom. -->
 <!-- ```{r tidy = F, warning = F, message = F} -->
