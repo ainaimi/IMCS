@@ -386,7 +386,7 @@ t(y)
 
 ```
 
-Note here that in this simulation, the first two observations experienced a competing event, the third and the fifth observations were censored, and the fourth observation experienced a heart attack.
+Note here that in this simulation, the fourth observation experienced a competing event (death), while the remaining four observations fell into the fourth category, experiencing no event over follow-up (and would thus be administratively censored). The transposed matrix `t(y)` makes this easier to see: each row is an observation, and the column containing the 1 indicates which of the four categories it realized.
 
 <!-- ## Hypergeometric Distribution -->
 
