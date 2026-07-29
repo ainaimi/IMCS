@@ -71,9 +71,10 @@ knit-time *inputs* that the lectures cannot regenerate themselves:
 | `mediation_dag.pdf`, `rct_dag.pdf`, `triangle_dag.pdf` | sections 3, 6 | compile the `.tex` sources in `_images/` (`make figures`) |
 | `pareto_comparison.pdf` | section 2 (distributions) | no source in repo — contact the author |
 
-Six other figure PDFs (`nested_loop_plot*`, `zip_plot_*`,
-`weibull_exponential_comparison`) are written by the lectures themselves
-during knit, so they appear after the first build.
+Eleven other figure PDFs (`nested_loop_plot*`, `zip_plot_*`,
+`lollipop_plot_*`, `estimate_*`, `weibull_exponential_comparison`) are
+written by the lectures themselves during knit, so they appear after the
+first build.
 
 ## License
 

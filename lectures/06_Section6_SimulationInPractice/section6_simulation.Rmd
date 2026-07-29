@@ -1,7 +1,7 @@
 ---
-title: "Simulation Study: Example 1 - IP Weighting versus Marginal Standardization for a Time-Fixed Exposure"
+title: "Simulation Study: Example 2 - IP Weighting versus Marginal Standardization for a Time-Fixed Exposure"
 author: "Ashley I Naimi"
-date: "`r paste0('Spring ', 2025)`" #format(Sys.Date(), '%Y')
+date: "Summer `r format(Sys.Date(), '%Y')`"
 urlcolor: blue
 bibliography: ../misc/ref.bib
 link-citations: yes
@@ -59,9 +59,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Evaluating the Performance of IPW versus Marginal Standardization
 
-We are going to wrap up our short course by pulling several of the pieces together that we've covered over the last few days. We'll use the ADEMP framework to develop a simulation study we'll conduct here. 
+In this first worked example, we are going to pull together several of the pieces that we've covered over the last few days. We'll use the ADEMP framework to develop a simulation study we'll conduct here; two more examples (a randomized trial and a mediation analysis) will follow.
 
-We'll start with the aims of our simulation study: to compare the performance of inverse probability weighting versus marginally standardized estimates of the average treatment effect. However, it would help us to get more specific with our intentions. For instance, we might ask whether we should choose IP-weighting versus marginal standardization with a different number of confounding variables (e.g., 10 versus 25. We might as whether we should choose the bootstrap versus the robust variance estimator when we use IP weighting. Getting more specific with our aims will help us make decisions about how we should construct our data generating mechanisms, analyses, and performance measures. 
+We'll start with the aims of our simulation study: to compare the performance of inverse probability weighting versus marginally standardized estimates of the average treatment effect. However, it would help us to get more specific with our intentions. For instance, we might ask whether we should choose IP-weighting versus marginal standardization with a different number of confounding variables (e.g., 10 versus 25). We might ask whether we should choose the bootstrap versus the robust variance estimator when we use IP weighting. Getting more specific with our aims will help us make decisions about how we should construct our data generating mechanisms, analyses, and performance measures. 
 
 # Aims
 
@@ -135,13 +135,13 @@ Inverse probability weighting can perform very poorly when the numerical value o
 $$0.5 / 0.00001 = 50000$$
 This means that the individual with a propensity score of 0.00001 will contribute a total of 50,000 pseudo-individuals in our weighted analysis. If our original sample size was only 1,000, this would suggest an important problem: in the weighted analysis, a single individual is contributing 50,000 observations, which is 50 times the size of the actual data we have.
 
-To address problems like this, we can trim the weights we create using the equation above. Specifically, we can construct a trimmed stabilized IP weight, where any values of the stabilized weights greater than (e.g.) the 97.5th percentile are **reset to the 97.5th percentile value**. For example, using an `ifelse` statement in R, we can construct trimmed weights as:
+To address problems like this, we can trim the weights we create using the equation above. Specifically, we can construct a trimmed stabilized IP weight, where any values of the stabilized weights greater than (e.g.) the 99.5th percentile are **reset to the 99.5th percentile value**. For example, using an `ifelse` statement in R, we can construct trimmed weights as:
 
 ```{r, eval = F}
 
-sw_trim <- ifelse(sw > quantile(sw, .975),
-                  quantile(sw, .975),
-                  analysis_data$sw)
+sw_trim <- ifelse(sw > quantile(sw, .995),
+                  quantile(sw, .995),
+                  sw)
 
 ```
 
@@ -178,7 +178,7 @@ Once we obtain our simulation data, we will use the following performance measur
 
 # Monte Carlo Integration for the True Marginal OR
 
-In order to obtain estimates of our desired performance measures, we will need to compute the true marginal odds ratios for all the scenarios we will explore. In our case, we will limit our simulation to scenarios where the sample size for each Monte Carlo simulation is 500 and 1000, and where the number of confounders in each Monte Carlo simulation is 10 and 25. 
+In order to obtain estimates of our desired performance measures, we will need to compute the true marginal odds ratios for all the scenarios we will explore. In our case, we will limit our simulation to scenarios where the sample size for each Monte Carlo simulation is 1000, and where the number of confounders in each Monte Carlo simulation is 10 and 25.
 
 This means that we'll have to use Monte Carlo integration to estimate the true marginal odds ratios under *two* settings: when there are 10 and 25 confounders in the data generating mechanism.^[Note that we don't need to account for changing sample sizes in the Monte Carlo integration approach, since we are interested in maximizing the sample size for this step.] We can do this using the following code:
 
@@ -336,7 +336,7 @@ Now that we have our true values, we can go ahead and proceed with running the s
      # IP WEIGHTING
      # create the propensity score in the dataset
      analysis_data$propensity_score <- glm(x ~ .,
-                                           data = analysis_data[,-y],
+                                           data = analysis_data %>% select(-y),
                                            family = binomial("logit"))$fitted.values
 
      # stabilized inverse probability weights
@@ -381,7 +381,7 @@ Now that we have our true values, we can go ahead and proceed with running the s
        # IP WEIGHTING
        # create the propensity score in the dataset
        boot_dat$propensity_score <- glm(x ~ .,
-                                        data = boot_dat[,-y],
+                                        data = boot_dat %>% select(-y),
                                         family = binomial("logit"))$fitted.values
 
        # stabilized inverse probability weights
@@ -554,6 +554,91 @@ ggplot(a) +
   facet_wrap(~c_number)
 
 ```
+
+## Bias of the Standard Errors
+
+Bias of the point estimates addresses our first aim, but it says nothing yet about our second aim: how well the robust variance estimator and the bootstrap estimate the uncertainty in the IP weighted estimator. Recall from Section 4 that a standard error is meant to estimate the standard deviation of the point estimates across repeated samples. Our Monte Carlo simulation gives us exactly that repeated-sampling distribution, so we can compare the average of the estimated standard errors in each scenario to the empirical standard deviation of the point estimates in that scenario. Our simulation output contains three estimated standard errors: the bootstrap standard error for marginal standardization, and both the robust (sandwich) and bootstrap standard errors for IP weighting:
+
+```{r tidy = F, warning = F, message = F}
+
+se_results <- a %>%
+  group_by(c_number) %>%
+  summarize(empSE_MS = sd(marginal_standardization_estimate),
+            meanSE_MS = mean(marginal_standardization_SE),
+
+            empSE_IPW = sd(ip_weighting_estimate),
+            meanSE_IPW_robust = mean(ip_weighting_robust_SE),
+            meanSE_IPW_boot = mean(ip_weighting_boot_SE),
+
+            ratio_MS = empSE_MS/meanSE_MS,
+            ratio_IPW_robust = empSE_IPW/meanSE_IPW_robust,
+            ratio_IPW_boot = empSE_IPW/meanSE_IPW_boot)
+
+se_results
+
+```
+
+The ratios in this table divide the empirical (true) standard error by the average estimated standard error, so a value of 1 indicates a perfectly calibrated standard error estimator, a value below 1 indicates a standard error that is too large (conservative), and a value above 1 indicates a standard error that is too small (anti-conservative). The bootstrap standard error for marginal standardization is well calibrated in both scenarios (ratios of roughly 0.98 and 1.02). For IP weighting, the two variance estimators behave quite differently, which speaks directly to our second aim. The bootstrap standard error tracks the true sampling variability closely (ratios of roughly 0.95 in both scenarios). The robust standard error, by contrast, overestimates the true sampling variability by roughly 30% (ratios of roughly 0.75). This conservatism is a known property of the robust variance estimator in this setting: it treats the estimated weights as if they were known, and ignoring the estimation of the weights leads it to overstate the variability of the stabilized IP weighted estimator.
+
+## Confidence Interval Coverage
+
+Point estimates and standard errors come together in confidence interval coverage: the proportion of Monte Carlo samples in which the 95% Wald interval contains the true value. As in Section 4, we construct the intervals as the estimate plus or minus 1.96 standard errors, which gives us three intervals to evaluate — one for marginal standardization, and one for each of the two IP weighting variance estimators:
+
+```{r tidy = F, warning = F, message = F}
+
+a <- a %>%
+  mutate(MS_LCL = marginal_standardization_estimate - 1.96*marginal_standardization_SE,
+         MS_UCL = marginal_standardization_estimate + 1.96*marginal_standardization_SE,
+
+         IPW_robust_LCL = ip_weighting_estimate - 1.96*ip_weighting_robust_SE,
+         IPW_robust_UCL = ip_weighting_estimate + 1.96*ip_weighting_robust_SE,
+
+         IPW_boot_LCL = ip_weighting_estimate - 1.96*ip_weighting_boot_SE,
+         IPW_boot_UCL = ip_weighting_estimate + 1.96*ip_weighting_boot_SE)
+
+coverage_results <- a %>%
+  group_by(c_number) %>%
+  summarize(coverageMS = mean(MS_LCL < true_log_or & true_log_or < MS_UCL),
+            coverageIPW_robust = mean(IPW_robust_LCL < true_log_or & true_log_or < IPW_robust_UCL),
+            coverageIPW_boot = mean(IPW_boot_LCL < true_log_or & true_log_or < IPW_boot_UCL))
+
+coverage_results
+
+```
+
+Before interpreting these numbers, we should ask how much Monte Carlo error to expect. Coverage is a proportion, so its Monte Carlo standard error is $\sqrt{p(1-p)/n_{sim}}$ [@Morris2019]. With 200 simulations and a nominal coverage of 0.95, that is:
+
+```{r tidy = F, warning = F, message = F}
+
+sqrt(.95*(1 - .95)/200)
+
+```
+
+So with only 200 simulations, estimated coverage within roughly 1.5 to 3 percentage points of 95% is compatible with nominal coverage. Marginal standardization covers at 96.5% with 10 confounders and 92% with 25 confounders — the first clearly compatible with the nominal rate, the second borderline (about two Monte Carlo standard errors low). The IP weighting intervals tell a more interesting story. With 10 confounders, the robust interval covers at 97.5% — above nominal, because the conservative robust standard error produces intervals that are wider than they need to be, which also happens to absorb the modest bias in the IP weighted point estimate. The bootstrap interval, built from a well-calibrated standard error, covers at 93.5%. With 25 confounders, however, both IP weighting intervals fall well short of nominal: 88.5% for the robust interval and 77% for the bootstrap interval. This is the bias from our first aim coming home to roost: when the point estimate is centered in the wrong place, even a perfectly estimated standard error yields intervals that miss the truth too often. Indeed, the well-calibrated bootstrap interval covers *worse* than the conservative robust interval here, because the robust interval's excess width partially compensates for the bias. This is why it is worth evaluating standard error bias and coverage separately: coverage mixes together the quality of the point estimator and the quality of the variance estimator, and only by looking at both measures can we tell which one is responsible for a coverage problem.
+
+## Confidence Interval Length
+
+Coverage alone can be misleading — we can always achieve high coverage with absurdly wide intervals. So our final performance measure is the average length of the confidence intervals:
+
+```{r tidy = F, warning = F, message = F}
+
+length_results <- a %>%
+  group_by(c_number) %>%
+  summarize(lengthMS = mean(MS_UCL - MS_LCL),
+            lengthIPW_robust = mean(IPW_robust_UCL - IPW_robust_LCL),
+            lengthIPW_boot = mean(IPW_boot_UCL - IPW_boot_LCL))
+
+length_results
+
+```
+
+The marginal standardization intervals are the shortest in both scenarios, and they get *shorter* as the number of confounders grows (from 0.48 to 0.41) — conditioning on more outcome predictors improves the precision of the standardized estimate. The IP weighting intervals move in the opposite direction, growing with the number of confounders, and the robust intervals are the longest of all: roughly 46% longer than the marginal standardization intervals with 10 confounders, and more than twice as long with 25.
+
+# Summarizing the Results
+
+We can now answer the two aims we set out at the beginning of this simulation study. For our first aim, marginal standardization clearly outperforms IP weighting in these scenarios: it is essentially unbiased with both 10 and 25 confounders, its intervals are the shortest, and its coverage is at or near the nominal rate. IP weighting shows bias that grows with the number of confounders, and with 25 confounders neither of its interval estimators achieves close to nominal coverage.
+
+For our second aim, the bootstrap estimates the true sampling variability of the IP weighted estimator well, while the robust variance estimator overestimates it by roughly 30%, yielding intervals that are conservative by construction. If we had to choose a variance estimator for IP weighting in settings like these, the bootstrap is the more accurate one — its standard errors mean what they claim to mean. The higher coverage of the robust intervals in these scenarios is not a point in their favor: it comes from excess width that happens to mask the estimator's bias, which is a property we should fix in the estimator (for example, with a better propensity score model specification or a different trimming strategy), not one we should paper over with an inflated variance.
 
 \newpage
 
