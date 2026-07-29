@@ -73,7 +73,9 @@ knitr::kable(head(design, n = 10))
 
 ## ----tidy = F, warning = F, message = F, results='hide'-----------------------
 
-remotes::install_github("matherealize/looplot")
+if (!requireNamespace("looplot", quietly = TRUE)) {
+  remotes::install_github("matherealize/looplot")
+}
 
 
 ## ----tidy = F, warning = F, message = F---------------------------------------

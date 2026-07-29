@@ -117,7 +117,9 @@ We can use a nested loop plot to present these results in a single image. To dep
 
 ```{r tidy = F, warning = F, message = F, results='hide'}
 
-remotes::install_github("matherealize/looplot")
+if (!requireNamespace("looplot", quietly = TRUE)) {
+  remotes::install_github("matherealize/looplot")
+}
 
 ```
 
