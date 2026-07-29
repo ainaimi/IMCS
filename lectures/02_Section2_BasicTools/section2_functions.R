@@ -55,7 +55,7 @@ expit(-2)
 
 expit(-1.5)
 
-logit(.2)
+logit(.12)
 
 logit(.18)
 
