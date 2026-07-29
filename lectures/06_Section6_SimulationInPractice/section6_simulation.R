@@ -45,9 +45,9 @@ knitr::include_graphics(here("_images","triangle_dag.pdf"))
 
 ## ----eval = F-----------------------------------------------------------------
 # 
-# sw_trim <- ifelse(sw > quantile(sw, .975),
-#                   quantile(sw, .975),
-#                   analysis_data$sw)
+# sw_trim <- ifelse(sw > quantile(sw, .995),
+#                   quantile(sw, .995),
+#                   sw)
 # 
 
 ## ----eval = F-----------------------------------------------------------------
