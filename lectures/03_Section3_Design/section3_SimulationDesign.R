@@ -98,7 +98,7 @@ for(i in 1:permutations){
 rr_permuted <- data.frame(rr_permuted)
 names(rr_permuted) <- "estimates"
 
-## ----warning=F, message=F, out.width = "5cm",fig.cap="Distribution of log risk ratios after 20,000 random permutations of the exposure variable in the 2x2 table data above. The solid blue density curve represents a nonparametric kernel density estimate of the distribution. The solid red density curve represents a normal density estimate of the distribution. The dashed red vertical line indicates the value of the log risk ratio estimated in the original unpermuted data.",echo=F----
+## ----permutationdist, warning=F, message=F, out.width = "5cm",fig.cap="Distribution of log risk ratios after 20,000 random permutations of the exposure variable in the 2x2 table data above. The solid blue density curve represents a nonparametric kernel density estimate of the distribution. The solid red density curve represents a normal density estimate of the distribution. The dashed red vertical line indicates the value of the log risk ratio estimated in the original unpermuted data.",echo=F----
 ggplot(rr_permuted) +  
   geom_histogram(aes(estimates,y=..density..),color="gray",fill="white") + 
   geom_density(aes(estimates),color="blue") + 
@@ -118,7 +118,7 @@ sum(rr_permuted$estimates <= log(risk_ratio))/permutations
 ## -----------------------------------------------------------------------------
 sum(abs(rr_permuted$estimates) >= abs(log(risk_ratio)))/permutations
 
-## ----out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F----
+## ----triangledag, out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F----
 knitr::include_graphics(here("_images","triangle_dag.pdf"))
 
 ## ----echo=T,fig.star=T,tidy=F,highlight=T-------------------------------------
@@ -247,7 +247,49 @@ tail(data.frame(Y,A,C=round(C,2)),3)
   mean(sim_res$marginalOR)
 
 
-## ----out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F----
+## ----prevalencegrid, tidy = F, warning = F, message = F-----------------------
+
+  set.seed(123)
+
+  intercepts <- c(-3.5, -2.75, -2, -1.25, -0.5, 0)
+
+  prevalence_res <- lapply(intercepts, function(b0){
+
+    sim_res <- lapply(1:1000,
+                      function(x) collapsibility_function(index = x,
+                                                          intercept = b0))
+
+    sim_res <- do.call(rbind, sim_res)
+
+    data.frame(prevalence = mean(sim_res$prevalenceY),
+               conditionalOR = exp(mean(sim_res$conditionalOR)),
+               marginalOR = exp(mean(sim_res$marginalOR)))
+
+  })
+
+  prevalence_res <- do.call(rbind, prevalence_res)
+
+  round(prevalence_res, 3)
+
+
+## ----prevalencegap, out.width = "10cm", fig.cap="Average conditionally and marginally adjusted odds ratios across 1,000 simulated datasets of 500 observations each, as a function of the outcome prevalence. The dashed horizontal line marks the true conditional odds ratio of 2; the dotted vertical line marks the conventional 10% rarity threshold.", echo=F, warning=F, message=F, tidy=F----
+plot_dat <- prevalence_res %>%
+  pivot_longer(cols = c(conditionalOR, marginalOR),
+               names_to = "Estimator",
+               values_to = "OR") %>%
+  mutate(Estimator = ifelse(Estimator == "conditionalOR",
+                            "Conditionally Adjusted",
+                            "Marginally Adjusted"))
+
+ggplot(plot_dat, aes(x = prevalence, y = OR, color = Estimator)) +
+  geom_hline(yintercept = 2, color = "gray", linetype = 2) +
+  geom_vline(xintercept = .1, color = "gray", linetype = 3) +
+  geom_line() +
+  geom_point() +
+  scale_color_brewer(palette = "Set1") +
+  labs(x = "Outcome Prevalence", y = "Odds Ratio")
+
+## ----triangledagrev, out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F----
 knitr::include_graphics(here("_images","triangle_dag.pdf"))
 
 ## ----eval=F-------------------------------------------------------------------
@@ -272,7 +314,7 @@ knitr::include_graphics(here("_images","triangle_dag.pdf"))
 # }
 # 
 
-## ----out.width = "10cm",fig.cap="Complex mediation diagram with unmeasured confounder $U$, baseline confounders $C$, mediator-outcome confounder affected by the exposure $L$, mediator $Z$, exposure $X$, and outcome $Y$.",echo=F----
+## ----mediationdag, out.width = "10cm",fig.cap="Complex mediation diagram with unmeasured confounder $U$, baseline confounders $C$, mediator-outcome confounder affected by the exposure $L$, mediator $Z$, exposure $X$, and outcome $Y$.",echo=F----
 knitr::include_graphics(here("_images","mediation_dag.pdf"))
 
 ## -----------------------------------------------------------------------------
