@@ -99,7 +99,7 @@ logit <- function(x){
 The first function takes a log-odds and returns a probability. The second takes a probability and returns a log-odds. For example, if we have a simple logistic regression model as defined as:
 
 $$\logit P(Y = 1 \mid X) = \beta_0 + \beta_1 X$$
-where $\beta_0 = -1.5$ and $\beta_1 = -0.5$ for $X \in [0,1]$, then, for individuals with $X = 1$ and $X = 0$, we have:
+where $\beta_0 = -1.5$ and $\beta_1 = -0.5$ for $X \in \{0,1\}$, then, for individuals with $X = 1$ and $X = 0$, we have:
 
 ```{r}
 
