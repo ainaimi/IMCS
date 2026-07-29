@@ -23,7 +23,10 @@ LECTURE_PDFS := $(LECTURE_RMDS:.Rmd=.pdf)
 # figures the lectures regenerate themselves at knit time (cleanable)
 GENERATED_FIGS := _images/nested_loop_plot.pdf _images/nested_loop_plot2.pdf \
                   _images/nested_loop_plot_rct.pdf _images/zip_plot_version1.pdf \
-                  _images/zip_plot_version2.pdf _images/weibull_exponential_comparison.pdf
+                  _images/zip_plot_version2.pdf _images/weibull_exponential_comparison.pdf \
+                  _images/lollipop_plot_bias.pdf _images/lollipop_plot_coverage.pdf \
+                  _images/estimate_histogram.pdf _images/estimate_density.pdf \
+                  _images/estimate_scatter.pdf
 
 SHARED := lectures/misc/preamble.tex lectures/misc/ref.bib
 
