@@ -197,7 +197,7 @@ which is equivalent to:
 $$ P(X = 1 \mid Z = 1) = \expit \{ \alpha_0 + \alpha_1 Z \}$$
 In our code, the values of $\alpha_0, \alpha_1$ were set to -1 and $\log(2)$, respectively. Importantly, the "logit" and "expit" functions are defined as:
 
-$$\logit P(\bullet) = \frac{P(\bullet)}{1 - P(\bullet)}$$
+$$\logit P(\bullet) = \log \left [ \frac{P(\bullet)}{1 - P(\bullet)} \right ]$$
 
 $$\expit (\bullet) = \frac{1}{[1 + \exp(-\bullet)]}$$
 These functions are inversely related, meaning:
