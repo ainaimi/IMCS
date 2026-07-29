@@ -24,7 +24,7 @@ output:
 ```{r setup, include=FALSE}
 # Load pacman (install if necessary)
 if (!requireNamespace("pacman", quietly = TRUE)) {
-  install.packages("pacman", repos = 'http://lib.stat.cmu.edu/R/CRAN')
+  install.packages("pacman", repos = 'https://cloud.r-project.org')
 }
 
 # Use pacman to load (and install if missing) all required packages
@@ -70,7 +70,7 @@ Functions are the most useful operational units in the R programming language. E
 
 The basic of a function in R is as follows:
 
-```{eval = F}
+```{r, eval = FALSE, purl = FALSE, tidy = FALSE}
 
 a_function <- function(<arguments>){
   
@@ -99,7 +99,7 @@ logit <- function(x){
 The first function takes a log-odds and returns a probability. The second takes a probability and returns a log-odds. For example, if we have a simple logistic regression model as defined as:
 
 $$\logit P(Y = 1 \mid X) = \beta_0 + \beta_1 X$$
-where $\beta_0 = -1.5$ and $\beta_1 = -0.5$ for $X \in [0,1]$, then, for individuals with $X = 1$ and $X = 0$, we have:
+where $\beta_0 = -1.5$ and $\beta_1 = -0.5$ for $X \in \{0,1\}$, then, for individuals with $X = 1$ and $X = 0$, we have:
 
 ```{r}
 
@@ -107,7 +107,7 @@ expit(-2)
 
 expit(-1.5)
 
-logit(.2)
+logit(.12)
 
 logit(.18)
 
@@ -119,7 +119,7 @@ In the above functions, the arguments are `x`, and the `return` statement is imp
 
 Here is a basic function that simulates a continuous covariate `c` a binary outcome `y`. The function takes three arguments: `nsim`, which is an indexing argument whose use will become clear soon; `sample_size`, and `parameter`, which is the odds ratio for the association between the covariate `c` and the outcome `y`. 
 
-The function outputs four items: the first is the indexing argument; the second is the sample size; the third is the mean of the outcome `y`, which will depend on the intercept value and the odds ratio parameter; the fourth is the estimated log-odds ratio for the association between `c` and `y`. Here is the function:
+The function outputs five items: the first is the indexing argument; the second is the sample size; the third is the odds ratio parameter; the fourth is the mean of the outcome `y`, which will depend on the intercept value and the odds ratio parameter; the fifth is the estimated log-odds ratio for the association between `c` and `y`. Here is the function:
 
 ```{r, warning = F, message = F}
 
@@ -381,7 +381,7 @@ This example represents the core idea of a seed, and sets the stage for understa
 
 # Using Seeds in R
 
-Near the beginning of this pdf document, we set a seed value to demonstrate the use of for loops and the apply family for a simple simulation study. We used `set.seed(123)` to do this. It is possible that this seed value will affect all analyses in subsequent code chunks in the document,^[I don't actually think this is true, but it's a good opportunity to demonstrate how to reset seeds.] so let's take the opportunity to reset it here:
+Near the beginning of this pdf document, we set a seed value to demonstrate the use of for loops and the apply family for a simple simulation study. We used `set.seed(123)` to do this. Because every code chunk in this document runs in the same R session, that seed deterministically affects the random number stream in all subsequent chunks, so let's take the opportunity to reset it here:
 
 ```{r}
 set.seed(NULL)
@@ -423,7 +423,7 @@ b
 
 ```
 
-Now, every time we run this code chunk, we get exactly the same values for `a` and `b`, which are 0.2875775 0.7883051 0.4089769 0.8830174 0.9404673 for `a` and 0 1 1 1 1 for `b`.
+Now, every time we run this code chunk, we get exactly the same values for `a` and `b`, which are 0.2875775 0.7883051 0.4089769 0.8830174 0.9404673 for `a` and 0 2 4 2 2 for `b`.
 
 ## Setting Seeds Once and Only Once
 
@@ -460,7 +460,7 @@ ggplot(plot_dat, aes(x = uniform, y = poisson)) +
 
 The plot above demonstrates a clear problem: higher/lower values of the uniform distribution are associated with higher/lower values of the Poisson distribution, even though these two variables should be independent^[Importantly, note that no information in the uniform distribution is used to define the Poisson distribution, and vice versa.]
 
-Why is this occurring? It turns out that in R (as in many other statistical software platforms) the way the Poisson random variable is generated is based on the inverse transformation method [@Roberts2010; p44]. This approach starts with a uniform distribution to generate the Poisson random variable. So the problem that arises is that the exact same uniform random variable that is generated in `a` is used to generate the Poisson random variable defined in `b`. 
+Why is this occurring? It turns out that in R (as in many other statistical software platforms) the way the Poisson random variable is generated is based on the inverse transformation method [@Roberts2010, p. 44]. This approach starts with a uniform distribution to generate the Poisson random variable. So the problem that arises is that the exact same uniform random variable that is generated in `a` is used to generate the Poisson random variable defined in `b`. 
 
 What should this plot look like if we want to construct two **truly independent** random variables from a uniform and Poisson distribution? We can see this with the use of only a single seed initiated in the code chunk:
 
@@ -487,17 +487,17 @@ ggplot(plot_dat, aes(x = uniform, y = poisson)) +
 
 This example serves to illustrate the danger of setting the seed multiple times in a given session. Notably, if you construct a simulation to evaluate the property of an estimator that assumes some form of independence between random variables, and you generate these variables with a strong dependence between them, the underlying assumptions of the simulation study will be violated, and the conclusions drawn from the study may be misleading.
 
-## Using the .RNGSeed State Object
+## Using the .Random.seed State Object
 
-Using the `set.seed()` function properly is an important tool to enable reproducibilty of simulation results. However, supposed you run a complicated simulation study with several tens or hundreds of thousands of iterations, and weeks to run. You may want to enable yourself and the research community to generate exactly any one of the tens or hundreds of thousands of sets of results. For example, suppose you run a simulation with 100,000 Monte Carlo runs, and you are interested in reproducing the exact set of results that came from simulation number 99,673. This situation might arise if you find that there are outliers or anomalous results in this particular Monte Carlo run, and that you need to investigate further why this may be the case. 
+Using the `set.seed()` function properly is an important tool to enable reproducibilty of simulation results. However, suppose you run a complicated simulation study with several tens or hundreds of thousands of iterations, and weeks to run. You may want to enable yourself and the research community to generate exactly any one of the tens or hundreds of thousands of sets of results. For example, suppose you run a simulation with 100,000 Monte Carlo runs, and you are interested in reproducing the exact set of results that came from simulation number 99,673. This situation might arise if you find that there are outliers or anomalous results in this particular Monte Carlo run, and that you need to investigate further why this may be the case. 
 
-If you only rely on the `set.seed()` function initialized once at the beginning of the simulation, you'd have to wait, possibly weeks, to get the this particular Monte Carlo number before you were able to reproduve your results, and then you would have to know beforehand what code you'd need to write to explore and potentially debug the problem. This is not a tenable way to solve this problem. 
+If you only rely on the `set.seed()` function initialized once at the beginning of the simulation, you'd have to wait, possibly weeks, to get to this particular Monte Carlo number before you were able to reproduce your results, and then you would have to know beforehand what code you'd need to write to explore and potentially debug the problem. This is not a tenable way to solve this problem. 
 
-Instead, you can rely on the `.RNGSeed` object, which represents the state of the pseudo-random number generator at every particular instance during the simulation. Here's how this object works in R:
+Instead, you can rely on the `.Random.seed` object, which represents the state of the pseudo-random number generator at every particular instance during the simulation. Here's how this object works in R:
 
 ```{r tidy = F, warning = F, message = F}
 
-# Reset the seed and explore the .RNGSeed object
+# Reset the seed and explore the .Random.seed object
 set.seed(NULL)
 
 length(.Random.seed)
@@ -506,7 +506,7 @@ head(.Random.seed)
 
 ```
 
-The `.Random.seed` object contains information on three important things. The first element in the list contains information on the type of seed being used. There are several to choose from, but the default in R is an updated version of the Mersenne-Twister known as the "Inversion" method. The number 10403 is referring to this. 
+The `.Random.seed` object contains information on three important things. The first element in the list encodes which algorithms R is currently using, one code per setting reported by the `RNGkind()` function. In the number 10403, the last two digits (03) identify the random number generator itself: the Mersenne-Twister, R's default. The middle two digits (04) identify the method used to turn uniform draws into normal deviates ("Inversion", also the default), and the leading 1 identifies the method used for discrete uniform sampling ("Rejection"). Note that "Inversion" is not a kind of random number generator; it is a separate setting for generating normal random variables from the generator's output.
 
 Let's skip the second element in the list for now which, in this instance, is 624. The string of numbers from the third to the 626th number represent the state of the pseudo random number generator, in this case, the Mersenne-Twister. The Mersenne-Twister is a complex algorithm that can be used to generate pseudo-random numbers. If we lean on our $\pi$ analogy, the string of numbers from the third to the 626th numbers can be thought of as the sequence of digits of $pi$, and these are what are used to generate pseudo-randomness. These numbers come from a mathematical operation (the "Twister" part) performed on a particular number that is one of the Mersenne primes (the number is $2^{19937} - 1$).
 

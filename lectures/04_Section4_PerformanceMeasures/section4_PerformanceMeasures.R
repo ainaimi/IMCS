@@ -8,7 +8,7 @@ packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
 
 for (package in packages) {
   if (!require(package, character.only=T, quietly=T)) {
-    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
+    install.packages(package, repos='https://cloud.r-project.org')
   }
 }
 
@@ -195,13 +195,14 @@ mse_m = mean((sim_res$mEstimate - log(sim_res$true_m))^2)
 
 ## -----------------------------------------------------------------------------
 
-mc_se_mse <- function(x, n){
-  sqrt(sum(((x - mean(x))^2 - mean((x - mean(x))^2))^2)/(n*(n-1)))
+mc_se_mse <- function(x, truth, n){
+  sq_err <- (x - truth)^2
+  sqrt(sum((sq_err - mean(sq_err))^2)/(n*(n-1)))
 }
 
-mc_se_mse(sim_res$cEstimate, n = 500)
+mc_se_mse(sim_res$cEstimate, truth = log(sim_res$true_c), n = 500)
 
-mc_se_mse(sim_res$mEstimate, n = 500)
+mc_se_mse(sim_res$mEstimate, truth = log(sim_res$true_m), n = 500)
 
 
 ## -----------------------------------------------------------------------------
@@ -245,6 +246,17 @@ mean(sim_res$cCoverage)
 mean(sim_res$mCoverage)
 
 
+## -----------------------------------------------------------------------------
+
+mc_se_prop <- function(p, n){
+  sqrt(p*(1 - p)/n)
+}
+
+mc_se_prop(mean(sim_res$cCoverage), n = 500)
+
+mc_se_prop(mean(sim_res$mCoverage), n = 500)
+
+
 ## ----tidy=FALSE---------------------------------------------------------------
 
 sim_res <- sim_res %>% mutate(
@@ -267,5 +279,22 @@ sim_res <- sim_res %>% mutate(
 mean(sim_res$cPower)
 
 mean(sim_res$mPower)
+
+
+## -----------------------------------------------------------------------------
+
+mc_se_prop(mean(sim_res$cPower), n = 500)
+
+mc_se_prop(mean(sim_res$mPower), n = 500)
+
+
+## -----------------------------------------------------------------------------
+
+sd(sim_res$mEstimate)
+
+
+## ----tidy = FALSE-------------------------------------------------------------
+
+(sd(sim_res$mEstimate)/0.005)^2
 
 

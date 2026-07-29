@@ -1,23 +1,25 @@
 ## ----setup, include=FALSE-----------------------------------------------------
-library(knitr)
-library(formatR)
-opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 
-packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
-               "gridExtra","skimr","here","RColorBrewer")
-
-for (package in packages) {
-  if (!require(package, character.only=T, quietly=T)) {
-    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
-  }
+# Load pacman (install if necessary)
+if (!requireNamespace("pacman", quietly = TRUE)) {
+  install.packages("pacman", repos = 'https://cloud.r-project.org')
 }
 
-for (package in packages) {
-  library(package, character.only=T)
-}
+# Use pacman to load (and install if missing) all required packages
+pacman::p_load(
+  data.table, tidyverse, ggplot2, ggExtra, formatR,
+  gridExtra, skimr, here, RColorBrewer,
+  GGally, boot, lmtest, sandwich,
+  knitr, remotes
+)
 
+# Ensure fontawesome is installed from GitHub if not available
+if (!requireNamespace("fontawesome", quietly = TRUE)) {
+  remotes::install_github("rstudio/fontawesome")
+}
 library(fontawesome)
 
+# Set ggplot2 theme
 thm <- theme_classic() +
   theme(
     legend.position = "top",
@@ -26,8 +28,15 @@ thm <- theme_classic() +
   )
 theme_set(thm)
 
-knitr::knit_hooks$set(purl = knitr::hook_purl)
-knitr::opts_chunk$set(echo = TRUE)
+# Set global chunk options
+opts_chunk$set(
+  tidy.opts = list(width.cutoff = 60),
+  tidy = TRUE,
+  echo = TRUE
+)
+
+# Set knit hook for purling
+knit_hooks$set(purl = hook_purl)
 
 
 ## ----tidy = F, warning = F, message = F---------------------------------------

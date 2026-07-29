@@ -11,7 +11,7 @@ cran_packages <- c(
   "rmarkdown", "knitr", "bookdown", "tint", "formatR", "fontawesome",
   # data handling and plotting
   "tidyverse", "data.table", "here", "skimr", "magrittr",
-  "gridExtra", "ggExtra", "RColorBrewer", "VIM",
+  "gridExtra", "ggExtra", "GGally", "RColorBrewer", "VIM",
   # distributions and simulation
   "mvtnorm", "EnvStats", "flexsurv", "rsimsum",
   # estimation and inference

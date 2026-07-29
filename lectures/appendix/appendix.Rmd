@@ -1,7 +1,7 @@
 ---
 title: "Appendix Notes"
 author: "Ashley I Naimi"
-date: "`r paste0('Spring ', 2024)`" #format(Sys.Date(), '%Y')
+date: "Summer `r format(Sys.Date(), '%Y')`"
 urlcolor: blue
 bibliography: ../misc/ref.bib
 link-citations: yes
@@ -31,7 +31,7 @@ packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
 
 for (package in packages) {
   if (!require(package, character.only=T, quietly=T)) {
-    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
+    install.packages(package, repos='https://cloud.r-project.org')
   }
 }
 

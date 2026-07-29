@@ -1,7 +1,7 @@
 ## ----setup, include=FALSE-----------------------------------------------------
 # Load pacman (install if necessary)
 if (!requireNamespace("pacman", quietly = TRUE)) {
-  install.packages("pacman", repos = 'http://lib.stat.cmu.edu/R/CRAN')
+  install.packages("pacman", repos = 'https://cloud.r-project.org')
 }
 
 # Use pacman to load (and install if missing) all required packages
@@ -55,7 +55,7 @@ expit(-2)
 
 expit(-1.5)
 
-logit(.2)
+logit(.12)
 
 logit(.18)
 
@@ -283,7 +283,7 @@ ggplot(plot_dat, aes(x = uniform, y = poisson)) +
 
 ## ----tidy = F, warning = F, message = F---------------------------------------
 
-# Reset the seed and explore the .RNGSeed object
+# Reset the seed and explore the .Random.seed object
 set.seed(NULL)
 
 length(.Random.seed)

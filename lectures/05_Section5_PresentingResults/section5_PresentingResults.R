@@ -8,7 +8,7 @@ packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
 
 for (package in packages) {
   if (!require(package, character.only=T, quietly=T)) {
-    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
+    install.packages(package, repos='https://cloud.r-project.org')
   }
 }
 
@@ -73,7 +73,9 @@ knitr::kable(head(design, n = 10))
 
 ## ----tidy = F, warning = F, message = F, results='hide'-----------------------
 
-remotes::install_github("matherealize/looplot")
+if (!requireNamespace("looplot", quietly = TRUE)) {
+  remotes::install_github("matherealize/looplot")
+}
 
 
 ## ----tidy = F, warning = F, message = F---------------------------------------
@@ -219,4 +221,112 @@ ggsave(here("_images", "zip_plot_version2.pdf"), p)
 
 ## ----zipper2, out.width="10cm", fig.align='center', fig.cap="Zipper plot displaying the distribution of normal-interval (Wald) confidence intervals in the relhaz data. Bounds are ranked according to the magnitude of the Wald test statistic for each point estimate.", echo=F----
 knitr::include_graphics(here("_images", "zip_plot_version2.pdf"))
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+perf <- relhaz %>%
+  group_by(n, baseline, model) %>%
+  summarize(bias = mean(theta - (-0.5)),
+            coverage = mean(include_flag == "Include"),
+            .groups = "drop")
+
+perf
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+p <- perf %>%
+  ggplot(.) +
+  geom_hline(yintercept = 0, lty = 2) +
+  geom_segment(aes(x = model, xend = model, y = 0, yend = bias)) +
+  geom_point(aes(x = model, y = bias), size = 2) +
+  ylab("Bias in the log Hazard Ratio") +
+  xlab("Method") +
+  coord_flip() +
+  facet_grid(n ~ baseline)
+
+ggsave(here("_images", "lollipop_plot_bias.pdf"), p, width = 8, height = 5)
+
+
+## ----lollipop1, out.width="10cm", fig.align='center', fig.cap="Lollipop plot of the bias in the log hazard ratio for each method, by sample size (rows) and true baseline hazard (columns).", echo=F----
+knitr::include_graphics(here("_images", "lollipop_plot_bias.pdf"))
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+p <- perf %>%
+  ggplot(.) +
+  geom_hline(yintercept = 0.95, lty = 2) +
+  geom_segment(aes(x = model, xend = model, y = 0.95, yend = coverage)) +
+  geom_point(aes(x = model, y = coverage), size = 2) +
+  ylab("95% Confidence Interval Coverage") +
+  xlab("Method") +
+  coord_flip() +
+  facet_grid(n ~ baseline)
+
+ggsave(here("_images", "lollipop_plot_coverage.pdf"), p, width = 8, height = 5)
+
+
+## ----lollipop2, out.width="10cm", fig.align='center', fig.cap="Lollipop plot of 95\\% confidence interval coverage for each method, by sample size (rows) and true baseline hazard (columns). The dashed line marks the nominal 0.95 level.", echo=F----
+knitr::include_graphics(here("_images", "lollipop_plot_coverage.pdf"))
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+p <- relhaz %>%
+  filter(n == 50, baseline == "Exponential") %>%
+  ggplot(.) +
+  geom_histogram(aes(x = theta), bins = 20,
+                 color = "black", fill = "grey") +
+  geom_vline(xintercept = -.5, lty = 2, color = "red") +
+  xlab("Estimated log Hazard Ratio") +
+  ylab("Count") +
+  facet_wrap(~model)
+
+ggsave(here("_images", "estimate_histogram.pdf"), p, width = 8, height = 4)
+
+
+## ----histogram1, out.width="12cm", fig.align='center', fig.cap="Histograms of the estimated log hazard ratio across 100 simulated datasets with $n = 50$ and an exponential baseline hazard. The dashed red line marks the true value of $-0.5$.", echo=F----
+knitr::include_graphics(here("_images", "estimate_histogram.pdf"))
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+p <- relhaz %>%
+  filter(baseline == "Exponential") %>%
+  ggplot(.) +
+  geom_density(aes(x = theta, color = model)) +
+  geom_vline(xintercept = -.5, lty = 2) +
+  scale_color_brewer(palette = "Set1") +
+  xlab("Estimated log Hazard Ratio") +
+  ylab("Density") +
+  facet_wrap(~n, labeller = label_both)
+
+ggsave(here("_images", "estimate_density.pdf"), p, width = 8, height = 4)
+
+
+## ----density1, out.width="12cm", fig.align='center', fig.cap="Kernel density estimates of the estimated log hazard ratio for each method under an exponential baseline hazard, with 50 (left) and 250 (right) observations per dataset. The dashed line marks the true value of $-0.5$.", echo=F----
+knitr::include_graphics(here("_images", "estimate_density.pdf"))
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+relhaz_wide <- relhaz %>%
+  select(dataset, n, baseline, model, theta) %>%
+  pivot_wider(names_from = model, values_from = theta)
+
+head(relhaz_wide)
+
+
+## ----tidy = F, warning = F, message = F---------------------------------------
+
+p <- relhaz_wide %>%
+  ggplot(.) +
+  geom_abline(intercept = 0, slope = 1, lty = 2) +
+  geom_point(aes(x = Cox, y = `RP(2)`), alpha = .5) +
+  xlab("Estimated log Hazard Ratio: Cox") +
+  ylab("Estimated log Hazard Ratio: Royston-Parmar") +
+  facet_grid(n ~ baseline)
+
+ggsave(here("_images", "estimate_scatter.pdf"), p, width = 8, height = 6)
+
+
+## ----scatter1, out.width="10cm", fig.align='center', fig.cap="Estimated log hazard ratios from the Cox model plotted against those from the Royston-Parmar flexible parametric model, one point per simulated dataset. The dashed line indicates perfect agreement.", echo=F----
+knitr::include_graphics(here("_images", "estimate_scatter.pdf"))
 

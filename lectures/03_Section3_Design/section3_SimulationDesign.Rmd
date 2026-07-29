@@ -1,7 +1,7 @@
 ---
 title: "Designing Simulation Studies"
 author: "Ashley I Naimi"
-date: "`r paste0('Summer ', 2025)`" #format(Sys.Date(), '%Y')
+date: "Summer `r format(Sys.Date(), '%Y')`"
 urlcolor: blue
 bibliography: ../misc/ref.bib
 link-citations: yes
@@ -31,7 +31,7 @@ packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
 
 for (package in packages) {
   if (!require(package, character.only=T, quietly=T)) {
-    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
+    install.packages(package, repos='https://cloud.r-project.org')
   }
 }
 
@@ -181,7 +181,7 @@ rr_permuted <- data.frame(rr_permuted)
 names(rr_permuted) <- "estimates"
 ```
 
-```{r, warning=F, message=F, out.width = "5cm",fig.cap="Distribution of log risk ratios after 2,000 random permutations of the exposure variable in the 2x2 table data above. The solid blue density curve represents a nonparametric kernel density estimate of the distribution. The solid red density curve represents a normal density estimate of the distribution. The dashed red vertical line indicates the value of the log risk ratio estimated in the original unpermuted data.",echo=F}
+```{r, warning=F, message=F, out.width = "5cm",fig.cap="Distribution of log risk ratios after 20,000 random permutations of the exposure variable in the 2x2 table data above. The solid blue density curve represents a nonparametric kernel density estimate of the distribution. The solid red density curve represents a normal density estimate of the distribution. The dashed red vertical line indicates the value of the log risk ratio estimated in the original unpermuted data.",echo=F}
 ggplot(rr_permuted) +  
   geom_histogram(aes(estimates,y=..density..),color="gray",fill="white") + 
   geom_density(aes(estimates),color="blue") + 
@@ -197,23 +197,23 @@ This permutation procedure gives us a critical component of a significance test:
 
 There are a total of `r permutations` estimates. How many of them are the same as or "more extreme" than the one we estimated in the actual data? We can compute this easily:
 ```{r}
-sum(rr_permuted$estimate <= log(risk_ratio))
+sum(rr_permuted$estimates <= log(risk_ratio))
 ```
 
 Dividing the number of estimates that are as or more extreme than the original risk ratio by `r permutations` gives us a one-sided p-value:
 ```{r}
-sum(rr_permuted$estimate <= log(risk_ratio))/permutations
+sum(rr_permuted$estimates <= log(risk_ratio))/permutations
 ```
 
 To get a two-sided test, we simply take the absolute values of both the original risk ratio and each estimate obtained in the permutation test, and repeat the comparison. Note that we have to change the direction of the "less than" sign for this to work:
 
 ```{r}
-sum(abs(rr_permuted$estimate) >= abs(log(risk_ratio)))/permutations
+sum(abs(rr_permuted$estimates) >= abs(log(risk_ratio)))/permutations
 ```
 
 ## Non-Collapsibility of the OR
 
-The next example will look at the impact of non-collapsiblility of the odds ratio [@Greenland1999,@Greenland2005b,@Pang2013]. The odds ratio is a non-collapsible measure of association, and for this reason its use in epidemiology is somewhat controversial [@Pang2013a,Kaufman2010a]. Non-collapsibility is a mathematical property of the odds ratio that results from Jensen's inequality (the average of a non-linear function does not equal the function its average; see @Greenland2011), and has confused many a statistician and epidemiologist [@Greenland1999; @Hernan2011].
+The next example will look at the impact of non-collapsiblility of the odds ratio [@Greenland1999; @Greenland2005b; @Pang2013]. The odds ratio is a non-collapsible measure of association, and for this reason its use in epidemiology is somewhat controversial [@Pang2013a; @Kaufman2010a]. Non-collapsibility is a mathematical property of the odds ratio that results from Jensen's inequality (the average of a non-linear function does not equal the function its average; see @Greenland2011), and has confused many a statistician and epidemiologist [@Greenland1999; @Hernan2011].
 
 In simple terms, non-collapsibility of the OR will be apparent when estimating an adjusted exposure-outcome association using a conditional and marginal approach (using standard logistic regression for the conditional approach, and IP-weighting or marginal standardization for the marginal approach). For example, in Figure 2, 
 

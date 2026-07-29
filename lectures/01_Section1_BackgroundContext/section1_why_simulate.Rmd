@@ -31,7 +31,7 @@ packages <- c( "data.table","tidyverse","ggplot2","ggExtra","formatR",
 
 for (package in packages) {
   if (!require(package, character.only=T, quietly=T)) {
-    install.packages(package, repos='http://lib.stat.cmu.edu/R/CRAN')
+    install.packages(package, repos='https://cloud.r-project.org')
   }
 }
 
@@ -85,7 +85,7 @@ As we will see in this course, Monte Carlo simulations are conducted primarily b
 
 This reliance on well behaved parametric forms creates an inference problem: we might find that a particular method performs very well in data simulated with well-behaved parametric models. But can we expect this same performance to hold in settings where we collect our own data that is not guaranteed to follow some set of well-behaved parametric models?
 
-Generative models are meant to solve this problem. They rely on, for example, neural networks [@Burkov2019, chapter 6], variational autoencoders [@Doersch2021], generative adversarial networks [@Goodfellow2020], or other algorithms that generally follow an "encoder-decoder" strategy. One part of algorithm encodes the relationship in an empirical dataset that we are potentially using for a specific analysis, and simulates a dataset from this encoding. Some approaches try to simulate this data with a known true relationship between (say) an exposure and outcome of interest [@Athey2024, @Parikh2022]. 
+Generative models are meant to solve this problem. They rely on, for example, neural networks [@Burkov2019, chapter 6], variational autoencoders [@Doersch2021], generative adversarial networks [@Goodfellow2020], or other algorithms that generally follow an "encoder-decoder" strategy. One part of algorithm encodes the relationship in an empirical dataset that we are potentially using for a specific analysis, and simulates a dataset from this encoding. Some approaches try to simulate this data with a known true relationship between (say) an exposure and outcome of interest [@Athey2024; @Parikh2022]. 
 
 The second part of the algorithm tries to "decode" the relationship, to see if it can tell whether the simulated data are "different" from the actual data. If certain parts of the data are, in fact, different, the initial encoder algorithm can re-simulate the data trying to improve the overall fidelity between the simulated and real data.
 
@@ -99,7 +99,7 @@ The g formula is a complex equation that (under some basic causal identifiabilit
 
 $$E(Y^{\overline{a}_M}) = \int \cdots \int \int E(Y \mid \overline{a}_M, \overline{z}_M) \prod_{m = 0}^M f(z_m \mid \overline{z}_{m-1}, \overline{a}_{m-1}) d\mu(z_m)$$
 
-This complex equation does not usually have a closed-form solution, and thus Monte Carlo estimation is the standard procedure for solving this function. Several explanations of this are available in the literature [@Robins2009; @Keil2014; @Daniel2013; @McGrath2020], as well as a large number of applied examples implementing the procedure [@Naimi2021a, @Taubman2009; @Westreich2012; @Cole2013; @Edwards2014; @Young2011].
+This complex equation does not usually have a closed-form solution, and thus Monte Carlo estimation is the standard procedure for solving this function. Several explanations of this are available in the literature [@Robins2009; @Keil2014; @Daniel2013; @McGrath2020], as well as a large number of applied examples implementing the procedure [@Naimi2021a; @Taubman2009; @Westreich2012; @Cole2013; @Edwards2014; @Young2011].
 
 For example, we [@Naimi2021a] had a question about whether daily, low-dose aspirin can be used to prevent pregnancy loss in women trying to get pregnant, but who are at a higher risk of pregnancy loss and having a hard time getting and staying pregnant. We collected data on roughly 1200 women trying to get pregnant at a number of medical centers across the United States. These data were from the Effects of Aspirin for Gestation and Reproduction (EAGeR) Trial. One of our goals was to quantify the following parameter:
 
@@ -114,7 +114,7 @@ Monte Carlo simulation is an extension/generalization of Monte Carlo estimation.
 
 ## The Monte Carlo Method
 
-What's important is that all three of these approaches rely on the Monte Carlo method to be deployed. The Monte Carlo method was introduced in the early 20th century [@Metropolis1949]. It was developed by John von Neumann, Stanislav Ulam, and Nicholas Metropolis to solve problems around the behavior of fissionable material under different conditions [@Metropolis1987]. The basic idea behind this method is to use chance to solve problems that would either be intractable, or just too difficult to solve analytically. Because of it's use of chance, it is named after the famed Monte Carlo Casino in Monaco [@Dunn2022].
+What's important is that all four of these approaches rely on the Monte Carlo method to be deployed. The Monte Carlo method was introduced in the early 20th century [@Metropolis1949]. It was developed by John von Neumann, Stanislav Ulam, and Nicholas Metropolis to solve problems around the behavior of fissionable material under different conditions [@Metropolis1987]. The basic idea behind this method is to use chance to solve problems that would either be intractable, or just too difficult to solve analytically. Because of it's use of chance, it is named after the famed Monte Carlo Casino in Monaco [@Dunn2022].
 
 # Example Simulation Questions
 
@@ -164,7 +164,10 @@ pi_est <- function(simulation_n) {
 
 }
 
-n_list <- c(500, 1000, 5000, 50000, 500000, 100000, 10000000)
+# set the seed value
+set.seed(41)
+
+n_list <- c(500, 1000, 5000, 50000, 100000, 500000, 10000000)
 
 pi_data <- NULL
 for(i in n_list){
@@ -184,7 +187,7 @@ knitr::kable(pi_data, "simple",
 
 ## Estimating the Central Tendency of a Random Variable
 
-Here, we'll use another example to illustrate the concept of simulation in a slightly more familiar setting. Suppose we have a dataset that contains information on the body mass index of 20 individuals sampled from the general population. We assume this BMI variable is distributed normally. 
+Here, we'll use another example to illustrate the concept of simulation in a slightly more familiar setting. Suppose we have a dataset that contains information on the body mass index of 200 individuals sampled from the general population. We assume this BMI variable is distributed normally. 
 
 Suppose further that we'd like to estimate the central tendency of this distribution as accurately and efficiently as possible. 
 
@@ -196,13 +199,13 @@ So should we use the mean, the median, or the mode to summarize this distributio
 # write a function that computes the statistical 
 # mode. modified from: https://stackoverflow.com/a/8189441
 mode_func <- function(x) {
-  ux <- unique(y)
-  ix <- which.max(tabulate(match(y, ux)))
-  if(ix==1){
+  ux <- unique(x)
+  tab <- tabulate(match(x, ux))
+  if(max(tab)==1){
     warning("no duplicates in data, mode does not exist")
     res <- sample(ux, size = 1)
   } else{
-    res <- ux[ix]
+    res <- ux[which.max(tab)]
   }
   return(res)
 }
@@ -240,14 +243,19 @@ head(res)
 # convert results to data frame
 res <- data.frame(res)
 
-# plot results
-ggplot(res) + 
-  geom_histogram(aes(mode_estimator), 
-                 alpha = .2, fill = "blue") +
-  geom_histogram(aes(mean_estimator), 
-                 alpha = .2, fill = "red") +
-  geom_histogram(aes(median_estimator), 
-                 alpha = .2, fill = "green") +
+# plot results: one histogram per estimator, overlaid,
+# with a colorblind-friendly palette
+res %>%
+  pivot_longer(everything(),
+               names_to = "estimator",
+               values_to = "estimate") %>%
+  mutate(estimator = str_remove(estimator, "_estimator")) %>%
+  ggplot() +
+  geom_histogram(aes(estimate, fill = estimator),
+                 alpha = .5, position = "identity") +
+  scale_fill_manual(values = c(mean = "#56B4E9",
+                               median = "#E69F00",
+                               mode = "#009E73")) +
   scale_x_continuous(expand = c(0,0)) +
   scale_y_continuous(expand = c(0,0))
 
@@ -274,7 +282,7 @@ As we proceed through this course, we'll see how these and other tools can be us
 
 The number of questions that can be addressed using simulation methods is nearly endless. However, to gain a more precise understanding of the kinds of questions asked and answered in actual research settings, let's consider a few published research papers that rely on simulation:
 
-## Inverse Probability Weighting versus G Comptuation in Time-Dependent Settings
+## Inverse Probability Weighting versus G Computation in Time-Dependent Settings
 
 In 2023, @Rudolph2023 compared different variations of inverse probability weighting and different variations of the g computation estimator for estimating the average treatment effect in survival data with a time-dependent treatment. Generally, there are few methods available to estimate effects for treatments that vary over time. The most commonly used techniques are IP weighting and g computation. However, researchers are often unsure about which approach to pick in a given setting. @Rudolph2023 sought to generate insights about how to navigate this question using simulation. They found that methods performed similarly, except for a variation of g computation known as the iterative conditional expectation (ICE) g computation estimator. This latter estimator had the lowest bias, but also the lowest precision, in the settings explored.
 
@@ -286,7 +294,7 @@ Researchers in epidemiology and other quantitative sciences often state that non
 
 In 2018, @Brakenhoff2018 conducted a simulation study that mimicked research in cardiovascular epidemiology to evaluate whether, in these more realistic settings, non-differential measurement error biases only towards the null. They showed that the direction of effect of random measurement error on the estimated exposure-outcome relations can be difficult to anticipate, suggesting that caution is warranted when concluding that estimated effects are conservative.
 
-## Hetergeneous Treatment Effects in the Presence of Null Overall Effects
+## Heterogeneous Treatment Effects in the Presence of Null Overall Effects
 
 Interest in heterogeneous treatment effects, a term meant to connote the fact that the effect of a treatment or exposure might differ widely across sub-groups of a population, is increasing. There has been some theoretical work suggesting that, in a given sample, if there is no overall effect of a treatment under study, then the existence of strong sub-group effects is unlikely. This is important, since researchers often estimate "significant" subgroup effects in the absence of overall effects, suggesting that these estimates are the result of noise and variability. 
 
