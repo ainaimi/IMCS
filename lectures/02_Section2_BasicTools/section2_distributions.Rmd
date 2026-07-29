@@ -284,7 +284,7 @@ ggplot() +
 
 ```
 
-The binomial distribution is defined by two parameters: the probability of a success in a given "trial" and the number of trial conducted. When the number of "trials" is one, the binomial distribution is equivalent to the Bernoulli distribution, which generates a $[0,1]$ indicator of whether an event occurred or not. In settings where logistic regression is used, the dependent variable is usually from a Bernoulli distribution with a probability depending on variables that will be included in the model. There are no default values for probability of success and the trial size, so these must be specified as follows. 
+The binomial distribution is defined by two parameters: the probability of a success in a given "trial" and the number of trial conducted. When the number of "trials" is one, the binomial distribution is equivalent to the Bernoulli distribution, which generates a $\{0,1\}$ indicator of whether an event occurred or not. In settings where logistic regression is used, the dependent variable is usually from a Bernoulli distribution with a probability depending on variables that will be included in the model. There are no default values for probability of success and the trial size, so these must be specified as follows. 
 
 ```{r}
 
@@ -353,7 +353,7 @@ ggplot() +
 
 ```
 
-The multinomial distribution is a generalization of the binomial distribution that can be used to generate categorical variables where the probability of each level is governed by a (possibly) unique probability value. The multinomial distribution is defined by two parameters: the set of values defining the probabilities of realizing a specific category. and the number of trial conducted. Similar to the binomial distribution, when the number of "trials" is one, the multinomial distribution is equivalent to the categorical distribution, which generates a $[0,1]$ indicator of whether an event occurred or not. In the multinomial (categorical) case, the "event" can take on more than 2 levels. There are no default values for probabilities of success and the trial size, so these must be specified. 
+The multinomial distribution is a generalization of the binomial distribution that can be used to generate categorical variables where the probability of each level is governed by a (possibly) unique probability value. The multinomial distribution is defined by two parameters: the set of values defining the probabilities of realizing a specific category. and the number of trial conducted. Similar to the binomial distribution, when the number of "trials" is one, the multinomial distribution is equivalent to the categorical distribution, which generates a $\{0,1\}$ indicator of whether an event occurred or not. In the multinomial (categorical) case, the "event" can take on more than 2 levels. There are no default values for probabilities of success and the trial size, so these must be specified. 
 
 We can start by using the multinomial distribution in R to model the physical mechanism by which we roll a single (size = 1), six sided die. The "six-sidedness" comes from the fact we are repeating the "1/6" value six times (using the `rep()` function). Here, we roll a six-sided dice 5 times:
 
