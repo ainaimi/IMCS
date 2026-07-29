@@ -71,7 +71,7 @@ simulation_function <- function(nsim, sample_size, parameter){
   
   p_y <- expit(-2 + log(parameter)*c)
   
-  y <- rbinom(sample_size, size = 1, p = p_y)
+  y <- rbinom(sample_size, size = 1, prob = p_y)
   
   a_data <- data.frame(c, y)
   

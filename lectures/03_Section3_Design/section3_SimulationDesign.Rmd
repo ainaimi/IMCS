@@ -183,7 +183,7 @@ names(rr_permuted) <- "estimates"
 
 ```{r permutationdist, warning=F, message=F, out.width = "5cm",fig.cap="Distribution of log risk ratios after 20,000 random permutations of the exposure variable in the 2x2 table data above. The solid blue density curve represents a nonparametric kernel density estimate of the distribution. The solid red density curve represents a normal density estimate of the distribution. The dashed red vertical line indicates the value of the log risk ratio estimated in the original unpermuted data.",echo=F}
 ggplot(rr_permuted) +  
-  geom_histogram(aes(estimates,y=..density..),color="gray",fill="white") + 
+  geom_histogram(aes(estimates, y = after_stat(density)),color="gray",fill="white") + 
   geom_density(aes(estimates),color="blue") + 
   stat_function(
     fun = dnorm, 
@@ -506,7 +506,7 @@ U <- rnorm(n)
 
 C <- rnorm(n)
 
-X <- rbinom(n, size = 1, p = expit(-1 + log(2)*C ))
+X <- rbinom(n, size = 1, prob = expit(-1 + log(2)*C ))
 
 L <- rnorm(n, mean = 0 + 1.5*X + 1.5*U)
 

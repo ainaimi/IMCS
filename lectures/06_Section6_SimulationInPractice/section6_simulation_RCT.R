@@ -76,7 +76,7 @@ knitr::include_graphics(here("_images","rct_dag.pdf"))
 #   )[,-1]
 # 
 #   # simulate the treatment via 50:50 randomization
-#   x <- rbinom(n, size = 1, p = .5)
+#   x <- rbinom(n, size = 1, prob = .5)
 # 
 #   # parameters for the covariate outcome relation
 #   parmsC_mu <- rep(1.25, c_number)

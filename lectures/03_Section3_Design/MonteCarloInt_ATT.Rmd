@@ -61,14 +61,14 @@ collapsibility_function <- function(sample_size, intercept){
   n = sample_size
   
   #simulate a single binary confounder
-  C <- rbinom(n, size = 1,p = .5)
+  C <- rbinom(n, size = 1, prob = .5)
   
   # simulate the propensity score
   theta <- c(0,log(2))
   pi_a <- expit(theta[1]+theta[2]*C) 
   
   # simulate the observed exposure
-  A_obs <- rbinom(n, size = 1, p = pi_a)
+  A_obs <- rbinom(n, size = 1, prob = pi_a)
   
   # define the outcome model
   beta <- c(intercept, log(1.5), log(.5), log(3))

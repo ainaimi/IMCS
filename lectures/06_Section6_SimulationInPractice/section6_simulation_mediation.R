@@ -44,7 +44,7 @@ U <- rnorm(n)
 
 C <- rnorm(n)
 
-X <- rbinom(n, size = 1, p = expit(-1 + log(2)*C ))
+X <- rbinom(n, size = 1, prob = expit(-1 + log(2)*C ))
 
 L <- rnorm(n, mean = 0 + 1.5*X + 1.5*U)
 
@@ -108,7 +108,7 @@ simulation_function <- function(index, sample_size = 500){
 
   U <- rnorm(n)
   C <- rnorm(n)
-  X <- rbinom(n, size = 1, p = expit(-1 + log(2)*C ))
+  X <- rbinom(n, size = 1, prob = expit(-1 + log(2)*C ))
   L <- rnorm(n, mean = 0 + 1.5*X + 1.5*U)
   Z <- rbinom(n, size = 1, expit(-1.5 + log(2)*X + log(2)*L ))
   Y <- rnorm(n, mean = 10 + 5*X + 5*C + 5*Z + 4*L + 4*U, sd = 5)

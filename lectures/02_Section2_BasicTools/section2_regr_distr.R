@@ -85,7 +85,7 @@ n = 5000
 
 z <- rnorm(n, mean = 0, sd = 1)
 
-x <- rbinom(n, size = 1, p = expit(-1 + log(2)*z))
+x <- rbinom(n, size = 1, prob = expit(-1 + log(2)*z))
 
 y <- 100 + 10*x + 3*z + rnorm(n, mean = 0, sd = 10)
 
@@ -135,7 +135,7 @@ summary(mod1)$coefficients
 a$propensity_score <- glm(x ~ z, data = a, family = binomial("logit"))$fitted.values
 
 ## ----tidy = F, warning = F, message = F---------------------------------------
-x <- rbinom(n, size = 1, p = expit(-1 + log(2)*z))
+x <- rbinom(n, size = 1, prob = expit(-1 + log(2)*z))
 
 ## ----tidy = F, warning = F, message = F---------------------------------------
 
@@ -145,7 +145,7 @@ n = 5000
 
 z <- rnorm(n, mean = 0, sd = 1)
 
-x <- rbinom(n, size = 1, p = expit(-1 + log(2)*z))
+x <- rbinom(n, size = 1, prob = expit(-1 + log(2)*z))
 
 y <- rpois(n, lambda = exp(2 + log(2)*x + log(1.5)*z))
 
