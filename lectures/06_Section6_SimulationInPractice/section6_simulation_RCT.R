@@ -30,7 +30,7 @@ knitr::knit_hooks$set(purl = knitr::hook_purl)
 knitr::opts_chunk$set(echo = TRUE)
 
 
-## ----out.width = "10cm",fig.cap="Simple causal diagram representing a randomized trial, with randomized treatmetn assignment $A$, outcome cause $C$, and outcome $Y$.",echo=F----
+## ----out.width = "10cm",fig.cap="Simple causal diagram representing a randomized trial, with randomized treatment assignment $A$, outcome cause $C$, and outcome $Y$.",echo=F----
 knitr::include_graphics(here("_images","rct_dag.pdf"))
 
 ## ----tidy = F, warning = F, message = F, eval = F-----------------------------
@@ -56,11 +56,11 @@ knitr::include_graphics(here("_images","rct_dag.pdf"))
 #   n <- sample_size
 #   print(n)
 # 
-#   # how many confounders to simulate?
+#   # how many covariates to simulate?
 #   p <- c_number
 #   print(p)
 # 
-#   ## confounder matrix
+#   ## covariate matrix
 #   sigma <- matrix(cov_mat, nrow=p, ncol=p)
 #   diag(sigma) <- diag_cov
 #   c <- mvtnorm::rmvnorm(n, mean=rep(0,p), sigma=sigma)

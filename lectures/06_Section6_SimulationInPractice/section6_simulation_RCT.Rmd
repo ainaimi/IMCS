@@ -59,7 +59,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Adjusted versus Unadjusted ITT Estimates
 
-Let's take a look at another question we can answer with simulation: comparing adjusted to unadjusted estimates of the ITT effect in a randomized trial. Again, it would help us to get more specific with our intentions. For instance, we might ask whether we adjsuting for known causes of the outcome yields an improvement in the bias and efficiency of the ITT estimator. 
+Let's take a look at another question we can answer with simulation: comparing adjusted to unadjusted estimates of the ITT effect in a randomized trial. Again, it would help us to get more specific with our intentions. For instance, we might ask whether adjusting for known causes of the outcome yields an improvement in the bias and efficiency of the ITT estimator. 
 
 # Aims
 
@@ -69,9 +69,9 @@ To start, let's specify some aims of our simulation study. These will help guide
 
 # Data Generating Mechanisms
 
-In terms of generating our data, we will rely on a simple triangle DAG, with a set of confounding variables, a single exposure, and a single outcome:
+In terms of generating our data, we will rely on a simple DAG, with a set of prognostic covariates (causes of the outcome, but — because treatment is randomized — not of the exposure, so they are not confounders), a single exposure, and a single outcome:
 
-```{r, out.width = "10cm",fig.cap="Simple causal diagram representing a randomized trial, with randomized treatmetn assignment $A$, outcome cause $C$, and outcome $Y$.",echo=F}
+```{r, out.width = "10cm",fig.cap="Simple causal diagram representing a randomized trial, with randomized treatment assignment $A$, outcome cause $C$, and outcome $Y$.",echo=F}
 knitr::include_graphics(here("_images","rct_dag.pdf"))
 ```
 
@@ -141,11 +141,11 @@ simulation_function <- function(index,
   n <- sample_size 
   print(n)
   
-  # how many confounders to simulate?
+  # how many covariates to simulate?
   p <- c_number
   print(p)
   
-  ## confounder matrix
+  ## covariate matrix
   sigma <- matrix(cov_mat, nrow=p, ncol=p)
   diag(sigma) <- diag_cov
   c <- mvtnorm::rmvnorm(n, mean=rep(0,p), sigma=sigma)
@@ -282,7 +282,7 @@ Here, we can more clearly see the differences between adjusted and unadjusted IT
 knitr::include_graphics(here("_images", "nested_loop_plot_rct.pdf"))
 ```
 
-Finally, it's important to note three subtleties here. **First,** the standard errors for the adjusted an unadjusted estimators are performing as expected. They are accurately capturing the variability in the point estimates. 
+Finally, it's important to note three subtleties here. **First,** the standard errors for the adjusted and unadjusted estimators are performing as expected. They are accurately capturing the variability in the point estimates. 
 
 We can confirm this by comparing the standard deviation of the point estimates from the adjusted and unadjusted approaches to the means of their respective standard error estimates:
 
@@ -304,9 +304,9 @@ Fundamentally, what is happening here is that the adjusted estimator is simply m
 
 **Second,** our illustration is limited in that our outcome is simulated from a linear model. Because of this, we can place the adjusted and unadjusted point estimates on equal footing as they are both targeting the same estimand. That is, because of the combination of randomization and linearity of the outcome model, the unadjusted and adjusted estimator are mathematically equivalent. 
 
-If our outcome was simulated from a nonlinear model, such as logistic regression, we'd have to take into consideration noncollapsibility here, which would add a considerable degree of complexity to this our simulation study.
+If our outcome was simulated from a nonlinear model, such as logistic regression, we'd have to take into consideration noncollapsibility here, which would add a considerable degree of complexity to our simulation study.
 
-**Third** and final, we did not explore the consequences of misspecification of the adjusted model in our simulations. To illustrate this point, suppose there were several interactions between the randomized treatment and the covariates in the data generating mechanism that we **did not know to acccount for** in the analytic model used to adjust our ITT estimator. Alternatively, suppose that a subset of the covariates were related to the outcome in complex (e.g., curvilinear) ways, and we failed to account for this in our analytic model because we did not know these relationships were present. 
+**Third** and final, we did not explore the consequences of misspecification of the adjusted model in our simulations. To illustrate this point, suppose there were several interactions between the randomized treatment and the covariates in the data generating mechanism that we **did not know to account for** in the analytic model used to adjust our ITT estimator. Alternatively, suppose that a subset of the covariates were related to the outcome in complex (e.g., curvilinear) ways, and we failed to account for this in our analytic model because we did not know these relationships were present. 
 
 In this case, it is possible that using a misspecified model to obtain an adjusted estimator results in bias of the ITT effect, which obviates the whole purpose of deploying a randomized trial. This is one reason why unadjusted ITT effects are most commonly reported in the literature, even though adjusted estimators are more efficient. In effect, efficiency is a second order property, while bias is a first order property.
 
