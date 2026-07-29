@@ -59,9 +59,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Evaluating the Performance of IPW versus Marginal Standardization
 
-We are going to wrap up our short course by pulling several of the pieces together that we've covered over the last few days. We'll use the ADEMP framework to develop a simulation study we'll conduct here. 
+In this first worked example, we are going to pull together several of the pieces that we've covered over the last few days. We'll use the ADEMP framework to develop a simulation study we'll conduct here; two more examples (a randomized trial and a mediation analysis) will follow.
 
-We'll start with the aims of our simulation study: to compare the performance of inverse probability weighting versus marginally standardized estimates of the average treatment effect. However, it would help us to get more specific with our intentions. For instance, we might ask whether we should choose IP-weighting versus marginal standardization with a different number of confounding variables (e.g., 10 versus 25. We might as whether we should choose the bootstrap versus the robust variance estimator when we use IP weighting. Getting more specific with our aims will help us make decisions about how we should construct our data generating mechanisms, analyses, and performance measures. 
+We'll start with the aims of our simulation study: to compare the performance of inverse probability weighting versus marginally standardized estimates of the average treatment effect. However, it would help us to get more specific with our intentions. For instance, we might ask whether we should choose IP-weighting versus marginal standardization with a different number of confounding variables (e.g., 10 versus 25). We might ask whether we should choose the bootstrap versus the robust variance estimator when we use IP weighting. Getting more specific with our aims will help us make decisions about how we should construct our data generating mechanisms, analyses, and performance measures. 
 
 # Aims
 
@@ -135,13 +135,13 @@ Inverse probability weighting can perform very poorly when the numerical value o
 $$0.5 / 0.00001 = 50000$$
 This means that the individual with a propensity score of 0.00001 will contribute a total of 50,000 pseudo-individuals in our weighted analysis. If our original sample size was only 1,000, this would suggest an important problem: in the weighted analysis, a single individual is contributing 50,000 observations, which is 50 times the size of the actual data we have.
 
-To address problems like this, we can trim the weights we create using the equation above. Specifically, we can construct a trimmed stabilized IP weight, where any values of the stabilized weights greater than (e.g.) the 97.5th percentile are **reset to the 97.5th percentile value**. For example, using an `ifelse` statement in R, we can construct trimmed weights as:
+To address problems like this, we can trim the weights we create using the equation above. Specifically, we can construct a trimmed stabilized IP weight, where any values of the stabilized weights greater than (e.g.) the 99.5th percentile are **reset to the 99.5th percentile value**. For example, using an `ifelse` statement in R, we can construct trimmed weights as:
 
 ```{r, eval = F}
 
-sw_trim <- ifelse(sw > quantile(sw, .975),
-                  quantile(sw, .975),
-                  analysis_data$sw)
+sw_trim <- ifelse(sw > quantile(sw, .995),
+                  quantile(sw, .995),
+                  sw)
 
 ```
 
@@ -178,7 +178,7 @@ Once we obtain our simulation data, we will use the following performance measur
 
 # Monte Carlo Integration for the True Marginal OR
 
-In order to obtain estimates of our desired performance measures, we will need to compute the true marginal odds ratios for all the scenarios we will explore. In our case, we will limit our simulation to scenarios where the sample size for each Monte Carlo simulation is 500 and 1000, and where the number of confounders in each Monte Carlo simulation is 10 and 25. 
+In order to obtain estimates of our desired performance measures, we will need to compute the true marginal odds ratios for all the scenarios we will explore. In our case, we will limit our simulation to scenarios where the sample size for each Monte Carlo simulation is 1000, and where the number of confounders in each Monte Carlo simulation is 10 and 25.
 
 This means that we'll have to use Monte Carlo integration to estimate the true marginal odds ratios under *two* settings: when there are 10 and 25 confounders in the data generating mechanism.^[Note that we don't need to account for changing sample sizes in the Monte Carlo integration approach, since we are interested in maximizing the sample size for this step.] We can do this using the following code:
 
