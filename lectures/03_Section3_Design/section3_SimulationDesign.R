@@ -98,7 +98,7 @@ for(i in 1:permutations){
 rr_permuted <- data.frame(rr_permuted)
 names(rr_permuted) <- "estimates"
 
-## ----warning=F, message=F, out.width = "5cm",fig.cap="Distribution of log risk ratios after 2,000 random permutations of the exposure variable in the 2x2 table data above. The solid blue density curve represents a nonparametric kernel density estimate of the distribution. The solid red density curve represents a normal density estimate of the distribution. The dashed red vertical line indicates the value of the log risk ratio estimated in the original unpermuted data.",echo=F----
+## ----warning=F, message=F, out.width = "5cm",fig.cap="Distribution of log risk ratios after 20,000 random permutations of the exposure variable in the 2x2 table data above. The solid blue density curve represents a nonparametric kernel density estimate of the distribution. The solid red density curve represents a normal density estimate of the distribution. The dashed red vertical line indicates the value of the log risk ratio estimated in the original unpermuted data.",echo=F----
 ggplot(rr_permuted) +  
   geom_histogram(aes(estimates,y=..density..),color="gray",fill="white") + 
   geom_density(aes(estimates),color="blue") + 
@@ -110,13 +110,13 @@ ggplot(rr_permuted) +
   geom_vline(xintercept = log(risk_ratio),color="red",linetype=2)
 
 ## -----------------------------------------------------------------------------
-sum(rr_permuted$estimate <= log(risk_ratio))
+sum(rr_permuted$estimates <= log(risk_ratio))
 
 ## -----------------------------------------------------------------------------
-sum(rr_permuted$estimate <= log(risk_ratio))/permutations
+sum(rr_permuted$estimates <= log(risk_ratio))/permutations
 
 ## -----------------------------------------------------------------------------
-sum(abs(rr_permuted$estimate) >= abs(log(risk_ratio)))/permutations
+sum(abs(rr_permuted$estimates) >= abs(log(risk_ratio)))/permutations
 
 ## ----out.width = "10cm",fig.cap="Simple confounding triangle, with exposure $X$, confounder $C$, and outcome $Y$.",echo=F----
 knitr::include_graphics(here("_images","triangle_dag.pdf"))
